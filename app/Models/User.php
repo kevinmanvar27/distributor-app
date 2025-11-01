@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -21,7 +22,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'is_admin',
+        'user_role',
+        'date_of_birth',
+        'avatar',
     ];
 
     /**
@@ -44,7 +47,140 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_admin' => 'boolean',
+            'date_of_birth' => 'date',
         ];
+    }
+
+    /**
+     * Check if the user is a super admin.
+     *
+     * @return bool
+     */
+    public function isSuperAdmin()
+    {
+        return $this->user_role === 'super_admin';
+    }
+
+    /**
+     * Check if the user has a specific role.
+     *
+     * @param string $role
+     * @return bool
+     */
+    public function hasRole($role)
+    {
+        return $this->user_role === $role;
+    }
+
+    /**
+     * Check if the user has any of the specified roles.
+     *
+     * @param array $roles
+     * @return bool
+     */
+    public function hasAnyRole($roles)
+    {
+        return in_array($this->user_role, $roles);
+    }
+
+    /**
+     * Check if the user has a specific permission.
+     *
+     * @param string $permission
+     * @return bool
+     */
+    public function hasPermission($permission)
+    {
+        // Super admins have all permissions
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        // Check if user has the permission through their role
+        $userRole = $this->user_role;
+        $role = \App\Models\Role::where('name', $userRole)->first();
+        
+        if ($role) {
+            return $role->permissions()->where('name', $permission)->exists();
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the user has any of the specified permissions.
+     *
+     * @param array $permissions
+     * @return bool
+     */
+    public function hasAnyPermission($permissions)
+    {
+        // Super admins have all permissions
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        // Check if user has any of the permissions through their role
+        $userRole = $this->user_role;
+        $role = \App\Models\Role::where('name', $userRole)->first();
+        
+        if ($role) {
+            return $role->permissions()->whereIn('name', $permissions)->exists();
+        }
+
+        return false;
+    }
+
+    /**
+     * Get the URL of the user's avatar.
+     *
+     * @return string
+     */
+    public function getAvatarUrlAttribute()
+    {
+        if ($this->avatar) {
+            return Storage::disk('public')->url('avatars/' . $this->avatar);
+        }
+        
+        // Return a default avatar if none is set
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=0D8ABC&color=fff';
+    }
+
+    /**
+     * Scope a query to only include staff members (super_admin, admin, editor).
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeStaff($query)
+    {
+        return $query->whereIn('user_role', ['super_admin', 'admin', 'editor']);
+    }
+
+    /**
+     * Scope a query to exclude super admins.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeNonSuperAdmin($query)
+    {
+        return $query->where('user_role', '!=', 'super_admin');
+    }
+
+    /**
+     * Get the roles assigned to this user.
+     */
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_role');
+    }
+    
+    /**
+     * Get the permissions directly assigned to this user.
+     */
+    public function permissions()
+    {
+        return $this->belongsToMany(\App\Models\Permission::class, 'user_permissions');
     }
 }

@@ -27,5 +27,8 @@ class DatabaseSeeder extends Seeder
         
         // Seed the default settings
         $this->call(SettingsTableSeeder::class);
+        
+        // Seed roles and permissions
+        $this->call(RolesAndPermissionsSeeder::class);
     }
 }

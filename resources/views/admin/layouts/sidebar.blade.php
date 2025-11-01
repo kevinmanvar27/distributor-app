@@ -21,42 +21,65 @@
                     <span class="sidebar-text">Dashboard</span>
                 </a>
             </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link {{ request()->routeIs('admin.settings') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.settings') }}">
-                    <i class="fas fa-cog me-3"></i>
-                    <span class="sidebar-text">Settings</span>
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.users.index') }}">
-                    <i class="fas fa-users me-3"></i>
-                    <span class="sidebar-text">Users</span>
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link hover-bg rounded-pill d-flex align-items-center py-2 px-3" href="#">
-                    <i class="fas fa-chart-bar me-3"></i>
-                    <span class="sidebar-text">Analytics</span>
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link hover-bg rounded-pill d-flex align-items-center py-2 px-3" href="#">
-                    <i class="fas fa-shopping-cart me-3"></i>
-                    <span class="sidebar-text">Orders</span>
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link hover-bg rounded-pill d-flex align-items-center py-2 px-3" href="#">
-                    <i class="fas fa-box me-3"></i>
-                    <span class="sidebar-text">Products</span>
-                </a>
-            </li>
-            <li class="nav-item mb-1">
-                <a class="nav-link hover-bg rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.color-palette') }}">
-                    <i class="fas fa-palette me-3"></i>
-                    <span class="sidebar-text">Color Palette</span>
-                </a>
-            </li>
+            @if(auth()->user()->hasPermission('manage_settings'))
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('admin.settings') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.settings') }}">
+                        <i class="fas fa-cog me-3"></i>
+                        <span class="sidebar-text">Settings</span>
+                    </a>
+                </li>
+            @endif
+            
+            <!-- Staff Management Section -->
+            @php 
+                $hasStaffPermission = auth()->user()->hasPermission('show_staff') ||
+                                    auth()->user()->hasPermission('add_staff') || 
+                                    auth()->user()->hasPermission('edit_staff') || 
+                                    auth()->user()->hasPermission('delete_staff'); 
+            @endphp
+            @if($hasStaffPermission)
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('admin.users.staff*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.users.staff') }}">
+                        <i class="fas fa-user-tie me-3"></i>
+                        <span class="sidebar-text">Staff Management</span>
+                    </a>
+                </li>
+            @endif
+            
+            <!-- User Management Section -->
+            @php 
+                $hasUserPermission = auth()->user()->hasPermission('show_user') ||
+                                    auth()->user()->hasPermission('add_user') || 
+                                    auth()->user()->hasPermission('edit_user') || 
+                                    auth()->user()->hasPermission('delete_user'); 
+            @endphp
+            @if($hasUserPermission)
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('admin.users.index') && !request()->routeIs('admin.users.staff*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.users.index') }}">
+                        <i class="fas fa-users me-3"></i>
+                        <span class="sidebar-text">User Management</span>
+                    </a>
+                </li>
+            @endif
+            
+            <!-- User Role and Permission Section (Only visible to users with manage_roles permission) -->
+            @if(auth()->user()->hasPermission('manage_roles'))
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('admin.roles*') || request()->routeIs('admin.permissions*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.roles.index') }}">
+                        <i class="fas fa-user-shield me-3"></i>
+                        <span class="sidebar-text">User Role & Permission</span>
+                    </a>
+                </li>
+            @endif
+
+            <!-- @if(auth()->user()->hasPermission('manage_color_palette'))
+                <li class="nav-item mb-1">
+                    <a class="nav-link hover-bg rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.color-palette') }}">
+                        <i class="fas fa-palette me-3"></i>
+                        <span class="sidebar-text">Color Palette</span>
+                    </a>
+                </li>
+            @endif -->
         </ul>
         
         <div class="px-3 py-3 border-top border-default mt-auto">

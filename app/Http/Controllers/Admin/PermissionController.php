@@ -4,53 +4,120 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use App\Models\Permission;
 
 class PermissionController extends Controller
 {
     /**
-     * Show the form for assigning permissions to a user.
+     * Display a listing of the permissions.
      *
-     * @param  \App\Models\User  $user
      * @return \Illuminate\View\View
      */
-    public function edit(User $user)
+    public function index()
     {
-        // Only super admins can assign permissions
-        if (!Auth::user()->isSuperAdmin()) {
-            return redirect()->back()->with('error', 'Only super admins can assign permissions.');
-        }
-        
         $permissions = Permission::all();
-        $userPermissions = $user->permissions->pluck('id')->toArray();
-        
-        return view('admin.users.permissions', compact('user', 'permissions', 'userPermissions'));
+        return view('admin.permissions.index', compact('permissions'));
     }
 
     /**
-     * Update the specified user's permissions in storage.
+     * Show the form for creating a new permission.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function create()
+    {
+        return view('admin.permissions.create');
+    }
+
+    /**
+     * Store a newly created permission in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\User  $user
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, User $user)
+    public function store(Request $request)
     {
-        // Only super admins can assign permissions
-        if (!Auth::user()->isSuperAdmin()) {
-            return redirect()->back()->with('error', 'Only super admins can assign permissions.');
-        }
-        
         $request->validate([
-            'permissions' => 'array',
-            'permissions.*' => 'exists:permissions,id',
+            'name' => 'required|unique:permissions,name',
+            'display_name' => 'required',
+            'description' => 'nullable|string',
         ]);
-        
-        // Sync the user's permissions
-        $user->permissions()->sync($request->input('permissions', []));
-        
-        return redirect()->back()->with('success', 'Permissions updated successfully.');
+
+        Permission::create([
+            'name' => $request->name,
+            'display_name' => $request->display_name,
+            'description' => $request->description,
+        ]);
+
+        return redirect()->route('admin.permissions.index')->with('success', 'Permission created successfully.');
+    }
+
+    /**
+     * Display the specified permission.
+     *
+     * @param  \App\Models\Permission  $permission
+     * @return \Illuminate\View\View
+     */
+    public function show(Permission $permission)
+    {
+        return view('admin.permissions.show', compact('permission'));
+    }
+
+    /**
+     * Show the form for editing the specified permission.
+     *
+     * @param  \App\Models\Permission  $permission
+     * @return \Illuminate\View\View
+     */
+    public function edit(Permission $permission)
+    {
+        return view('admin.permissions.edit', compact('permission'));
+    }
+
+    /**
+     * Update the specified permission in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Permission  $permission
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function update(Request $request, Permission $permission)
+    {
+        $request->validate([
+            'name' => 'required|unique:permissions,name,' . $permission->id,
+            'display_name' => 'required',
+            'description' => 'nullable|string',
+        ]);
+
+        $permission->update([
+            'name' => $request->name,
+            'display_name' => $request->display_name,
+            'description' => $request->description,
+        ]);
+
+        return redirect()->route('admin.permissions.index')->with('success', 'Permission updated successfully.');
+    }
+
+    /**
+     * Remove the specified permission from storage.
+     *
+     * @param  \App\Models\Permission  $permission
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroy(Permission $permission)
+    {
+        // Prevent deleting permissions that are assigned to roles
+        if ($permission->roles()->count() > 0) {
+            return redirect()->route('admin.permissions.index')->with('error', 'Cannot delete permission assigned to roles.');
+        }
+
+        // Prevent deleting permissions that are assigned to users
+        if ($permission->users()->count() > 0) {
+            return redirect()->route('admin.permissions.index')->with('error', 'Cannot delete permission assigned to users.');
+        }
+
+        $permission->delete();
+
+        return redirect()->route('admin.permissions.index')->with('success', 'Permission deleted successfully.');
     }
 }

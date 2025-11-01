@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\FirebaseController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\PermissionController;
 
 // Redirect root URL to admin login page
 Route::get('/', function () {
@@ -60,6 +62,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/color-palette', function () {
         return view('admin.color-palette');
     })->name('admin.color-palette');
+    Route::get('/admin/test-links', function () {
+        return view('admin.test-links');
+    })->name('admin.test-links');
     Route::get('/admin/settings', [SettingsController::class, 'index'])->name('admin.settings');
     Route::post('/admin/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
     Route::post('/admin/settings/reset', [SettingsController::class, 'reset'])->name('admin.settings.reset');
@@ -72,8 +77,11 @@ Route::middleware('auth')->group(function () {
     
     // User Management Routes
     Route::prefix('admin')->group(function () {
-        Route::resource('users', UserController::class)->except(['show'])->names([
-            'index' => 'admin.users.index',
+        // Regular users management
+        Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
+        Route::get('/users/staff', [UserController::class, 'staff'])->name('admin.users.staff');
+        
+        Route::resource('users', UserController::class)->except(['index'])->names([
             'create' => 'admin.users.create',
             'store' => 'admin.users.store',
             'edit' => 'admin.users.edit',
@@ -83,7 +91,30 @@ Route::middleware('auth')->group(function () {
         
         // User Avatar Routes
         Route::post('/users/{user}/avatar', [UserController::class, 'updateAvatar'])->name('admin.users.avatar.update');
-        Route::post('/users/{user}/avatar/remove', [UserController::class, 'removeAvatar'])->name('admin.users.avatar.remove');
+        Route::delete('/users/{user}/avatar', [UserController::class, 'removeAvatar'])->name('admin.users.avatar.remove');
+        
+        // Role and Permission Management Routes (only accessible to super_admin)
+        Route::middleware('permission:manage_roles')->group(function () {
+            Route::resource('roles', RoleController::class)->names([
+                'index' => 'admin.roles.index',
+                'create' => 'admin.roles.create',
+                'store' => 'admin.roles.store',
+                'show' => 'admin.roles.show',
+                'edit' => 'admin.roles.edit',
+                'update' => 'admin.roles.update',
+                'destroy' => 'admin.roles.destroy',
+            ]);
+            
+            Route::resource('permissions', PermissionController::class)->names([
+                'index' => 'admin.permissions.index',
+                'create' => 'admin.permissions.create',
+                'store' => 'admin.permissions.store',
+                'show' => 'admin.permissions.show',
+                'edit' => 'admin.permissions.edit',
+                'update' => 'admin.permissions.update',
+                'destroy' => 'admin.permissions.destroy',
+            ]);
+        });
     });
     
     // Database Management Routes

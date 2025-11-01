@@ -135,10 +135,10 @@
                                                     <select class="form-select border-0 border-bottom rounded-end-pill ps-0 py-2 @error('user_role') is-invalid @enderror" 
                                                             id="user_role" name="user_role" required>
                                                         <option value="">Select Role</option>
-                                                        <option value="super_admin" {{ old('user_role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
-                                                        <option value="admin" {{ old('user_role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                                                        <option value="editor" {{ old('user_role') == 'editor' ? 'selected' : '' }}>Editor</option>
-                                                        <option value="user" {{ old('user_role') == 'user' ? 'selected' : '' }}>User</option>
+                                                        <option value="super_admin" {{ (old('user_role') ?? $role) == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                                                        <option value="admin" {{ (old('user_role') ?? $role) == 'admin' ? 'selected' : '' }}>Admin</option>
+                                                        <option value="editor" {{ (old('user_role') ?? $role) == 'editor' ? 'selected' : '' }}>Editor</option>
+                                                        <option value="user" {{ (old('user_role') ?? $role) == 'user' ? 'selected' : '' }}>User</option>
                                                     </select>
                                                 </div>
                                                 @error('user_role')
@@ -165,8 +165,8 @@
                                     </div>
                                     
                                     <div class="d-flex justify-content-between mt-5">
-                                        <a href="{{ route('admin.users.index') }}" class="btn btn-light rounded-pill px-4">
-                                            <i class="fas fa-arrow-left me-2"></i> Back to Users
+                                        <a href="{{ $role !== 'user' ? route('admin.users.staff') : route('admin.users.index') }}" class="btn btn-light rounded-pill px-4">
+                                            <i class="fas fa-arrow-left me-2"></i> Back
                                         </a>
                                         <button type="submit" class="btn btn-primary rounded-pill px-4">
                                             <i class="fas fa-save me-2"></i> Create User
@@ -188,6 +188,13 @@
 document.getElementById('avatar').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
+        // Check if file is an image
+        if (!file.type.match('image.*')) {
+            alert('Please select an image file (JPEG, PNG, GIF).');
+            e.target.value = '';
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('avatar-preview').src = e.target.result;
