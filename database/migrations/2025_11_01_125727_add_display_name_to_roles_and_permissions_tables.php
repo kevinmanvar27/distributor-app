@@ -11,13 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('roles', function (Blueprint $table) {
-            $table->string('display_name')->after('name');
-        });
-
-        Schema::table('permissions', function (Blueprint $table) {
-            $table->string('display_name')->after('name');
-        });
+        // Columns already exist in the initial migrations, so no action needed
     }
 
     /**
@@ -25,12 +19,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('roles', function (Blueprint $table) {
-            $table->dropColumn('display_name');
-        });
-
-        Schema::table('permissions', function (Blueprint $table) {
-            $table->dropColumn('display_name');
-        });
+        // No action needed as we're not making any changes
     }
 };

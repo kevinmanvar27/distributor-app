@@ -10,6 +10,8 @@
     <!-- Favicon -->
     @if(setting('favicon'))
         <link rel="icon" type="image/x-icon" href="{{ asset('storage/' . setting('favicon')) }}">
+    @else
+        <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAQAAVzABAEAjBQAaDwYAWjUGAGE6CQBrQQ0ATS8dAFAzHgBhPBMARjMcAFE0HgBmQg8ARjMeAFI1HgBhQg4AUzceAGZDDwBpRg4Aa0gOAHBKDgBzTA4Afk0OAHRNDgCETQ4A">
     @endif
     
     <!-- Bootstrap CSS CDN -->
@@ -45,6 +47,9 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <!-- Vite compiled JavaScript -->
+    @vite(['resources/js/app.js'])
     
     <!-- Custom Scripts -->
     <script src="{{ asset('assets/js/admin.js') }}"></script>

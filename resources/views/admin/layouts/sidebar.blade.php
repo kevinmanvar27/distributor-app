@@ -21,6 +21,20 @@
                     <span class="sidebar-text">Dashboard</span>
                 </a>
             </li>
+            
+            <!-- Product Management Section -->
+            @if(auth()->user()->hasPermission('viewAny', App\Models\Product::class) || 
+                auth()->user()->hasPermission('create', App\Models\Product::class) || 
+                auth()->user()->hasPermission('update', App\Models\Product::class) || 
+                auth()->user()->hasPermission('delete', App\Models\Product::class))
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('admin.products*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.products.index') }}">
+                        <i class="fas fa-box me-3"></i>
+                        <span class="sidebar-text">Product Management</span>
+                    </a>
+                </li>
+            @endif
+            
             @if(auth()->user()->hasPermission('manage_settings'))
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('admin.settings') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.settings') }}">

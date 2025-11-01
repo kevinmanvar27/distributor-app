@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\ProductController;
 
 // Redirect root URL to admin login page
 Route::get('/', function () {
@@ -143,4 +144,22 @@ Route::middleware('auth')->group(function () {
     
     // Firebase Statistics Route
     Route::get('/admin/firebase/stats', [FirebaseController::class, 'getStatistics'])->name('admin.firebase.stats');
+    
+    // Product Management Routes
+    Route::prefix('admin')->group(function () {
+        Route::resource('products', ProductController::class)->names([
+            'index' => 'admin.products.index',
+            'create' => 'admin.products.create',
+            'store' => 'admin.products.store',
+            'show' => 'admin.products.show',
+            'edit' => 'admin.products.edit',
+            'update' => 'admin.products.update',
+            'destroy' => 'admin.products.destroy',
+        ]);
+        
+        // Media Library Routes
+        Route::get('/media', [ProductController::class, 'getMedia'])->name('admin.media.index');
+        Route::post('/media', [ProductController::class, 'storeMedia'])->name('admin.media.store');
+        Route::delete('/media/{media}', [ProductController::class, 'destroyMedia'])->name('admin.media.destroy');
+    });
 });

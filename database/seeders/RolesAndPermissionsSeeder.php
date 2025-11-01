@@ -140,6 +140,33 @@ class RolesAndPermissionsSeeder extends Seeder
                 'display_name' => 'Manage Settings',
                 'description' => 'Access and modify application settings'
             ],
+            
+            // Product Management Permissions
+            [
+                'name' => 'viewAny_product',
+                'display_name' => 'View Any Product',
+                'description' => 'View all products'
+            ],
+            [
+                'name' => 'view_product',
+                'display_name' => 'View Product',
+                'description' => 'View a specific product'
+            ],
+            [
+                'name' => 'create_product',
+                'display_name' => 'Create Product',
+                'description' => 'Create new products'
+            ],
+            [
+                'name' => 'update_product',
+                'display_name' => 'Update Product',
+                'description' => 'Modify existing products'
+            ],
+            [
+                'name' => 'delete_product',
+                'display_name' => 'Delete Product',
+                'description' => 'Remove products'
+            ],
         ];
 
         // Create new permissions
@@ -166,7 +193,11 @@ class RolesAndPermissionsSeeder extends Seeder
                     'add_user_role_permission',
                     'edit_user_role_permission',
                     'delete_user_role_permission',
-                    'manage_roles'
+                    'manage_roles',
+                    'viewAny_product',
+                    'view_product',
+                    'create_product',
+                    'update_product'
                 ])->get();
                 $role->permissions()->sync($editorPermissions);
             } else {
