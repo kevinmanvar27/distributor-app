@@ -1,0 +1,199 @@
+@extends('admin.layouts.app')
+
+@section('title', 'Add User')
+
+@section('content')
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        @include('admin.layouts.sidebar')
+        
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            @include('admin.layouts.header', ['pageTitle' => 'Add User'])
+            
+            <div class="pt-4 pb-2 mb-3">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h4 class="card-title mb-0 fw-bold">Add New User</h4>
+                                <p class="mb-0 text-muted">Create a new user account with role assignment</p>
+                            </div>
+                            
+                            <div class="card-body">
+                                @if(session('success'))
+                                    <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                @endif
+                                
+                                @if(session('error'))
+                                    <div class="alert alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                        <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                @endif
+                                
+                                <form action="{{ route('admin.users.store') }}" method="POST" class="needs-validation" novalidate enctype="multipart/form-data">
+                                    @csrf
+                                    
+                                    <div class="row">
+                                        <div class="col-md-12 text-center mb-4">
+                                            <div class="position-relative d-inline-block">
+                                                <img id="avatar-preview" src="https://ui-avatars.com/api/?name=New+User&background=random" 
+                                                     class="rounded-circle border border-3 border-primary" width="100" height="100" alt="Avatar Preview">
+                                                <div class="position-absolute bottom-0 end-0 bg-primary rounded-circle p-1">
+                                                    <i class="fas fa-user text-white"></i>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <label for="avatar" class="form-label fw-medium">Profile Picture</label>
+                                                <input type="file" class="form-control form-control-sm mx-auto @error('avatar') is-invalid @enderror" 
+                                                       id="avatar" name="avatar" accept="image/*" style="max-width: 200px;">
+                                                <div class="form-text">Optional. Max 2MB. JPG, PNG, GIF.</div>
+                                                @error('avatar')
+                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="name" class="form-label fw-medium">Full Name <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
+                                                        <i class="fas fa-user text-muted"></i>
+                                                    </span>
+                                                    <input type="text" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2 @error('name') is-invalid @enderror" 
+                                                           id="name" name="name" value="{{ old('name') }}" placeholder="Enter full name" required>
+                                                </div>
+                                                @error('name')
+                                                    <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="email" class="form-label fw-medium">Email Address <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
+                                                        <i class="fas fa-envelope text-muted"></i>
+                                                    </span>
+                                                    <input type="email" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2 @error('email') is-invalid @enderror" 
+                                                           id="email" name="email" value="{{ old('email') }}" placeholder="Enter email address" required>
+                                                </div>
+                                                @error('email')
+                                                    <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="password" class="form-label fw-medium">Password <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
+                                                        <i class="fas fa-lock text-muted"></i>
+                                                    </span>
+                                                    <input type="password" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2 @error('password') is-invalid @enderror" 
+                                                           id="password" name="password" placeholder="Enter password" required>
+                                                </div>
+                                                <div class="form-text ms-4">Password must be at least 8 characters long.</div>
+                                                @error('password')
+                                                    <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="password_confirmation" class="form-label fw-medium">Confirm Password <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
+                                                        <i class="fas fa-lock text-muted"></i>
+                                                    </span>
+                                                    <input type="password" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2" 
+                                                           id="password_confirmation" name="password_confirmation" placeholder="Confirm password" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="user_role" class="form-label fw-medium">Role <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
+                                                        <i class="fas fa-user-tag text-muted"></i>
+                                                    </span>
+                                                    <select class="form-select border-0 border-bottom rounded-end-pill ps-0 py-2 @error('user_role') is-invalid @enderror" 
+                                                            id="user_role" name="user_role" required>
+                                                        <option value="">Select Role</option>
+                                                        <option value="super_admin" {{ old('user_role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                                                        <option value="admin" {{ old('user_role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                                                        <option value="editor" {{ old('user_role') == 'editor' ? 'selected' : '' }}>Editor</option>
+                                                        <option value="user" {{ old('user_role') == 'user' ? 'selected' : '' }}>User</option>
+                                                    </select>
+                                                </div>
+                                                @error('user_role')
+                                                    <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="date_of_birth" class="form-label fw-medium">Date of Birth</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
+                                                        <i class="fas fa-calendar text-muted"></i>
+                                                    </span>
+                                                    <input type="date" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2 @error('date_of_birth') is-invalid @enderror" 
+                                                           id="date_of_birth" name="date_of_birth" value="{{ old('date_of_birth') }}">
+                                                </div>
+                                                @error('date_of_birth')
+                                                    <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mt-5">
+                                        <a href="{{ route('admin.users.index') }}" class="btn btn-light rounded-pill px-4">
+                                            <i class="fas fa-arrow-left me-2"></i> Back to Users
+                                        </a>
+                                        <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                            <i class="fas fa-save me-2"></i> Create User
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            @include('admin.layouts.footer')
+        </main>
+    </div>
+</div>
+
+<script>
+document.getElementById('avatar').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('avatar-preview').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+@endsection

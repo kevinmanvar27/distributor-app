@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Palette Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            /* Light Theme */
+            --primary-light: rgba(255, 107, 0, 1); /* #FF6B00 */
+            --secondary-light: rgba(245, 245, 245, 1); /* #F5F5F5 */
+            --background-light: rgba(255, 255, 255, 1); /* #FFFFFF */
+            --surface-light: rgba(255, 255, 255, 1); /* #FFFFFF */
+            --text-light: rgba(51, 51, 51, 1); /* #333333 */
+            --text-secondary-light: rgba(117, 117, 117, 1); /* #757575 */
+            --border-light: rgba(224, 224, 224, 1); /* #E0E0E0 */
+            --success-light: rgba(76, 175, 80, 1); /* #4CAF50 */
+            --error-light: rgba(244, 67, 54, 1); /* #F44336 */
+            --warning-light: rgba(255, 152, 0, 1); /* #FF9800 */
+            --info-light: rgba(33, 150, 243, 1); /* #2196F3 */
+            
+            /* Dark Theme */
+            --primary-dark: rgba(255, 107, 0, 1); /* #FF6B00 */
+            --secondary-dark: rgba(42, 42, 42, 1); /* #2A2A2A */
+            --background-dark: rgba(18, 18, 18, 1); /* #121212 */
+            --surface-dark: rgba(30, 30, 30, 1); /* #1E1E1E */
+            --text-dark: rgba(255, 255, 255, 1); /* #FFFFFF */
+            --text-secondary-dark: rgba(176, 176, 176, 1); /* #B0B0B0 */
+            --border-dark: rgba(51, 51, 51, 1); /* #333333 */
+            --success-dark: rgba(76, 175, 80, 1); /* #4CAF50 */
+            --error-dark: rgba(244, 67, 54, 1); /* #F44336 */
+            --warning-dark: rgba(255, 152, 0, 1); /* #FF9800 */
+            --info-dark: rgba(33, 150, 243, 1); /* #2196F3 */
+            
+            /* Grayscale System */
+            --gray-50: rgba(250, 250, 250, 1); /* #FAFAFA */
+            --gray-100: rgba(245, 245, 245, 1); /* #F5F5F5 */
+            --gray-200: rgba(238, 238, 238, 1); /* #EEEEEE */
+            --gray-300: rgba(224, 224, 234, 1); /* #E0E0E0 */
+            --gray-400: rgba(189, 189, 189, 1); /* #BDBDBD */
+            --gray-500: rgba(158, 158, 158, 1); /* #9E9E9E */
+            --gray-600: rgba(117, 117, 117, 1); /* #757575 */
+            --gray-700: rgba(97, 97, 97, 1); /* #616161 */
+            --gray-800: rgba(66, 66, 66, 1); /* #424242 */
+            --gray-900: rgba(33, 33, 33, 1); /* #212121 */
+        }
+
+        /* Active Theme Variables */
+        :root {
+            --primary: var(--primary-light);
+            --secondary: var(--secondary-light);
+            --background: var(--background-light);
+            --surface: var(--surface-light);
+            --text: var(--text-light);
+            --text-secondary: var(--text-secondary-light);
+            --border: var(--border-light);
+            --success: var(--success-light);
+            --error: var(--error-light);
+            --warning: var(--warning-light);
+            --info: var(--info-light);
+        }
+
+        [data-theme="dark"] {
+            --primary: var(--primary-dark);
+            --secondary: var(--secondary-dark);
+            --background: var(--background-dark);
+            --surface: var(--surface-dark);
+            --text: var(--text-dark);
+            --text-secondary: var(--text-secondary-dark);
+            --border: var(--border-dark);
+            --success: var(--success-dark);
+            --error: var(--error-dark);
+            --warning: var(--warning-dark);
+            --info: var(--info-dark);
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            font-family: 'Figtree', sans-serif;
+        }
+
+        .card {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s ease;
+        }
+
+        .btn-theme {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .btn-theme:hover {
+            background-color: color-mix(in srgb, var(--primary) 90%, black);
+            border-color: color-mix(in srgb, var(--primary) 90%, black);
+            color: white;
+        }
+
+        .theme-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="bg-background text-text">
+    <div class="theme-switcher">
+        <button id="theme-toggle" class="btn btn-outline-secondary rounded-circle" type="button">
+            <i id="theme-icon" class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h1>Color Palette Demo</h1>
+                <p class="lead">This page showcases the new color palette for both light and dark themes.</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Light Theme Colors -->
+            <div class="col-12">
+                <h2 class="h3 mb-4">Light Theme</h2>
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(255, 107, 0, 1);">
+                                <h3 class="text-white">Primary</h3>
+                                <p class="text-white mb-0">#FF6B00 (Orange)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(245, 245, 245, 1);">
+                                <h3 class="text-dark">Secondary</h3>
+                                <p class="text-dark mb-0">#F5F5F5 (Light Gray)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(255, 255, 255, 1);">
+                                <h3 class="text-dark">Background</h3>
+                                <p class="text-dark mb-0">#FFFFFF (White)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(255, 255, 255, 1);">
+                                <h3 class="text-dark">Surface</h3>
+                                <p class="text-dark mb-0">#FFFFFF (White)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(51, 51, 51, 1);">
+                                <h3 class="text-white">Text</h3>
+                                <p class="text-white mb-0">#333333 (Dark Gray)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(117, 117, 117, 1);">
+                                <h3 class="text-white">Text Secondary</h3>
+                                <p class="text-white mb-0">#757575 (Medium Gray)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(224, 224, 224, 1);">
+                                <h3 class="text-dark">Border</h3>
+                                <p class="text-dark mb-0">#E0E0E0 (Light Gray Border)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(76, 175, 80, 1);">
+                                <h3 class="text-white">Success</h3>
+                                <p class="text-white mb-0">#4CAF50 (Green)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(244, 67, 54, 1);">
+                                <h3 class="text-white">Error</h3>
+                                <p class="text-white mb-0">#F44336 (Red)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(255, 152, 0, 1);">
+                                <h3 class="text-white">Warning</h3>
+                                <p class="text-white mb-0">#FF9800 (Orange)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dark Theme Colors -->
+            <div class="col-12 mt-5">
+                <h2 class="h3 mb-4">Dark Theme</h2>
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(255, 107, 0, 1);">
+                                <h3 class="text-white">Primary</h3>
+                                <p class="text-white mb-0">#FF6B00 (Orange)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(42, 42, 42, 1);">
+                                <h3 class="text-white">Secondary</h3>
+                                <p class="text-white mb-0">#2A2A2A (Dark Gray)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(18, 18, 18, 1);">
+                                <h3 class="text-white">Background</h3>
+                                <p class="text-white mb-0">#121212 (Very Dark Gray)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(30, 30, 30, 1);">
+                                <h3 class="text-white">Surface</h3>
+                                <p class="text-white mb-0">#1E1E1E (Dark Gray)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(255, 255, 255, 1);">
+                                <h3 class="text-dark">Text</h3>
+                                <p class="text-dark mb-0">#FFFFFF (White)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(176, 176, 176, 1);">
+                                <h3 class="text-dark">Text Secondary</h3>
+                                <p class="text-dark mb-0">#B0B0B0 (Light Gray)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(51, 51, 51, 1);">
+                                <h3 class="text-white">Border</h3>
+                                <p class="text-white mb-0">#333333 (Dark Gray Border)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(76, 175, 80, 1);">
+                                <h3 class="text-white">Success</h3>
+                                <p class="text-white mb-0">#4CAF50 (Green)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(244, 67, 54, 1);">
+                                <h3 class="text-white">Error</h3>
+                                <p class="text-white mb-0">#F44336 (Red)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(255, 152, 0, 1);">
+                                <h3 class="text-white">Warning</h3>
+                                <p class="text-white mb-0">#FF9800 (Orange)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grayscale System -->
+            <div class="col-12 mt-5">
+                <h2 class="h3 mb-4">Grayscale System</h2>
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(250, 250, 250, 1);">
+                                <h3 class="text-dark">Gray 50</h3>
+                                <p class="text-dark mb-0">#FAFAFA (Lightest Gray)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(245, 245, 245, 1);">
+                                <h3 class="text-dark">Gray 100</h3>
+                                <p class="text-dark mb-0">#F5F5F5</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(238, 238, 238, 1);">
+                                <h3 class="text-dark">Gray 200</h3>
+                                <p class="text-dark mb-0">#EEEEEE</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(224, 224, 224, 1);">
+                                <h3 class="text-dark">Gray 300</h3>
+                                <p class="text-dark mb-0">#E0E0E0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(189, 189, 189, 1);">
+                                <h3 class="text-dark">Gray 400</h3>
+                                <p class="text-dark mb-0">#BDBDBD</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(158, 158, 158, 1);">
+                                <h3 class="text-dark">Gray 500</h3>
+                                <p class="text-dark mb-0">#9E9E9E</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(117, 117, 117, 1);">
+                                <h3 class="text-white">Gray 600</h3>
+                                <p class="text-white mb-0">#757575</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(97, 97, 97, 1);">
+                                <h3 class="text-white">Gray 700</h3>
+                                <p class="text-white mb-0">#616161</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(66, 66, 66, 1);">
+                                <h3 class="text-white">Gray 800</h3>
+                                <p class="text-white mb-0">#424242</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4" style="background-color: rgba(33, 33, 33, 1);">
+                                <h3 class="text-white">Gray 900</h3>
+                                <p class="text-white mb-0">#212121 (Darkest Gray)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        
+        // Check for saved theme preference or default to light theme
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        
+        // Apply the saved theme
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            themeIcon.classList.remove('fa-sun');
+            themeIcon.classList.add('fa-moon');
+        }
+        
+        // Toggle theme when button is clicked
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                
+                if (currentTheme === 'dark') {
+                    // Switch to light theme
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                } else {
+                    // Switch to dark theme
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
