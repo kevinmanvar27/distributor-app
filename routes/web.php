@@ -157,6 +157,9 @@ Route::middleware('auth')->group(function () {
             'destroy' => 'admin.products.destroy',
         ]);
         
+        // Additional product routes
+        Route::get('/products/{product}/details', [ProductController::class, 'showDetails'])->name('admin.products.details');
+        
         // Media Library Routes
         Route::get('/media', [ProductController::class, 'getMedia'])->name('admin.media.index');
         Route::post('/media', [ProductController::class, 'storeMedia'])->name('admin.media.store');

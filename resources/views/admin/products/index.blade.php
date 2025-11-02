@@ -35,7 +35,7 @@
                                 @endif
                                 
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle">
+                                    <table class="table table-hover align-middle" id="productsTable">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>ID</th>
@@ -56,7 +56,9 @@
                                                         <div class="d-flex align-items-center">
                                                             @if($product->mainPhoto)
                                                                 <img src="{{ $product->mainPhoto->url }}" 
-                                                                     class="rounded me-3" width="40" height="40" alt="{{ $product->name }}">
+                                                                     class="rounded me-3" width="40" height="40" alt="{{ $product->name }}" 
+                                                                     onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'bg-light rounded me-3 d-flex align-items-center justify-content-center\' style=\'width: 40px; height: 40px;\'><i class=\'fas fa-image text-muted\'></i></div><div><div class=\'fw-medium\'>{{ $product->name }}</div></div>';"
+                                                                     loading="lazy">
                                                             @else
                                                                 <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                                                     <i class="fas fa-image text-muted"></i>
@@ -102,14 +104,12 @@
                                                     </td>
                                                     <td>
                                                         <div class="btn-group btn-group-sm" role="group">
-                                                            @can('update', $product)
-                                                            <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-outline-primary rounded-start-pill px-3">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
-                                                            @endcan
-                                                            @can('view', $product)
-                                                            <a href="{{ route('admin.products.show', $product) }}" class="btn btn-outline-info px-3">
+                                                            <button type="button" class="btn btn-outline-info rounded-start-pill px-3" data-product-id="{{ $product->id }}" onclick="showProductDetails(this.getAttribute('data-product-id'))">
                                                                 <i class="fas fa-eye"></i>
+                                                            </button>
+                                                            @can('update', $product)
+                                                            <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-outline-primary px-3">
+                                                                <i class="fas fa-edit"></i>
                                                             </a>
                                                             @endcan
                                                             @can('delete', $product)
@@ -125,25 +125,29 @@
                                                     </td>
                                                 </tr>
                                             @empty
-                                                <tr>
-                                                    <td colspan="8" class="text-center py-5">
-                                                        <div class="text-muted">
-                                                            <i class="fas fa-box-open fa-2x mb-3"></i>
-                                                            <p class="mb-0">No products found</p>
-                                                            <p class="small">Try creating a new product</p>
-                                                        </div>
-                                                    </td>
-                                                </tr>
+                                                {{-- Handled by DataTables JavaScript --}}
                                             @endforelse
                                         </tbody>
                                     </table>
                                 </div>
                                 
-                                @if($products->hasPages())
-                                    <div class="d-flex justify-content-center mt-4">
-                                        {{ $products->links() }}
+                                <!-- Modal for showing product details -->
+                                <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="productModalLabel">Product Details</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body" id="productModalBody">
+                                                <!-- Content will be loaded here via AJAX -->
+                                            </div>
+                                            <div class="modal-footer" id="productModalFooter">
+                                                <!-- Buttons will be added here dynamically -->
+                                            </div>
+                                        </div>
                                     </div>
-                                @endif
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -154,4 +158,120 @@
         </main>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#productsTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "ordering": true,
+            "searching": true,
+            "info": true,
+            "paging": true,
+            "columnDefs": [
+                { "orderable": false, "targets": [7] } // Disable sorting on Actions column
+            ],
+            "language": {
+                "search": "Search:",
+                "lengthMenu": "Show _MENU_ entries per page",
+                "info": "Showing _START_ to _END_ of _TOTAL_ products",
+                "infoEmpty": "Showing 0 to 0 of 0 products",
+                "infoFiltered": "(filtered from _MAX_ total products)",
+                "paginate": {
+                    "first": "First",
+                    "last": "Last",
+                    "next": "Next",
+                    "previous": "Previous"
+                }
+            },
+            "aoColumns": [
+                null, // ID
+                null, // Product
+                null, // MRP
+                null, // Selling Price
+                null, // Stock Status
+                null, // Status
+                null, // Created
+                null  // Actions
+            ],
+            "preDrawCallback": function(settings) {
+                // Ensure consistent column count
+                if ($('#productsTable tbody tr').length === 0) {
+                    $('#productsTable tbody').html('<tr><td colspan="8" class="text-center py-5"><div class="text-muted"><i class="fas fa-box-open fa-2x mb-3"></i><p class="mb-0">No products found</p><p class="small">Try creating a new product</p></div></td></tr>');
+                }
+            },
+            "drawCallback": function(settings) {
+                // Reinitialize tooltips after each draw
+                $('[data-bs-toggle="tooltip"]').tooltip();
+            }
+        });
+        // Adjust select width after DataTable initializes
+        $('.dataTables_length select').css('width', '80px');
+    });
+    
+    // Function to show product details in modal
+    function showProductDetails(productId) {
+        $.ajax({
+            url: '/admin/products/' + productId + '/details',
+            type: 'GET',
+            success: function(data) {
+                // Set the modal body content
+                $('#productModalBody').html(data);
+                
+                // Clear the modal footer since buttons are now in the partial view
+                $('#productModalFooter').html(`
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Close
+                    </button>
+                `);
+                
+                // Add event listener for SEO toggle
+                $('#toggle-seo-settings-modal').on('click', function() {
+                    const $icon = $(this).find('i');
+                    const $text = $(this).find('span');
+                    if ($icon.hasClass('fa-chevron-down')) {
+                        $icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                        $text.text('Collapse');
+                        $('#seo-settings-content-modal').removeClass('d-none');
+                    } else {
+                        $icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                        $text.text('Expand');
+                        $('#seo-settings-content-modal').addClass('d-none');
+                    }
+                });
+                
+                // Show the modal
+                $('#productModal').modal('show');
+            },
+            error: function() {
+                alert('Error loading product details.');
+            }
+        });
+    }
+    
+    // Function to delete product
+    function deleteProduct(productId) {
+        if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+            $.ajax({
+                url: '/admin/products/' + productId,
+                type: 'DELETE',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    _method: 'DELETE'
+                },
+                success: function(response) {
+                    $('#productModal').modal('hide');
+                    // Reload the page to reflect changes
+                    location.reload();
+                },
+                error: function() {
+                    alert('Error deleting product.');
+                }
+            });
+        }
+    }
+</script>
 @endsection

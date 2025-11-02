@@ -73,7 +73,8 @@
                                             <div class="mb-4">
                                                 <label class="form-label fw-bold">Stock Status</label>
                                                 <div class="form-check form-switch mb-2">
-                                                    <input class="form-check-input" type="checkbox" id="in_stock" name="in_stock" {{ old('in_stock', true) ? 'checked' : '' }}>
+                                                    <input type="hidden" name="in_stock" value="0">
+                                                    <input class="form-check-input" type="checkbox" id="in_stock" name="in_stock" value="1" {{ old('in_stock', true) ? 'checked' : '' }}>
                                                     <label class="form-check-label" for="in_stock">
                                                         <span id="stock-status-text">In Stock</span>
                                                     </label>

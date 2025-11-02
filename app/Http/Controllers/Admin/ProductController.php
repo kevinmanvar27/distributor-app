@@ -44,7 +44,7 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'mrp' => 'required|numeric|min:0.01',
             'selling_price' => 'nullable|numeric|lt:mrp',
-            'in_stock' => 'boolean',
+            'in_stock' => 'required|boolean',
             'stock_quantity' => 'nullable|integer|min:0',
             'status' => 'required|in:draft,published',
             'main_photo_id' => 'nullable|exists:media,id',
@@ -90,6 +90,17 @@ class ProductController extends Controller
     }
 
     /**
+     * Display the specified product details for modal view.
+     */
+    public function showDetails(Product $product)
+    {
+        $this->authorize('view', $product);
+        
+        // Return only the content section for the modal without extending layout
+        return view('admin.products._product_details', compact('product'));
+    }
+
+    /**
      * Show the form for editing the specified product.
      */
     public function edit(Product $product)
@@ -114,7 +125,7 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'mrp' => 'required|numeric|min:0.01',
             'selling_price' => 'nullable|numeric|lt:mrp',
-            'in_stock' => 'boolean',
+            'in_stock' => 'required|boolean',
             'stock_quantity' => 'nullable|integer|min:0',
             'status' => 'required|in:draft,published',
             'main_photo_id' => 'nullable|exists:media,id',

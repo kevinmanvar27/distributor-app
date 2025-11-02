@@ -189,9 +189,10 @@ $(document).ready(function() {
         const $uploadIndicator = $('<div class="mb-4"><div class="card border-0 shadow-sm h-100"><div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Uploading...</span></div></div></div></div>');
         $('#media-library-items').prepend($uploadIndicator);
         
-        // Hide existing content during upload
-        $('#media-library-items .mb-4:not(:first-child)').addClass('d-none');
-        $('#no-media-message').addClass('d-none');
+        // Instead of hiding existing content, we'll just add the new item at the top
+        // This prevents the blinking/flickering effect
+        // $('#media-library-items .mb-4:not(:first-child)').addClass('d-none');
+        // $('#no-media-message').addClass('d-none');
         
         // Send AJAX request to upload media
         $.ajaxSetup({
@@ -220,8 +221,8 @@ $(document).ready(function() {
                 // Remove upload indicator
                 $uploadIndicator.remove();
                 
-                // Show existing content again
-                $('#media-library-items .mb-4').removeClass('d-none');
+                // No need to show existing content again since we never hid it
+                // $('#media-library-items .mb-4').removeClass('d-none');
                 
                 if (data.success) {
                     // Add the new item to the top of the grid without full refresh
@@ -289,18 +290,26 @@ $(document).ready(function() {
                     }
                 } else {
                     console.error('Upload failed:', data.error);
-                    // Show error message if needed
+                    // Show error message to user
+                    alert('Upload failed: ' + (data.error || 'Unknown error occurred'));
+                    
+                    // Preserve selected media state - don't clear selections on error
+                    // The selectedMedia array and UI selections should remain unchanged
                 }
             },
             error: function(xhr, status, error) {
                 // Remove upload indicator
                 $uploadIndicator.remove();
                 
-                // Show existing content again
-                $('#media-library-items .mb-4').removeClass('d-none');
+                // No need to show existing content again since we never hid it
+                // $('#media-library-items .mb-4').removeClass('d-none');
                 
                 console.error('Upload failed:', error);
-                // Show error message if needed
+                // Show error message to user
+                alert('Upload failed: ' + error);
+                
+                // Preserve selected media state - don't clear selections on error
+                // The selectedMedia array and UI selections should remain unchanged
             }
         });
     }
