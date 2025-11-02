@@ -24,6 +24,7 @@ class Product extends Model
         'status',
         'main_photo_id',
         'product_gallery',
+        'product_categories', // Added for category/subcategory storage
         'meta_title',
         'meta_description',
         'meta_keywords',
@@ -37,6 +38,7 @@ class Product extends Model
     protected $casts = [
         'in_stock' => 'boolean',
         'product_gallery' => 'array',
+        'product_categories' => 'array', // Added for category/subcategory storage
         'mrp' => 'decimal:2',
         'selling_price' => 'decimal:2',
     ];

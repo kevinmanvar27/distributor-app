@@ -175,6 +175,11 @@ Route::middleware('auth')->group(function () {
         Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('admin.categories.update');
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
         
+        // AJAX routes for product management
+        Route::get('/categories-all', [CategoryController::class, 'getAllCategories'])->name('admin.categories.all');
+        Route::post('/categories/create', [CategoryController::class, 'createCategory'])->name('admin.categories.create.ajax');
+        Route::post('/subcategories/create', [CategoryController::class, 'createSubCategory'])->name('admin.subcategories.create.ajax');
+        
         // Subcategory routes
         Route::get('/categories/{category}/subcategories', [CategoryController::class, 'getSubCategories'])->name('admin.categories.subcategories');
         Route::post('/subcategories', [CategoryController::class, 'storeSubCategory'])->name('admin.subcategories.store');

@@ -43,7 +43,7 @@
                                     </div>
                                 @endif
                                 
-                                <form action="{{ route('admin.products.update', $product) }}" method="POST" enctype="multipart/form-data">
+                                <form action="{{ route('admin.products.update', $product) }}" method="POST" enctype="multipart/form-data" id="product-form">
                                     @csrf
                                     @method('PUT')
                                     
@@ -96,12 +96,78 @@
                                         </div>
                                         
                                         <div class="col-lg-4">
+                                            <!-- Category Selection -->
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">Categories</label>
+                                                <div id="category-selection">
+                                                    @if(isset($categories) && $categories->count() > 0)
+                                                        @foreach($categories as $category)
+                                                            @php
+                                                                // Check if category is selected
+                                                                $isCategorySelected = false;
+                                                                if (is_array(old('product_categories')) && isset(old('product_categories')[$category->id])) {
+                                                                    $isCategorySelected = true;
+                                                                } elseif (is_array($product->product_categories) && in_array($category->id, array_column($product->product_categories, 'category_id'))) {
+                                                                    $isCategorySelected = true;
+                                                                }
+                                                            @endphp
+                                                            
+                                                            <div class="form-check mb-2 category-item" data-category-id="{{ $category->id }}">
+                                                                <input class="form-check-input category-checkbox" type="checkbox" id="category_{{ $category->id }}" value="{{ $category->id }}" name="product_categories[{{ $category->id }}][category_id]" {{ $isCategorySelected ? 'checked' : '' }}>
+                                                                <label class="form-check-label fw-bold" for="category_{{ $category->id }}">
+                                                                    {{ $category->name }}
+                                                                </label>
+                                                                
+                                                                @if($category->subCategories->count() > 0)
+                                                                    @php
+                                                                        // Check if subcategories should be visible
+                                                                        $showSubcategories = $isCategorySelected;
+                                                                    @endphp
+                                                                    
+                                                                    <div class="subcategory-container ms-4 mt-2 {{ $showSubcategories ? '' : 'd-none' }}" id="subcategory_container_{{ $category->id }}">
+                                                                        @foreach($category->subCategories as $subcategory)
+                                                                            @php
+                                                                                // Check if subcategory is selected
+                                                                                $isSubcategorySelected = false;
+                                                                                if ((is_array(old('product_categories')) && isset(old('product_categories')[$category->id]['subcategory_ids']) && in_array($subcategory->id, old('product_categories')[$category->id]['subcategory_ids']))) {
+                                                                                    $isSubcategorySelected = true;
+                                                                                } elseif (is_array($product->product_categories) && in_array($category->id, array_column($product->product_categories, 'category_id')) && 
+                                                                                    isset(array_column($product->product_categories, 'subcategory_ids', 'category_id')[$category->id]) && 
+                                                                                    in_array($subcategory->id, array_column($product->product_categories, 'subcategory_ids', 'category_id')[$category->id])) {
+                                                                                    $isSubcategorySelected = true;
+                                                                                }
+                                                                            @endphp
+                                                                            
+                                                                            <div class="form-check mb-1">
+                                                                                <input class="form-check-input subcategory-checkbox" type="checkbox" id="subcategory_{{ $subcategory->id }}" value="{{ $subcategory->id }}" name="product_categories[{{ $category->id }}][subcategory_ids][]" data-category-id="{{ $category->id }}" {{ $isSubcategorySelected ? 'checked' : '' }}>
+                                                                                <label class="form-check-label" for="subcategory_{{ $subcategory->id }}">
+                                                                                    {{ $subcategory->name }}
+                                                                                </label>
+                                                                            </div>
+                                                                        @endforeach
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
+                                                    @else
+                                                        <p class="text-muted">No categories available. Please create categories first.</p>
+                                                    @endif
+                                                </div>
+                                                <div class="mt-2">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" id="manage-categories-btn">
+                                                        <i class="fas fa-plus me-1"></i> Manage Categories & Subcategories
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-lg-8">
                                             <div class="mb-4">
                                                 <label class="form-label fw-bold">Main Photo</label>
                                                 <div class="border rounded-3 p-3 text-center" id="main-photo-preview">
                                                     @if($product->mainPhoto)
                                                         <div class="bg-light d-flex align-items-center justify-content-center mb-2" style="height: 150px;">
-                                                            <img src="{{ $product->mainPhoto->url }}" class="img-fluid" alt="{{ $product->name }}" style="max-height: 100%; max-width: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-image fa-2x text-muted\\'></i>'">
+                                                            <img src="{{ $product->mainPhoto->url }}" class="img-fluid" alt="{{ $product->name }}" style="max-height: 100%; max-width: 100%; object-fit: cover;">
                                                         </div>
                                                     @endif
                                                     <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#mediaLibraryModal" data-target="main_photo">
@@ -128,7 +194,7 @@
                                                                 @if($media)
                                                                 <div class="position-relative gallery-item" data-id="{{ $mediaId }}" draggable="true">
                                                                     <div class="bg-light d-flex align-items-center justify-content-center" style="height: 80px; width: 80px;">
-                                                                        <img src="{{ $media->url }}" class="img-fluid" alt="Gallery image" style="max-height: 100%; max-width: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-image text-muted\\'></i>'">
+                                                                        <img src="{{ $media->url }}" class="img-fluid" alt="Gallery image" style="max-height: 100%; max-width: 100%; object-fit: cover;">
                                                                     </div>
                                                                     <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 rounded-circle p-1 remove-gallery-item" data-id="{{ $mediaId }}">
                                                                         <i class="fas fa-times"></i>
@@ -249,6 +315,66 @@
                 </button>
                 <button type="button" class="btn btn-primary rounded-pill px-4" id="select-media-btn" disabled>
                     <i class="fas fa-check me-2"></i> Select
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Unified Category Management Modal -->
+<div class="modal fade" id="categoryManagementModal" tabindex="-1" aria-labelledby="categoryManagementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categoryManagementModalLabel">Manage Categories & Subcategories</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3">Categories</h6>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control rounded-pill" id="new-category-name" placeholder="Enter category name">
+                                <button class="btn btn-outline-primary rounded-pill" type="button" id="add-category-btn">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="categories-list" class="border rounded-3 p-3" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Categories will be loaded here dynamically -->
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3">Subcategories</h6>
+                        <div class="mb-3">
+                            <select class="form-select rounded-pill mb-2" id="subcategory-parent-category">
+                                <option value="">Select a category first</option>
+                                @if(isset($categories))
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                            <div class="input-group">
+                                <input type="text" class="form-control rounded-pill" id="new-subcategory-name" placeholder="Enter subcategory name">
+                                <button class="btn btn-outline-primary rounded-pill" type="button" id="add-subcategory-btn" disabled>
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="subcategories-list" class="border rounded-3 p-3" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Subcategories will be loaded here dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Close
+                </button>
+                <button type="button" class="btn btn-primary rounded-pill" id="save-category-selections">
+                    <i class="fas fa-save me-2"></i>Save Selections
                 </button>
             </div>
         </div>

@@ -61,17 +61,286 @@ $(document).ready(function() {
         }
     });
     
-    // Remove main photo
-    $('#remove-main-photo').on('click', function() {
-        $('#main_photo_id').val('');
-        $('#main-photo-preview').html(`
-            <i class="fas fa-image fa-2x text-muted mb-2"></i>
-            <p class="text-muted mb-2">No image selected</p>
-            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#mediaLibraryModal" data-target="main_photo">
-                <i class="fas fa-folder-open me-1"></i> Select from Media Library
-            </button>
-        `);
-    });
+    // Category functionality
+    function initializeCategorySelection() {
+        // Handle category checkbox changes
+        $('.category-checkbox').on('change', function() {
+            const categoryId = $(this).val();
+            const $subcategoryContainer = $('#subcategory_container_' + categoryId);
+            
+            if ($(this).is(':checked')) {
+                // Show subcategories when category is selected
+                $subcategoryContainer.removeClass('d-none');
+            } else {
+                // Hide and deselect subcategories when category is deselected
+                $subcategoryContainer.addClass('d-none');
+                $subcategoryContainer.find('.subcategory-checkbox').prop('checked', false);
+            }
+        });
+        
+        // Handle "Manage Categories & Subcategories" button
+        $('#manage-categories-btn').on('click', function() {
+            loadCategoriesForManagement();
+            $('#categoryManagementModal').modal('show');
+        });
+        
+        // Handle parent category selection for subcategories
+        $('#subcategory-parent-category').on('change', function() {
+            const categoryId = $(this).val();
+            if (categoryId) {
+                $('#add-subcategory-btn').prop('disabled', false);
+                loadSubcategoriesForManagement(categoryId);
+            } else {
+                $('#add-subcategory-btn').prop('disabled', true);
+                $('#subcategories-list').html('');
+            }
+        });
+        
+        // Handle adding new category
+        $('#add-category-btn').on('click', function() {
+            const categoryName = $('#new-category-name').val().trim();
+            
+            if (!categoryName) {
+                alert('Please enter a category name');
+                return;
+            }
+            
+            // Make AJAX call to create the category
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            
+            $.ajax({
+                url: '/admin/categories/create',
+                method: 'POST',
+                data: {
+                    name: categoryName,
+                    description: ''
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Category "' + categoryName + '" created successfully');
+                        
+                        // Clear the input
+                        $('#new-category-name').val('');
+                        
+                        // Reload categories
+                        loadCategoriesForManagement();
+                        
+                        // Also update the main category selection area
+                        updateMainCategorySelection(response.category);
+                    } else {
+                        alert('Error creating category');
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        let errors = xhr.responseJSON.errors;
+                        let errorMessages = '';
+                        for (let field in errors) {
+                            errorMessages += errors[field][0] + '\n';
+                        }
+                        alert('Error creating category:\n' + errorMessages);
+                    } else {
+                        alert('Error creating category');
+                    }
+                }
+            });
+        });
+        
+        // Handle adding new subcategory
+        $('#add-subcategory-btn').on('click', function() {
+            const subcategoryName = $('#new-subcategory-name').val().trim();
+            const parentCategoryId = $('#subcategory-parent-category').val();
+            
+            if (!subcategoryName) {
+                alert('Please enter a subcategory name');
+                return;
+            }
+            
+            if (!parentCategoryId) {
+                alert('Please select a parent category');
+                return;
+            }
+            
+            // Make AJAX call to create the subcategory
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            
+            $.ajax({
+                url: '/admin/subcategories/create',
+                method: 'POST',
+                data: {
+                    category_id: parentCategoryId,
+                    name: subcategoryName,
+                    description: ''
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Subcategory "' + subcategoryName + '" created successfully');
+                        
+                        // Clear the input
+                        $('#new-subcategory-name').val('');
+                        
+                        // Reload subcategories
+                        loadSubcategoriesForManagement(parentCategoryId);
+                        
+                        // Also update the main subcategory selection area
+                        updateMainSubcategorySelection(response.subcategory);
+                    } else {
+                        alert('Error creating subcategory');
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        let errors = xhr.responseJSON.errors;
+                        let errorMessages = '';
+                        for (let field in errors) {
+                            errorMessages += errors[field][0] + '\n';
+                        }
+                        alert('Error creating subcategory:\n' + errorMessages);
+                    } else {
+                        alert('Error creating subcategory');
+                    }
+                }
+            });
+        });
+        
+        // Handle saving category selections
+        $('#save-category-selections').on('click', function() {
+            // Close the modal
+            $('#categoryManagementModal').modal('hide');
+        });
+    }
+    
+    // Load categories for management modal
+    function loadCategoriesForManagement() {
+        // Make AJAX call to load categories
+        $.ajax({
+            url: '/admin/categories-all',
+            method: 'GET',
+            success: function(categories) {
+                let html = '';
+                if (categories.length > 0) {
+                    categories.forEach(function(category) {
+                        html += `
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="manage_category_${category.id}" value="${category.id}" data-category-name="${category.name}">
+                                <label class="form-check-label" for="manage_category_${category.id}">
+                                    ${category.name}
+                                </label>
+                            </div>
+                        `;
+                    });
+                } else {
+                    html = '<p class="text-muted">No categories available</p>';
+                }
+                
+                $('#categories-list').html(html);
+                
+                // Update the parent category dropdown for subcategories
+                let dropdownHtml = '<option value="">Select a category first</option>';
+                categories.forEach(function(category) {
+                    dropdownHtml += `<option value="${category.id}">${category.name}</option>`;
+                });
+                $('#subcategory-parent-category').html(dropdownHtml);
+            },
+            error: function() {
+                $('#categories-list').html('<p class="text-danger">Error loading categories</p>');
+            }
+        });
+    }
+    
+    // Load subcategories for management modal
+    function loadSubcategoriesForManagement(categoryId) {
+        // Make AJAX call to load subcategories for the selected category
+        $.ajax({
+            url: '/admin/categories/' + categoryId + '/subcategories',
+            method: 'GET',
+            success: function(response) {
+                let html = '';
+                if (response.data && response.data.length > 0) {
+                    response.data.forEach(function(subcategory) {
+                        html += `
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="manage_subcategory_${subcategory.id}" value="${subcategory.id}">
+                                <label class="form-check-label" for="manage_subcategory_${subcategory.id}">
+                                    ${subcategory.name}
+                                </label>
+                            </div>
+                        `;
+                    });
+                } else {
+                    html = '<p class="text-muted">No subcategories available</p>';
+                }
+                
+                $('#subcategories-list').html(html);
+            },
+            error: function() {
+                $('#subcategories-list').html('<p class="text-danger">Error loading subcategories</p>');
+            }
+        });
+    }
+    
+    // Update main category selection area with new category
+    function updateMainCategorySelection(category) {
+        // Check if the category already exists in the main selection area
+        if ($('#category_' + category.id).length === 0) {
+            const categoryHtml = `
+                <div class="form-check mb-2 category-item" data-category-id="${category.id}">
+                    <input class="form-check-input category-checkbox" type="checkbox" id="category_${category.id}" value="${category.id}" name="product_categories[${category.id}][category_id]">
+                    <label class="form-check-label fw-bold" for="category_${category.id}">
+                        ${category.name}
+                    </label>
+                    <div class="subcategory-container ms-4 mt-2 d-none" id="subcategory_container_${category.id}"></div>
+                </div>
+            `;
+            
+            // Add the new category to the main selection area
+            $('#category-selection').append(categoryHtml);
+            
+            // Reattach event handlers
+            $('.category-checkbox').off('change').on('change', function() {
+                const categoryId = $(this).val();
+                const $subcategoryContainer = $('#subcategory_container_' + categoryId);
+                
+                if ($(this).is(':checked')) {
+                    // Show subcategories when category is selected
+                    $subcategoryContainer.removeClass('d-none');
+                } else {
+                    // Hide and deselect subcategories when category is deselected
+                    $subcategoryContainer.addClass('d-none');
+                    $subcategoryContainer.find('.subcategory-checkbox').prop('checked', false);
+                }
+            });
+        }
+    }
+    
+    // Update main subcategory selection area with new subcategory
+    function updateMainSubcategorySelection(subcategory) {
+        // Check if the subcategory already exists in the main selection area
+        if ($('#subcategory_' + subcategory.id).length === 0) {
+            const subcategoryHtml = `
+                <div class="form-check mb-1">
+                    <input class="form-check-input subcategory-checkbox" type="checkbox" id="subcategory_${subcategory.id}" value="${subcategory.id}" name="product_categories[${subcategory.category_id}][subcategory_ids][]" data-category-id="${subcategory.category_id}">
+                    <label class="form-check-label" for="subcategory_${subcategory.id}">
+                        ${subcategory.name}
+                    </label>
+                </div>
+            `;
+            
+            // Add the new subcategory to the main selection area
+            $('#subcategory_container_' + subcategory.category_id).append(subcategoryHtml);
+        }
+    }
+    
+    // Initialize category selection
+    initializeCategorySelection();
     
     // Media library functionality
     let selectedMedia = [];
@@ -525,7 +794,7 @@ $(document).ready(function() {
                 
                 // Add remove functionality
                 $('#remove-main-photo').on('click', function() {
-                    $('#main_photo_id').val('');
+                    $('#main_photo_id').val(''); // Set to empty string instead of null
                     $('#main-photo-preview').html(`
                         <i class="fas fa-image fa-2x text-muted mb-2"></i>
                         <p class="text-muted mb-2">No image selected</p>

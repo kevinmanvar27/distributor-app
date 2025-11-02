@@ -245,4 +245,70 @@ class CategoryController extends Controller
         
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Get all categories for product management.
+     */
+    public function getAllCategories()
+    {
+        $this->authorize('viewAny', Category::class);
+        
+        $categories = Category::with('subCategories')->where('is_active', true)->get();
+        
+        return response()->json($categories);
+    }
+
+    /**
+     * Create a new category via AJAX.
+     */
+    public function createCategory(Request $request)
+    {
+        $this->authorize('create', Category::class);
+        
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+        
+        $data = $request->only(['name', 'description']);
+        $data['slug'] = Str::slug($request->name);
+        $data['is_active'] = true;
+        
+        $category = Category::create($data);
+        
+        return response()->json(['success' => true, 'category' => $category]);
+    }
+
+    /**
+     * Create a new subcategory via AJAX.
+     */
+    public function createSubCategory(Request $request)
+    {
+        $this->authorize('create', SubCategory::class);
+        
+        $validator = Validator::make($request->all(), [
+            'category_id' => 'required|exists:categories,id',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+        
+        $data = $request->only(['category_id', 'name', 'description']);
+        $data['slug'] = Str::slug($request->name);
+        $data['is_active'] = true;
+        
+        $subCategory = SubCategory::create($data);
+        
+        // Load the parent category relationship
+        $subCategory->load('category');
+        
+        return response()->json(['success' => true, 'subcategory' => $subCategory]);
+    }
 }

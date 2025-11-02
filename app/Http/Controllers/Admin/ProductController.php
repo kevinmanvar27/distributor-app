@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Media;
+use App\Models\Category;
+use App\Models\SubCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -29,7 +32,10 @@ class ProductController extends Controller
     {
         $this->authorize('create', Product::class);
         
-        return view('admin.products.create');
+        // Get all active categories with their subcategories
+        $categories = Category::with('subCategories')->where('is_active', true)->get();
+        
+        return view('admin.products.create', compact('categories'));
     }
 
     /**
@@ -38,6 +44,9 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', Product::class);
+        
+        // Log the request data for debugging
+        Log::info('Product store request data:', $request->all());
         
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -49,6 +58,10 @@ class ProductController extends Controller
             'status' => 'required|in:draft,published',
             'main_photo_id' => 'nullable|exists:media,id',
             'product_gallery' => 'nullable',
+            'product_categories' => 'nullable|array',
+            'product_categories.*.category_id' => 'required|exists:categories,id',
+            'product_categories.*.subcategory_ids' => 'nullable|array',
+            'product_categories.*.subcategory_ids.*' => 'nullable|exists:sub_categories,id',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:255',
@@ -64,8 +77,16 @@ class ProductController extends Controller
             'meta_description', 'meta_keywords'
         ]);
         
+        // Log the data that will be saved
+        Log::info('Product data to be saved:', $data);
+        
         // Handle stock quantity - set to 0 if not in stock or not provided
         $data['stock_quantity'] = $request->in_stock ? ($request->stock_quantity ?? 0) : 0;
+        
+        // Ensure stock_quantity is never null
+        if (!isset($data['stock_quantity']) || is_null($data['stock_quantity'])) {
+            $data['stock_quantity'] = 0;
+        }
         
         // Handle product gallery - convert from JSON string to array if needed
         $productGallery = $request->product_gallery;
@@ -74,7 +95,20 @@ class ProductController extends Controller
         }
         $data['product_gallery'] = is_array($productGallery) ? $productGallery : [];
         
+        // Handle product categories - convert from JSON string to array if needed
+        $productCategories = $request->product_categories;
+        if (is_string($productCategories)) {
+            $productCategories = json_decode($productCategories, true);
+        }
+        $data['product_categories'] = is_array($productCategories) ? $productCategories : [];
+        
+        // Log the final data before creating the product
+        Log::info('Final product data before creation:', $data);
+        
         $product = Product::create($data);
+        
+        // Log the created product
+        Log::info('Product created:', $product->toArray());
         
         return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
     }
@@ -110,7 +144,10 @@ class ProductController extends Controller
         // Load the main photo relationship
         $product->load('mainPhoto');
         
-        return view('admin.products.edit', compact('product'));
+        // Get all active categories with their subcategories
+        $categories = Category::with('subCategories')->where('is_active', true)->get();
+        
+        return view('admin.products.edit', compact('product', 'categories'));
     }
 
     /**
@@ -130,6 +167,10 @@ class ProductController extends Controller
             'status' => 'required|in:draft,published',
             'main_photo_id' => 'nullable|exists:media,id',
             'product_gallery' => 'nullable',
+            'product_categories' => 'nullable|array',
+            'product_categories.*.category_id' => 'required|exists:categories,id',
+            'product_categories.*.subcategory_ids' => 'nullable|array',
+            'product_categories.*.subcategory_ids.*' => 'nullable|exists:sub_categories,id',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:255',
@@ -148,12 +189,27 @@ class ProductController extends Controller
         // Handle stock quantity - set to 0 if not in stock or not provided
         $data['stock_quantity'] = $request->in_stock ? ($request->stock_quantity ?? 0) : 0;
         
+        // Ensure stock_quantity is never null
+        if (!isset($data['stock_quantity']) || is_null($data['stock_quantity'])) {
+            $data['stock_quantity'] = 0;
+        }
+        
         // Handle product gallery - convert from JSON string to array if needed
         $productGallery = $request->product_gallery;
         if (is_string($productGallery)) {
             $productGallery = json_decode($productGallery, true);
         }
         $data['product_gallery'] = is_array($productGallery) ? $productGallery : [];
+        
+        // Handle product categories - convert from JSON string to array if needed
+        $productCategories = $request->product_categories;
+        if (is_string($productCategories)) {
+            $productCategories = json_decode($productCategories, true);
+        }
+        $data['product_categories'] = is_array($productCategories) ? $productCategories : [];
+        
+        // Log the final data before updating the product
+        Log::info('Final product data before update:', $data);
         
         $product->update($data);
         

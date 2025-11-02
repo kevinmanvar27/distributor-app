@@ -3,9 +3,6 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\View;
-use App\Models\Setting;
-use App\Services\NotificationService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,9 +11,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(NotificationService::class, function ($app) {
-            return new NotificationService();
-        });
+        //
     }
 
     /**
@@ -24,10 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Share settings with all views
-        View::composer('*', function ($view) {
-            $setting = Setting::first();
-            $view->with('setting', $setting);
-        });
+        // Load helper functions
+        foreach (glob(app_path('Helpers') . '/*.php') as $file) {
+            require_once $file;
+        }
     }
 }

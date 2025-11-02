@@ -576,6 +576,16 @@ a:hover {
     border-radius: 10px;
     overflow: hidden;
     position: relative;
+    aspect-ratio: 1/1; /* Fixed square aspect ratio */
+    display: flex;
+    flex-direction: column;
+    max-width: 200px; /* Set maximum width */
+    max-height: 200px; /* Set maximum height */
+    width: 100%; /* Ensure it takes full width of container */
+    height: 100%; /* Ensure it takes full height */
+    min-width: 0; /* Fix for flexbox issues */
+    min-height: 0; /* Fix for flexbox issues */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
 .media-item:hover {
@@ -637,33 +647,70 @@ a:hover {
     transform: scale(1.1);
 }
 
-/* Masonry grid layout */
+/* Fixed size container for media items */
 #media-library-items {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     grid-gap: 1rem;
     align-items: start;
-}
-
-#media-library-items .col-3 {
     width: 100%;
-    margin-bottom: 0;
+    box-sizing: border-box;
 }
 
-#media-library-items .card-img-top {
-    height: auto;
-    aspect-ratio: 4/3;
+#media-library-items .mb-4 {
+    margin-bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.card-img-top {
+    height: 150px;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+    background-color: var(--secondary);
+    max-width: 200px; /* Set maximum width */
+    max-height: 150px; /* Set maximum height */
+    width: 100%; /* Ensure it takes full width of container */
+    position: relative;
+    box-sizing: border-box;
 }
 
-#media-library-items .card-img-top img {
-    max-height: 100%;
+.card-img-top img {
     max-width: 100%;
+    max-height: 100%;
     object-fit: cover;
+    width: auto;
+    height: auto;
+    display: block;
+    position: relative;
+}
+
+/* Ensure images are properly sized even after dynamic loading */
+#media-library-items .card-img-top img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    width: auto;
+    height: auto;
+    display: block;
+}
+
+/* Force image sizing to prevent overflow */
+.media-item .card-img-top img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: cover !important;
+}
+
+/* Additional fix for grid items */
+#media-library-items .col-3 {
     width: 100%;
-    height: 100%;
+    margin-bottom: 0;
+    box-sizing: border-box;
 }
 
 /* Drag and drop styles */
@@ -694,6 +741,7 @@ a:hover {
 #no-media-message {
     text-align: center;
     padding: 2rem;
+    grid-column: 1 / -1; /* Span full width */
 }
 
 #no-media-message .upload-area {
