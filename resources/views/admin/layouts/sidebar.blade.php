@@ -35,6 +35,14 @@
                 </li>
             @endif
             
+            <!-- Category Management Section -->
+            <li class="nav-item mb-1">
+                <a class="nav-link {{ request()->routeIs('admin.categories*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.categories.index') }}">
+                    <i class="fas fa-tags me-3"></i>
+                    <span class="sidebar-text">Category Management</span>
+                </a>
+            </li>
+            
             @if(auth()->user()->hasPermission('manage_settings'))
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('admin.settings') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.settings') }}">

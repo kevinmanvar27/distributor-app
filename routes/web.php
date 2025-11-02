@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\CategoryController;
 
 // Redirect root URL to admin login page
 Route::get('/', function () {
@@ -164,5 +165,21 @@ Route::middleware('auth')->group(function () {
         Route::get('/media', [ProductController::class, 'getMedia'])->name('admin.media.index');
         Route::post('/media', [ProductController::class, 'storeMedia'])->name('admin.media.store');
         Route::delete('/media/{media}', [ProductController::class, 'destroyMedia'])->name('admin.media.destroy');
+    });
+    
+    // Category Management Routes
+    Route::prefix('admin')->group(function () {
+        Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories.index');
+        Route::post('/categories', [CategoryController::class, 'store'])->name('admin.categories.store');
+        Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('admin.categories.show');
+        Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('admin.categories.update');
+        Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
+        
+        // Subcategory routes
+        Route::get('/categories/{category}/subcategories', [CategoryController::class, 'getSubCategories'])->name('admin.categories.subcategories');
+        Route::post('/subcategories', [CategoryController::class, 'storeSubCategory'])->name('admin.subcategories.store');
+        Route::get('/subcategories/{subCategory}', [CategoryController::class, 'showSubCategory'])->name('admin.subcategories.show');
+        Route::put('/subcategories/{subCategory}', [CategoryController::class, 'updateSubCategory'])->name('admin.subcategories.update');
+        Route::delete('/subcategories/{subCategory}', [CategoryController::class, 'destroySubCategory'])->name('admin.subcategories.destroy');
     });
 });
