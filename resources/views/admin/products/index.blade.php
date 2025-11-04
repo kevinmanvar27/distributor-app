@@ -20,7 +20,7 @@
                                     <p class="mb-0 text-muted">Manage all products</p>
                                 </div>
                                 @can('create', App\Models\Product::class)
-                                <a href="{{ route('admin.products.create') }}" class="btn btn-primary rounded-pill px-4">
+                                <a href="{{ route('admin.products.create') }}" class="btn btn-theme rounded-pill px-4">
                                     <i class="fas fa-plus me-2"></i> Add New Product
                                 </a>
                                 @endcan
@@ -44,7 +44,6 @@
                                                 <th>Selling Price</th>
                                                 <th>Stock Status</th>
                                                 <th>Status</th>
-                                                <th>Created</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -91,15 +90,6 @@
                                                             <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2">
                                                                 Draft
                                                             </span>
-                                                        @endif
-                                                    </td>
-                                                    <td>
-                                                        @if($product->created_at)
-                                                            <span class="text-muted" data-bs-toggle="tooltip" data-bs-title="{{ $product->created_at->format('F j, Y \a\t g:i A') }}">
-                                                                {{ $product->created_at->diffForHumans() }}
-                                                            </span>
-                                                        @else
-                                                            <span class="text-muted">N/A</span>
                                                         @endif
                                                     </td>
                                                     <td>
@@ -172,7 +162,7 @@
             "info": true,
             "paging": true,
             "columnDefs": [
-                { "orderable": false, "targets": [7] } // Disable sorting on Actions column
+                { "orderable": false, "targets": [6] } // Disable sorting on Actions column
             ],
             "language": {
                 "search": "Search:",
@@ -194,13 +184,12 @@
                 null, // Selling Price
                 null, // Stock Status
                 null, // Status
-                null, // Created
                 null  // Actions
             ],
             "preDrawCallback": function(settings) {
                 // Ensure consistent column count
                 if ($('#productsTable tbody tr').length === 0) {
-                    $('#productsTable tbody').html('<tr><td colspan="8" class="text-center py-5"><div class="text-muted"><i class="fas fa-box-open fa-2x mb-3"></i><p class="mb-0">No products found</p><p class="small">Try creating a new product</p></div></td></tr>');
+                    $('#productsTable tbody').html('<tr><td colspan="7" class="text-center py-5"><div class="text-muted"><i class="fas fa-box-open fa-2x mb-3"></i><p class="mb-0">No products found</p><p class="small">Try creating a new product</p></div></td></tr>');
                 }
             },
             "drawCallback": function(settings) {

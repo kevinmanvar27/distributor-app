@@ -19,7 +19,7 @@
                                     <h4 class="card-title mb-0 fw-bold">Roles</h4>
                                     <p class="mb-0 text-muted">Manage user roles and permissions</p>
                                 </div>
-                                <a href="{{ route('admin.roles.create') }}" class="btn btn-primary rounded-pill px-4">
+                                <a href="{{ route('admin.roles.create') }}" class="btn btn-theme rounded-pill px-4">
                                     <i class="fas fa-plus me-2"></i> Add New Role
                                 </a>
                             </div>
@@ -40,7 +40,7 @@
                                 @endif
                                 
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle">
+                                    <table class="table table-hover align-middle" id="rolesTable">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>ID</th>
@@ -116,4 +116,53 @@
         </main>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#rolesTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "ordering": true,
+            "searching": true,
+            "info": true,
+            "paging": true,
+            "columnDefs": [
+                { "orderable": false, "targets": [6] } // Disable sorting on Actions column
+            ],
+            "language": {
+                "search": "Search:",
+                "lengthMenu": "Show _MENU_ entries per page",
+                "info": "Showing _START_ to _END_ of _TOTAL_ roles",
+                "infoEmpty": "Showing 0 to 0 of 0 roles",
+                "infoFiltered": "(filtered from _MAX_ total roles)",
+                "paginate": {
+                    "first": "First",
+                    "last": "Last",
+                    "next": "Next",
+                    "previous": "Previous"
+                }
+            },
+            "aoColumns": [
+                null, // ID
+                null, // Name
+                null, // Display Name
+                null, // Description
+                null, // Permissions
+                null, // Users
+                null  // Actions
+            ],
+            "preDrawCallback": function(settings) {
+                // Ensure consistent column count
+                if ($('#rolesTable tbody tr').length === 0) {
+                    $('#rolesTable tbody').html('<tr><td colspan="7" class="text-center py-5"><div class="text-muted"><i class="fas fa-user-tag fa-2x mb-3"></i><p class="mb-0">No roles found</p><p class="small">Try creating a new role</p></div></td></tr>');
+                }
+            }
+        });
+        // Adjust select width after DataTable initializes
+        $('.dataTables_length select').css('width', '80px');
+    });
+</script>
 @endsection

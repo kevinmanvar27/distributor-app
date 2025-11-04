@@ -12,7 +12,7 @@
             
             <div class="pt-4 pb-2 mb-3">
                 <div class="row justify-content-center">
-                    <div class="col-lg-8">
+                    <div class="col-12">
                         <div class="card border-0 shadow-sm">
                             <div class="card-header bg-white border-0 py-3">
                                 <h4 class="card-title mb-0 fw-bold">Edit User</h4>
@@ -176,11 +176,45 @@
                                         </div>
                                     </div>
                                     
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="address" class="form-label fw-medium">Address</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
+                                                        <i class="fas fa-map-marker-alt text-muted"></i>
+                                                    </span>
+                                                    <input type="text" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2 @error('address') is-invalid @enderror" 
+                                                           id="address" name="address" value="{{ old('address', $user->address) }}" placeholder="Enter address">
+                                                </div>
+                                                @error('address')
+                                                    <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="mobile_number" class="form-label fw-medium">Mobile Number</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
+                                                        <i class="fas fa-phone text-muted"></i>
+                                                    </span>
+                                                    <input type="text" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2 @error('mobile_number') is-invalid @enderror" 
+                                                           id="mobile_number" name="mobile_number" value="{{ old('mobile_number', $user->mobile_number) }}" placeholder="Enter mobile number">
+                                                </div>
+                                                @error('mobile_number')
+                                                    <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="d-flex justify-content-between mt-5">
                                         <a href="{{ $user->hasAnyRole(['user']) ? route('admin.users.index') : route('admin.users.staff') }}" class="btn btn-light rounded-pill px-4">
                                             <i class="fas fa-arrow-left me-2"></i> Back
                                         </a>
-                                        <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                        <button type="submit" class="btn btn-theme rounded-pill px-4">
                                             <i class="fas fa-save me-2"></i> Update User
                                         </button>
                                     </div>

@@ -19,7 +19,7 @@
                                     <h4 class="card-title mb-0 fw-bold">User Management</h4>
                                     <p class="mb-0 text-muted">Manage all users and their roles</p>
                                 </div>
-                                <a href="{{ route('admin.users.create') }}" class="btn btn-primary rounded-pill px-4">
+                                <a href="{{ route('admin.users.create') }}" class="btn btn-theme rounded-pill px-4">
                                     <i class="fas fa-plus me-2"></i> Add New User
                                 </a>
                             </div>
@@ -40,15 +40,16 @@
                                 @endif
                                 
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle">
+                                    <table class="table table-hover align-middle" id="usersTable">
                                         <thead class="table-light">
                                             <tr>
-                                                <th>ID</th>
+                                                <th>#</th>
                                                 <th>User</th>
                                                 <th>Email</th>
                                                 <th>Role</th>
+                                                <th>Address</th>
+                                                <th>Mobile</th>
                                                 <th>Date of Birth</th>
-                                                <th>Created</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -82,18 +83,11 @@
                                                             {{ ucfirst(str_replace('_', ' ', $user->user_role)) }}
                                                         </span>
                                                     </td>
+                                                    <td>{{ $user->address ?? 'N/A' }}</td>
+                                                    <td>{{ $user->mobile_number ?? 'N/A' }}</td>
                                                     <td>
                                                         @if($user->date_of_birth)
                                                             <span class="text-muted">{{ $user->date_of_birth->format('M d, Y') }}</span>
-                                                        @else
-                                                            <span class="text-muted">N/A</span>
-                                                        @endif
-                                                    </td>
-                                                    <td>
-                                                        @if($user->created_at)
-                                                            <span class="text-muted" data-bs-toggle="tooltip" data-bs-title="{{ $user->created_at->format('F j, Y \a\t g:i A') }}">
-                                                                {{ $user->created_at->diffForHumans() }}
-                                                            </span>
                                                         @else
                                                             <span class="text-muted">N/A</span>
                                                         @endif
@@ -121,7 +115,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="7" class="text-center py-5">
+                                                    <td colspan="8" class="text-center py-5">
                                                         <div class="text-muted">
                                                             <i class="fas fa-users fa-2x mb-3"></i>
                                                             <p class="mb-0">No users found</p>
@@ -134,11 +128,7 @@
                                     </table>
                                 </div>
                                 
-                                @if($users->hasPages())
-                                    <div class="d-flex justify-content-center mt-4">
-                                        {{ $users->links() }}
-                                    </div>
-                                @endif
+
                             </div>
                         </div>
                     </div>
@@ -149,4 +139,54 @@
         </main>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#usersTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "ordering": true,
+            "searching": true,
+            "info": true,
+            "paging": true,
+            "columnDefs": [
+                { "orderable": false, "targets": [7] } // Disable sorting on Actions column
+            ],
+            "language": {
+                "search": "Search:",
+                "lengthMenu": "Show _MENU_ entries per page",
+                "info": "Showing _START_ to _END_ of _TOTAL_ users",
+                "infoEmpty": "Showing 0 to 0 of 0 users",
+                "infoFiltered": "(filtered from _MAX_ total users)",
+                "paginate": {
+                    "first": "First",
+                    "last": "Last",
+                    "next": "Next",
+                    "previous": "Previous"
+                }
+            },
+            "aoColumns": [
+                null, // #
+                null, // User
+                null, // Email
+                null, // Role
+                null, // Address
+                null, // Mobile
+                null, // Date of Birth
+                null  // Actions
+            ],
+            "preDrawCallback": function(settings) {
+                // Ensure consistent column count
+                if ($('#usersTable tbody tr').length === 0) {
+                    $('#usersTable tbody').html('<tr><td colspan="8" class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No users found</p><p class="small">Try creating a new user</p></div></td></tr>');
+                }
+            }
+        });
+        // Adjust select width after DataTable initializes
+        $('.dataTables_length select').css('width', '80px');
+    });
+</script>
 @endsection

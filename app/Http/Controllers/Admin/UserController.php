@@ -77,6 +77,8 @@ class UserController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'user_role' => ['required', 'string', Rule::in($roleNames)],
             'date_of_birth' => ['nullable', 'date', 'before_or_equal:today'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'mobile_number' => ['nullable', 'string', 'max:20'],
         ], [
             'user_role.required' => 'Please select a user role.',
             'user_role.in' => 'Please select a valid user role.',
@@ -88,6 +90,8 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'date_of_birth' => $request->date_of_birth,
+            'address' => $request->address,
+            'mobile_number' => $request->mobile_number,
         ]);
         
         // Now set the user role which will properly sync with the roles relationship
@@ -151,6 +155,8 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'user_role' => ['required', 'string', Rule::in($roleNames)],
             'date_of_birth' => ['nullable', 'date', 'before_or_equal:today'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'mobile_number' => ['nullable', 'string', 'max:20'],
         ], [
             'user_role.required' => 'Please select a user role.',
             'user_role.in' => 'Please select a valid user role.',
@@ -160,6 +166,8 @@ class UserController extends Controller
         $user->email = $request->email;
         $user->user_role = $request->user_role;
         $user->date_of_birth = $request->date_of_birth;
+        $user->address = $request->address;
+        $user->mobile_number = $request->mobile_number;
 
         // Update password only if provided
         if ($request->filled('password')) {
@@ -200,70 +208,35 @@ class UserController extends Controller
             'avatar.max' => 'The image may not be greater than 2MB.',
         ]);
 
-        // Delete old avatar if exists
+        // Delete existing avatar if it exists
         if ($user->avatar) {
             Storage::disk('public')->delete('avatars/' . $user->avatar);
         }
-        
-        // Store new avatar
-        $avatarName = time() . '_' . $user->id . '.' . $request->file('avatar')->extension();
-        $request->file('avatar')->storeAs('avatars', $avatarName, 'public');
-        $user->avatar = $avatarName;
+
+        // Store the new avatar
+        $avatarPath = $request->file('avatar')->store('avatars', 'public');
+        $user->avatar = basename($avatarPath);
         $user->save();
 
-        return redirect()->back()->with('success', 'Profile picture updated successfully.');
-    }
-    
-    /**
-     * Handle avatar upload from user update form.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\User  $user
-     * @return void
-     */
-    protected function handleAvatarUpload(Request $request, User $user)
-    {
-        // Only process if avatar file is provided
-        if (!$request->hasFile('avatar')) {
-            return;
-        }
-        
-        // Validate only the avatar field - avatar is optional when updating user profile
-        $request->validate([
-            'avatar' => ['image', 'mimes:jpeg,png,jpg,gif', 'max:2048'], // 2MB max
-        ], [
-            'avatar.image' => 'The file must be an image.',
-            'avatar.max' => 'The image may not be greater than 2MB.',
-        ]);
-
-        // Delete old avatar if exists
-        if ($user->avatar) {
-            Storage::disk('public')->delete('avatars/' . $user->avatar);
-        }
-        
-        // Store new avatar
-        $avatarName = time() . '_' . $user->id . '.' . $request->file('avatar')->extension();
-        $request->file('avatar')->storeAs('avatars', $avatarName, 'public');
-        $user->avatar = $avatarName;
-        $user->save();
+        return back()->with('success', 'Avatar updated successfully.');
     }
 
     /**
-     * Remove the specified user's avatar.
+     * Remove the user's avatar.
      *
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\RedirectResponse
      */
     public function removeAvatar(User $user)
     {
-        // Delete avatar file if exists
+        // Delete avatar file if it exists
         if ($user->avatar) {
             Storage::disk('public')->delete('avatars/' . $user->avatar);
             $user->avatar = null;
             $user->save();
         }
-        
-        return redirect()->back()->with('success', 'Profile picture removed successfully.');
+
+        return back()->with('success', 'Avatar removed successfully.');
     }
 
     /**
@@ -274,23 +247,54 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        // Prevent deleting the current logged in user
+        // Prevent users from deleting themselves
         if (Auth::user()->id == $user->id) {
-            return redirect()->route('admin.users.index')->with('error', 'You cannot delete your own account.');
+            return back()->with('error', 'You cannot delete your own account.');
         }
 
-        // Delete avatar if exists
+        // Delete avatar if it exists
         if ($user->avatar) {
             Storage::disk('public')->delete('avatars/' . $user->avatar);
         }
 
+        // Delete the user
         $user->delete();
 
         // Redirect to appropriate page based on user role
-        if ($user->hasAnyRole(['super_admin', 'admin', 'editor'])) {
-            return redirect()->route('admin.users.staff')->with('success', 'Staff member deleted successfully.');
-        } else {
+        if ($user->hasAnyRole(['user'])) {
             return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
+        } else {
+            return redirect()->route('admin.users.staff')->with('success', 'Staff member deleted successfully.');
+        }
+    }
+
+    /**
+     * Handle avatar upload for user creation and update.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\User  $user
+     * @return void
+     */
+    private function handleAvatarUpload(Request $request, User $user)
+    {
+        if ($request->hasFile('avatar')) {
+            // Validate the avatar
+            $request->validate([
+                'avatar' => ['image', 'mimes:jpeg,png,jpg,gif', 'max:2048'], // 2MB max
+            ], [
+                'avatar.image' => 'The file must be an image.',
+                'avatar.max' => 'The image may not be greater than 2MB.',
+            ]);
+
+            // Delete existing avatar if it exists
+            if ($user->avatar) {
+                Storage::disk('public')->delete('avatars/' . $user->avatar);
+            }
+
+            // Store the new avatar
+            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = basename($avatarPath);
+            $user->save();
         }
     }
 }

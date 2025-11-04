@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\UserGroupController;
 
 // Redirect root URL to admin login page
 Route::get('/', function () {
@@ -117,6 +118,17 @@ Route::middleware('auth')->group(function () {
                 'destroy' => 'admin.permissions.destroy',
             ]);
         });
+        
+        // User Group Management Routes
+        Route::resource('user-groups', UserGroupController::class)->names([
+            'index' => 'admin.user-groups.index',
+            'create' => 'admin.user-groups.create',
+            'store' => 'admin.user-groups.store',
+            'show' => 'admin.user-groups.show',
+            'edit' => 'admin.user-groups.edit',
+            'update' => 'admin.user-groups.update',
+            'destroy' => 'admin.user-groups.destroy',
+        ]);
     });
     
     // Database Management Routes
@@ -165,8 +177,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/media', [ProductController::class, 'getMedia'])->name('admin.media.index');
         Route::post('/media', [ProductController::class, 'storeMedia'])->name('admin.media.store');
         Route::delete('/media/{media}', [ProductController::class, 'destroyMedia'])->name('admin.media.destroy');
+        
+
     });
-    
+
     // Category Management Routes
     Route::prefix('admin')->group(function () {
         Route::get('/categories', [CategoryController::class, 'index'])->name('admin.categories.index');

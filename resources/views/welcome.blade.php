@@ -32,7 +32,7 @@
                                     <div class="card-body">
                                         <h3 class="card-title mb-3">Documentation</h3>
                                         <p class="card-text text-secondary mb-4">Learn how to use and customize this admin panel with our comprehensive documentation.</p>
-                                        <a href="https://laravel.com/docs" target="_blank" class="btn btn-primary">Read Documentation</a>
+                                        <a href="https://laravel.com/docs" target="_blank" class="btn btn-theme">Read Documentation</a>
                                     </div>
                                 </div>
                             </div>
@@ -52,11 +52,11 @@
                             <div class="d-flex flex-wrap justify-content-center gap-3">
                                 @if (Route::has('login'))
                                     @auth
-                                        <a href="{{ url('/dashboard') }}" class="btn btn-primary btn-lg px-4 py-2">
+                                        <a href="{{ url('/dashboard') }}" class="btn btn-theme btn-lg px-4 py-2">
                                             Dashboard
                                         </a>
                                     @else
-                                        <a href="{{ route('login') }}" class="btn btn-primary btn-lg px-4 py-2">
+                                        <a href="{{ route('login') }}" class="btn btn-theme btn-lg px-4 py-2">
                                             Admin Login
                                         </a>
 

@@ -21,7 +21,7 @@
                                 </div>
                                 <div class="d-flex gap-2">
                                     @can('update', $product)
-                                    <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-primary rounded-pill px-4">
+                                    <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-theme rounded-pill px-4">
                                         <i class="fas fa-edit me-2"></i> Edit Product
                                     </a>
                                     @endcan

@@ -52,6 +52,28 @@
             </div>
             
             <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Address</label>
+                <p class="form-control-plaintext">
+                    @if($user->address)
+                        {{ $user->address }}
+                    @else
+                        <span class="text-muted">Not provided</span>
+                    @endif
+                </p>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Mobile Number</label>
+                <p class="form-control-plaintext">
+                    @if($user->mobile_number)
+                        {{ $user->mobile_number }}
+                    @else
+                        <span class="text-muted">Not provided</span>
+                    @endif
+                </p>
+            </div>
+            
+            <div class="col-md-6 mb-3">
                 <label class="form-label fw-bold">Account Created</label>
                 <p class="form-control-plaintext">
                     @if($user->created_at)

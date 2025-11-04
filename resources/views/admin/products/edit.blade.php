@@ -244,7 +244,7 @@
                                         <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2">
                                             <i class="fas fa-times me-2"></i> Cancel
                                         </a>
-                                        <button type="submit" class="btn btn-primary rounded-pill px-4 py-2">
+                                        <button type="submit" class="btn btn-theme rounded-pill px-4 py-2">
                                             <i class="fas fa-save me-2"></i> Update Product
                                         </button>
                                     </div>
@@ -313,7 +313,7 @@
                 <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
                     <i class="fas fa-times me-2"></i> Cancel
                 </button>
-                <button type="button" class="btn btn-primary rounded-pill px-4" id="select-media-btn" disabled>
+                <button type="button" class="btn btn-theme rounded-pill px-4" id="select-media-btn" disabled>
                     <i class="fas fa-check me-2"></i> Select
                 </button>
             </div>
@@ -373,7 +373,7 @@
                 <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
                     <i class="fas fa-times me-2"></i>Close
                 </button>
-                <button type="button" class="btn btn-primary rounded-pill" id="save-category-selections">
+                <button type="button" class="btn btn-theme rounded-pill" id="save-category-selections">
                     <i class="fas fa-save me-2"></i>Save Selections
                 </button>
             </div>

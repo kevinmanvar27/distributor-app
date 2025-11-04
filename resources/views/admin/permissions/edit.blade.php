@@ -97,7 +97,7 @@
                                         <a href="{{ route('admin.permissions.index') }}" class="btn btn-light rounded-pill px-4">
                                             <i class="fas fa-arrow-left me-2"></i> Back to Permissions
                                         </a>
-                                        <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                        <button type="submit" class="btn btn-theme rounded-pill px-4">
                                             <i class="fas fa-save me-2"></i> Update Permission
                                         </button>
                                     </div>

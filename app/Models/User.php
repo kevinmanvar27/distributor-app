@@ -25,6 +25,8 @@ class User extends Authenticatable
         'user_role',
         'date_of_birth',
         'avatar',
+        'address',
+        'mobile_number',
     ];
 
     /**
@@ -182,5 +184,13 @@ class User extends Authenticatable
     public function permissions()
     {
         return $this->belongsToMany(\App\Models\Permission::class, 'user_permissions');
+    }
+    
+    /**
+     * Get the user groups that this user belongs to.
+     */
+    public function userGroups()
+    {
+        return $this->belongsToMany(UserGroup::class, 'user_group_members');
     }
 }

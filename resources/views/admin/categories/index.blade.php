@@ -47,7 +47,6 @@
                                                 <th>Category</th>
                                                 <th>Description</th>
                                                 <th>Status</th>
-                                                <th>Created</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -91,15 +90,6 @@
                                                         @endif
                                                     </td>
                                                     <td>
-                                                        @if($category->created_at)
-                                                            <span class="text-muted" data-bs-toggle="tooltip" data-bs-title="{{ $category->created_at->format('F j, Y \a\t g:i A') }}">
-                                                                {{ $category->created_at->diffForHumans() }}
-                                                            </span>
-                                                        @else
-                                                            <span class="text-muted">N/A</span>
-                                                        @endif
-                                                    </td>
-                                                    <td>
                                                         <div class="btn-group btn-group-sm" role="group">
                                                             <button type="button" class="btn btn-outline-info rounded-start-pill px-3" onclick="showSubCategories({{ $category->id }})">
                                                                 <i class="fas fa-list"></i>
@@ -115,7 +105,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="6" class="text-center py-5">
+                                                    <td colspan="5" class="text-center py-5">
                                                         <div class="text-muted">
                                                             <i class="fas fa-tags fa-2x mb-3"></i>
                                                             <p class="mb-0">No categories found</p>
@@ -380,7 +370,7 @@
             "info": true,
             "paging": true,
             "columnDefs": [
-                { "orderable": false, "targets": [5] } // Disable sorting on Actions column
+                { "orderable": false, "targets": [4] } // Disable sorting on Actions column
             ],
             "language": {
                 "search": "Search:",
@@ -400,13 +390,12 @@
                 null, // Category
                 null, // Description
                 null, // Status
-                null, // Created
                 null  // Actions
             ],
             "preDrawCallback": function(settings) {
                 // Ensure consistent column count
                 if ($('#categoriesTable tbody tr').length === 0) {
-                    $('#categoriesTable tbody').html('<tr><td colspan="6" class="text-center py-5"><div class="text-muted"><i class="fas fa-tags fa-2x mb-3"></i><p class="mb-0">No categories found</p><p class="small">Try creating a new category</p></div></td></tr>');
+                    $('#categoriesTable tbody').html('<tr><td colspan="5" class="text-center py-5"><div class="text-muted"><i class="fas fa-tags fa-2x mb-3"></i><p class="mb-0">No categories found</p><p class="small">Try creating a new category</p></div></td></tr>');
                 }
             },
             "drawCallback": function(settings) {

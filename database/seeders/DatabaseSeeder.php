@@ -36,5 +36,9 @@ class DatabaseSeeder extends Seeder
         
         // Seed categories and subcategories
         $this->call(CategorySeeder::class);
+        
+        // Seed user groups
+        $this->call(UserGroupSeeder::class);
+
     }
 }

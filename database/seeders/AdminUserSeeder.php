@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Artisan;
 
 class AdminUserSeeder extends Seeder
 {
@@ -28,5 +29,7 @@ class AdminUserSeeder extends Seeder
                 'user_role' => 'super_admin',
             ]);
         }
+        
+
     }
 }

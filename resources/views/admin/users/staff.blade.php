@@ -52,8 +52,9 @@
                                                 <th>Staff Member</th>
                                                 <th>Email</th>
                                                 <th>Role</th>
+                                                <th>Address</th>
+                                                <th>Mobile</th>
                                                 <th>Date of Birth</th>
-                                                <th>Created</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -87,18 +88,11 @@
                                                             {{ ucfirst(str_replace('_', ' ', $user->user_role)) }}
                                                         </span>
                                                     </td>
+                                                    <td>{{ $user->address ?? 'N/A' }}</td>
+                                                    <td>{{ $user->mobile_number ?? 'N/A' }}</td>
                                                     <td>
                                                         @if($user->date_of_birth)
                                                             <span class="text-muted">{{ $user->date_of_birth->format('M d, Y') }}</span>
-                                                        @else
-                                                            <span class="text-muted">N/A</span>
-                                                        @endif
-                                                    </td>
-                                                    <td>
-                                                        @if($user->created_at)
-                                                            <span class="text-muted" data-bs-toggle="tooltip" data-bs-title="{{ $user->created_at->format('F j, Y \a\t g:i A') }}">
-                                                                {{ $user->created_at->diffForHumans() }}
-                                                            </span>
                                                         @else
                                                             <span class="text-muted">N/A</span>
                                                         @endif
@@ -175,7 +169,7 @@
             "info": true,
             "paging": true,
             "columnDefs": [
-                { "orderable": false, "targets": [6] } // Disable sorting on Actions column
+                { "orderable": false, "targets": [7] } // Disable sorting on Actions column
             ],
             "language": {
                 "search": "Search:",
@@ -195,14 +189,15 @@
                 null, // Staff Member
                 null, // Email
                 null, // Role
+                null, // Address
+                null, // Mobile
                 null, // Date of Birth
-                null, // Created
                 null  // Actions
             ],
             "preDrawCallback": function(settings) {
                 // Ensure consistent column count
                 if ($('#staffTable tbody tr').length === 0) {
-                    $('#staffTable tbody').html('<tr><td colspan="7" class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No staff members found</p><p class="small">Try creating a new staff member</p></div></td></tr>');
+                    $('#staffTable tbody').html('<tr><td colspan="8" class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No staff members found</p><p class="small">Try creating a new staff member</p></div></td></tr>');
                 }
             }
         });

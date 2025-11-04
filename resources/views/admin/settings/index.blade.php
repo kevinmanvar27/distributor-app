@@ -682,7 +682,7 @@
                                                                 <div class="form-text">Complete SQL backup of your database</div>
                                                             </div>
                                                             
-                                                            <button type="button" class="btn btn-primary w-100" data-action="export-database">
+                                                            <button type="button" class="btn btn-theme w-100" data-action="export-database">
                                                                 <i class="fas fa-download me-1"></i> Export Full Database
                                                             </button>
                                                         </div>
