@@ -90,10 +90,10 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            console.log('Theme updated on server:', data);
+            // Theme updated on server
         })
         .catch(error => {
-            console.error('Error updating theme on server:', error);
+            // Error updating theme on server
         });
     }
     
@@ -108,5 +108,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Add any other common admin functionality here
-    console.log('Admin dashboard scripts loaded');
+    // Admin dashboard scripts loaded
 });

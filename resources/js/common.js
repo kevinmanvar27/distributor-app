@@ -558,7 +558,7 @@ $(document).ready(function() {
                         $('#no-media-message').addClass('d-none');
                     }
                 } else {
-                    console.error('Upload failed:', data.error);
+                    // Upload failed
                     // Show error message to user
                     alert('Upload failed: ' + (data.error || 'Unknown error occurred'));
                     
@@ -573,7 +573,7 @@ $(document).ready(function() {
                 // No need to show existing content again since we never hid it
                 // $('#media-library-items .mb-4').removeClass('d-none');
                 
-                console.error('Upload failed:', error);
+                // Upload failed
                 // Show error message to user
                 alert('Upload failed: ' + error);
                 
@@ -639,8 +639,8 @@ $(document).ready(function() {
             .fail(function(xhr, status, error) {
                 $('#media-loading').addClass('d-none');
                 $('#no-media-message').removeClass('d-none');
-                console.error('Error loading media:', error);
-                console.error('Request URL:', url);
+                // Error loading media
+                // Request URL error
             });
     }
     
@@ -755,7 +755,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Delete failed:', error);
+                // Delete failed
                 alert('Failed to delete media item.');
             }
         });
