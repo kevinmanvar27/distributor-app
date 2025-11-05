@@ -17,7 +17,7 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $userCount = User::count();
+        $userCount = User::where('user_role', 'user')->count();
         $userGroupCount = UserGroup::count();
         $productCount = Product::count();
         $categoryCount = Category::count();
