@@ -91,12 +91,14 @@ body {
     background-color: var(--theme-color, var(--primary));
     border-color: var(--theme-color, var(--primary));
     color: white;
+    text-decoration: none;
 }
 
 .btn-theme:hover {
     background-color: color-mix(in srgb, var(--theme-color, var(--primary)) 90%, black);
     border-color: color-mix(in srgb, var(--theme-color, var(--primary)) 90%, black);
     color: white;
+    text-decoration: none;
 }
 
 .form-control:focus, .form-select:focus {
@@ -145,6 +147,7 @@ body {
 
 .sidebar .nav-link {
     color: var(--sidebar-text-color, var(--text));
+    text-decoration: none;
 }
 
 .sidebar.collapsed {
@@ -154,14 +157,17 @@ body {
 .sidebar .nav-link.active {
     background-color: var(--theme-color, var(--primary)) !important;
     color: white !important;
+    text-decoration: none;
 }
 
 .sidebar .nav-link.hover-bg:hover {
     background-color: rgba(0, 0, 0, 0.05);
+    text-decoration: none;
 }
 
 [data-theme="dark"] .sidebar .nav-link.hover-bg:hover {
     background-color: rgba(255, 255, 255, 0.05);
+    text-decoration: none;
 }
 
 @media (min-width: 768px) {
@@ -233,6 +239,7 @@ body {
     font-weight: 500;
     padding: 0.5rem 1rem;
     transition: all 0.2s ease;
+    text-decoration: none;
 }
 
 .btn-sm {
@@ -557,16 +564,24 @@ a {
 
 a:hover {
     color: var(--link-hover-color, var(--primary));
-    text-decoration: underline;
+    text-decoration: none;
+}
+
+/* Ensure buttons and sidebar links never have text decoration */
+.btn a:hover,
+.sidebar .nav-link a:hover {
+    text-decoration: none;
 }
 
 /* Ensure Bootstrap link styles respect our custom colors */
 .btn-link {
     color: var(--link-color, var(--primary));
+    text-decoration: none;
 }
 
 .btn-link:hover {
     color: var(--link-hover-color, var(--primary));
+    text-decoration: none;
 }
 
 /* Media Library Styles */

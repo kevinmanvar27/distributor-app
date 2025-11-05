@@ -22,7 +22,7 @@
                 </a>
             </li>
             
-            <!-- Product Management Section -->
+            <!-- Product Section -->
             @if(auth()->user()->hasPermission('viewAny', App\Models\Product::class) || 
                 auth()->user()->hasPermission('create', App\Models\Product::class) || 
                 auth()->user()->hasPermission('update', App\Models\Product::class) || 
@@ -30,16 +30,16 @@
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('admin.products*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.products.index') }}">
                         <i class="fas fa-box me-3"></i>
-                        <span class="sidebar-text">Product Management</span>
+                        <span class="sidebar-text">Product</span>
                     </a>
                 </li>
             @endif
             
-            <!-- Category Management Section -->
+            <!-- Category Section -->
             <li class="nav-item mb-1">
                 <a class="nav-link {{ request()->routeIs('admin.categories*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.categories.index') }}">
                         <i class="fas fa-tags me-3"></i>
-                        <span class="sidebar-text">Category Management</span>
+                        <span class="sidebar-text">Category</span>
                     </a>
                 </li>
                 
@@ -52,7 +52,7 @@
                     </li>
                 @endif
                 
-                <!-- Staff Management Section -->
+                <!-- Staff Section -->
                 @php 
                     $hasStaffPermission = auth()->user()->hasPermission('show_staff') ||
                                         auth()->user()->hasPermission('add_staff') || 
@@ -63,12 +63,12 @@
                     <li class="nav-item mb-1">
                         <a class="nav-link {{ request()->routeIs('admin.users.staff*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.users.staff') }}">
                             <i class="fas fa-user-tie me-3"></i>
-                            <span class="sidebar-text">Staff Management</span>
+                            <span class="sidebar-text">Staff</span>
                         </a>
                     </li>
                 @endif
                 
-                <!-- User Management Section -->
+                <!-- Users Section -->
                 @php 
                     $hasUserPermission = auth()->user()->hasPermission('show_user') ||
                                         auth()->user()->hasPermission('add_user') || 
@@ -79,17 +79,17 @@
                     <li class="nav-item mb-1">
                         <a class="nav-link {{ request()->routeIs('admin.users.index') && !request()->routeIs('admin.users.staff*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.users.index') }}">
                             <i class="fas fa-users me-3"></i>
-                            <span class="sidebar-text">User Management</span>
+                            <span class="sidebar-text">Users</span>
                         </a>
                     </li>
                 @endif
                 
-                <!-- User Group Management Section -->
+                <!-- User Groups Section -->
                 @if($hasUserPermission)
                     <li class="nav-item mb-1">
                         <a class="nav-link {{ request()->routeIs('admin.user-groups*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.user-groups.index') }}">
                             <i class="fas fa-users-cog me-3"></i>
-                            <span class="sidebar-text">User Group Management</span>
+                            <span class="sidebar-text">User Groups</span>
                         </a>
                     </li>
                 @endif

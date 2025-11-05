@@ -28,7 +28,7 @@ class UserGroupController extends Controller
      */
     public function create()
     {
-        $users = User::where('user_role', 'user')->orderBy('name')->get();
+        $users = User::where('user_role', 'user')->with('userGroups')->orderBy('name')->get();
         return view('admin.user-groups.create', compact('users'));
     }
 
@@ -90,7 +90,7 @@ class UserGroupController extends Controller
     public function edit(UserGroup $userGroup)
     {
         $userGroup->load('users');
-        $users = User::where('user_role', 'user')->orderBy('name')->get();
+        $users = User::where('user_role', 'user')->with('userGroups')->orderBy('name')->get();
         $selectedUsers = $userGroup->users->pluck('id')->toArray();
         
         // Check if the request is an AJAX request for modal content

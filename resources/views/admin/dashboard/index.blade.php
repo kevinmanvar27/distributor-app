@@ -42,7 +42,7 @@
                                     </div>
                                     <div class="text-end">
                                         <h3 class="h5 text-secondary mb-1">Total Users</h3>
-                                        <p class="h3 mb-0 fw-bold">1,250</p>
+                                        <p class="h3 mb-0 fw-bold">{{ $userCount }}</p>
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
@@ -57,12 +57,12 @@
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="bg-success bg-opacity-10 p-3 rounded-circle">
-                                        <i class="fas fa-shopping-cart text-success"></i>
+                                    <div class="bg-info bg-opacity-10 p-3 rounded-circle">
+                                        <i class="fas fa-users-cog text-info"></i>
                                     </div>
                                     <div class="text-end">
-                                        <h3 class="h5 text-secondary mb-1">Orders</h3>
-                                        <p class="h3 mb-0 fw-bold">320</p>
+                                        <h3 class="h5 text-secondary mb-1">User Groups</h3>
+                                        <p class="h3 mb-0 fw-bold">{{ $userGroupCount }}</p>
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
@@ -77,16 +77,16 @@
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
-                                        <i class="fas fa-dollar-sign text-warning"></i>
+                                    <div class="bg-success bg-opacity-10 p-3 rounded-circle">
+                                        <i class="fas fa-boxes text-success"></i>
                                     </div>
                                     <div class="text-end">
-                                        <h3 class="h5 text-secondary mb-1">Revenue</h3>
-                                        <p class="h3 mb-0 fw-bold">$24,580</p>
+                                        <h3 class="h5 text-secondary mb-1">Products</h3>
+                                        <p class="h3 mb-0 fw-bold">{{ $productCount }}</p>
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span class="text-danger fw-medium"><i class="fas fa-arrow-down me-1"></i> 2.7%</span>
+                                    <span class="text-success fw-medium"><i class="fas fa-arrow-up me-1"></i> 5.2%</span>
                                     <span class="text-secondary small">Since last month</span>
                                 </div>
                             </div>
@@ -97,16 +97,16 @@
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="bg-info bg-opacity-10 p-3 rounded-circle">
-                                        <i class="fas fa-chart-line text-info"></i>
+                                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
+                                        <i class="fas fa-tags text-warning"></i>
                                     </div>
                                     <div class="text-end">
-                                        <h3 class="h5 text-secondary mb-1">Conversion</h3>
-                                        <p class="h3 mb-0 fw-bold">4.2%</p>
+                                        <h3 class="h5 text-secondary mb-1">Categories</h3>
+                                        <p class="h3 mb-0 fw-bold">{{ $categoryCount }}</p>
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span class="text-success fw-medium"><i class="fas fa-arrow-up me-1"></i> 1.2%</span>
+                                    <span class="text-success fw-medium"><i class="fas fa-arrow-up me-1"></i> 3.1%</span>
                                     <span class="text-secondary small">Since last month</span>
                                 </div>
                             </div>
@@ -167,34 +167,34 @@
                                 </div>
                                 <div class="d-flex align-items-start py-3 border-bottom">
                                     <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3 mt-1">
-                                        <i class="fas fa-shopping-cart text-success"></i>
+                                        <i class="fas fa-boxes text-success"></i>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <h4 class="h6 mb-1">New order received</h4>
-                                        <p class="text-secondary mb-1 small">Order #12345 for $245.99</p>
-                                        <span class="badge bg-success-subtle text-success">Order</span>
+                                        <h4 class="h6 mb-1">New product added</h4>
+                                        <p class="text-secondary mb-1 small">Product "Wireless Headphones" added</p>
+                                        <span class="badge bg-success-subtle text-success">Product</span>
                                     </div>
                                     <span class="text-secondary small">4h ago</span>
                                 </div>
                                 <div class="d-flex align-items-start py-3 border-bottom">
                                     <div class="bg-warning bg-opacity-10 p-2 rounded-circle me-3 mt-1">
-                                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                                        <i class="fas fa-tags text-warning"></i>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <h4 class="h6 mb-1">Payment failed</h4>
-                                        <p class="text-secondary mb-1 small">Payment for order #12342 failed</p>
-                                        <span class="badge bg-warning-subtle text-warning">Alert</span>
+                                        <h4 class="h6 mb-1">New category created</h4>
+                                        <p class="text-secondary mb-1 small">Category "Electronics" created</p>
+                                        <span class="badge bg-warning-subtle text-warning">Category</span>
                                     </div>
                                     <span class="text-secondary small">6h ago</span>
                                 </div>
                                 <div class="d-flex align-items-start py-3">
                                     <div class="bg-info bg-opacity-10 p-2 rounded-circle me-3 mt-1">
-                                        <i class="fas fa-cog text-info"></i>
+                                        <i class="fas fa-users-cog text-info"></i>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <h4 class="h6 mb-1">Settings updated</h4>
-                                        <p class="text-secondary mb-1 small">System settings were updated</p>
-                                        <span class="badge bg-info-subtle text-info">System</span>
+                                        <h4 class="h6 mb-1">User group updated</h4>
+                                        <p class="text-secondary mb-1 small">Group "Premium Customers" discount updated</p>
+                                        <span class="badge bg-info-subtle text-info">User Group</span>
                                     </div>
                                     <span class="text-secondary small">1d ago</span>
                                 </div>

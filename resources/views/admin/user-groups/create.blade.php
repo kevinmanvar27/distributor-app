@@ -105,8 +105,23 @@
                                                                             <img src="{{ $user->avatar_url }}" 
                                                                                  class="rounded-circle me-3" width="30" height="30" alt="{{ $user->name }}">
                                                                             <div>
-                                                                                <div class="fw-medium">{{ $user->name }}</div>
-                                                                                <div class="small text-muted">{{ $user->email }}</div>
+                                                                                <div class="fw-medium">
+                                                                                    {{ $user->name }} 
+                                                                                    <span class="text-muted">
+                                                                                        @if($user->mobile_number)
+                                                                                            ({{ $user->mobile_number }})
+                                                                                        @else
+                                                                                            (No phone number)
+                                                                                        @endif
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div class="small">
+                                                                                    @if($user->userGroups->count() > 0)
+                                                                                        <span class="badge bg-info">Group: {{ $user->userGroups->first()->name }}</span>
+                                                                                    @else
+                                                                                        <span class="badge bg-secondary">No group assigned</span>
+                                                                                    @endif
+                                                                                </div>
                                                                             </div>
                                                                         </label>
                                                                     </div>

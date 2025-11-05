@@ -36,8 +36,16 @@
                                     <img src="{{ $user->avatar_url }}" 
                                          class="rounded-circle me-3" width="40" height="40" alt="{{ $user->name }}">
                                     <div>
-                                        <div class="fw-medium">{{ $user->name }}</div>
-                                        <div class="small text-muted">{{ $user->email }}</div>
+                                        <div class="fw-medium">
+                                            {{ $user->name }} 
+                                            <span class="text-muted">
+                                                @if($user->mobile_number)
+                                                    ({{ $user->mobile_number }})
+                                                @else
+                                                    (No phone number)
+                                                @endif
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
