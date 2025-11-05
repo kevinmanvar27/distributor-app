@@ -135,13 +135,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/settings/database/clean', [SettingsController::class, 'cleanDatabase'])->name('admin.settings.database.clean');
     Route::post('/admin/settings/database/export', [SettingsController::class, 'exportDatabase'])->name('admin.settings.database.export');
     
-    // Theme switching route
-    Route::post('/admin/theme/switch', function () {
-        $theme = request('theme', 'light');
-        session(['theme' => $theme]);
-        return response()->json(['status' => 'success', 'theme' => $theme]);
-    })->name('admin.theme.switch');
-    
     // Firebase Notification Test Route
     Route::get('/admin/test-firebase', function () {
         return response()->json([
@@ -178,7 +171,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/media', [ProductController::class, 'storeMedia'])->name('admin.media.store');
         Route::delete('/media/{media}', [ProductController::class, 'destroyMedia'])->name('admin.media.destroy');
         
-
     });
 
     // Category Management Routes

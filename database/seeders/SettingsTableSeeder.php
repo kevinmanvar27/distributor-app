@@ -27,7 +27,6 @@ class SettingsTableSeeder extends Seeder
                 'heading_text_color' => '#333333',
                 'label_text_color' => '#333333',
                 'general_text_color' => '#333333',
-                'default_theme' => 'light',
                 'header_logo' => null,
                 'footer_logo' => null,
                 'favicon' => null,

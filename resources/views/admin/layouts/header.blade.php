@@ -36,11 +36,6 @@
                     <input type="text" class="form-control border-default rounded-end-pill ps-2" placeholder="Search..." style="font-size: 0.9rem;">
                 </div>
                 
-                <!-- Theme Toggle -->
-                <button id="theme-toggle" class="btn btn-outline-secondary me-2 rounded-circle" type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Toggle Theme">
-                    <i id="theme-icon" class="fas fa-moon"></i>
-                </button>
-                
                 <!-- Notifications -->
                 <div class="dropdown me-2">
                     <button class="btn btn-outline-secondary position-relative rounded-circle" type="button" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false">

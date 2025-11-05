@@ -117,7 +117,7 @@
                 <!-- Charts and Recent Activity -->
                 <div class="row g-4">
                     <!-- Chart -->
-                    <div class="col-lg-8">
+                    <div class="col-lg-12">
                         <div class="card border-0 shadow-sm">
                             <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
                                 <h3 class="h5 mb-0 fw-semibold">Performance Overview</h3>
@@ -142,66 +142,6 @@
                                         <p class="text-secondary">Visual representation of your data will appear here</p>
                                         <button class="btn btn-sm btn-theme rounded-pill">View Detailed Report</button>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Recent Activity -->
-                    <div class="col-lg-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-header bg-transparent border-0">
-                                <h3 class="h5 mb-0 fw-semibold">Recent Activity</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="d-flex align-items-start py-3 border-bottom">
-                                    <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3 mt-1">
-                                        <i class="fas fa-user-plus text-primary"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h4 class="h6 mb-1">New user registered</h4>
-                                        <p class="text-secondary mb-1 small">John Doe registered 2 hours ago</p>
-                                        <span class="badge bg-primary-subtle text-primary">User</span>
-                                    </div>
-                                    <span class="text-secondary small">2h ago</span>
-                                </div>
-                                <div class="d-flex align-items-start py-3 border-bottom">
-                                    <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3 mt-1">
-                                        <i class="fas fa-boxes text-success"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h4 class="h6 mb-1">New product added</h4>
-                                        <p class="text-secondary mb-1 small">Product "Wireless Headphones" added</p>
-                                        <span class="badge bg-success-subtle text-success">Product</span>
-                                    </div>
-                                    <span class="text-secondary small">4h ago</span>
-                                </div>
-                                <div class="d-flex align-items-start py-3 border-bottom">
-                                    <div class="bg-warning bg-opacity-10 p-2 rounded-circle me-3 mt-1">
-                                        <i class="fas fa-tags text-warning"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h4 class="h6 mb-1">New category created</h4>
-                                        <p class="text-secondary mb-1 small">Category "Electronics" created</p>
-                                        <span class="badge bg-warning-subtle text-warning">Category</span>
-                                    </div>
-                                    <span class="text-secondary small">6h ago</span>
-                                </div>
-                                <div class="d-flex align-items-start py-3">
-                                    <div class="bg-info bg-opacity-10 p-2 rounded-circle me-3 mt-1">
-                                        <i class="fas fa-users-cog text-info"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h4 class="h6 mb-1">User group updated</h4>
-                                        <p class="text-secondary mb-1 small">Group "Premium Customers" discount updated</p>
-                                        <span class="badge bg-info-subtle text-info">User Group</span>
-                                    </div>
-                                    <span class="text-secondary small">1d ago</span>
-                                </div>
-                                <div class="text-center mt-3">
-                                    <button class="btn btn-sm btn-outline-secondary rounded-pill w-100">
-                                        View All Activity
-                                    </button>
                                 </div>
                             </div>
                         </div>

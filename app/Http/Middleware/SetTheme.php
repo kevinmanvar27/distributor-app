@@ -16,18 +16,6 @@ class SetTheme
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Get the theme from session, or use the default from settings
-        $theme = session('theme');
-        
-        if (!$theme) {
-            // Get default theme from settings
-            $setting = Setting::first();
-            $theme = $setting && $setting->default_theme ? $setting->default_theme : 'light';
-        }
-        
-        // Set the theme in session
-        session(['theme' => $theme]);
-        
         // Share theme settings with all views
         $setting = Setting::first();
         if ($setting) {

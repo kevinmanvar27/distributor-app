@@ -16,7 +16,6 @@ class Setting extends Model
         'footer_text',
         'theme_color',
         'background_color',
-        'default_theme',
         'font_color',
         'font_style',
         'sidebar_text_color',

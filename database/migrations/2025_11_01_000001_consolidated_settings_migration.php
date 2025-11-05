@@ -11,9 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Check if the settings table exists
         if (!Schema::hasTable('settings')) {
-            // Create the table if it doesn't exist
             Schema::create('settings', function (Blueprint $table) {
                 $table->id();
                 
@@ -23,10 +21,10 @@ return new class extends Migration
                 $table->string('favicon')->nullable();
                 $table->string('site_title')->nullable();
                 $table->text('site_description')->nullable();
+                $table->string('tagline')->nullable();
                 $table->text('footer_text')->nullable();
                 $table->string('theme_color')->nullable();
                 $table->string('background_color')->nullable();
-                $table->string('default_theme')->default('light');
                 
                 // Font settings
                 $table->string('font_color')->nullable();
@@ -94,6 +92,9 @@ return new class extends Migration
                 if (!Schema::hasColumn('settings', 'site_description')) {
                     $table->text('site_description')->nullable();
                 }
+                if (!Schema::hasColumn('settings', 'tagline')) {
+                    $table->string('tagline')->nullable();
+                }
                 if (!Schema::hasColumn('settings', 'footer_text')) {
                     $table->text('footer_text')->nullable();
                 }
@@ -102,9 +103,6 @@ return new class extends Migration
                 }
                 if (!Schema::hasColumn('settings', 'background_color')) {
                     $table->string('background_color')->nullable();
-                }
-                if (!Schema::hasColumn('settings', 'default_theme')) {
-                    $table->string('default_theme')->default('light');
                 }
                 
                 // Font settings
