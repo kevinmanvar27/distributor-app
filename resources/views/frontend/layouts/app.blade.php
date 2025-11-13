@@ -26,193 +26,279 @@
     
     <!-- Custom Styles with dynamic settings -->
     <style>
-        :root {
-            /* Color settings */
-            --theme-color: {{ setting('theme_color', '#007bff') }};
-            --background-color: {{ setting('background_color', '#f8f9fa') }};
-            --font-color: {{ setting('font_color', '#333333') }};
-            --font-style: {{ setting('font_style', 'Arial, sans-serif') }};
-            --link-color: {{ setting('link_color', '#007bff') }};
-            --link-hover-color: {{ setting('link_hover_color', '#0056b3') }};
-            --sidebar-text-color: {{ setting('sidebar_text_color', '#333333') }};
-            --heading-text-color: {{ setting('heading_text_color', '#333333') }};
-            --label-text-color: {{ setting('label_text_color', '#333333') }};
-            --general-text-color: {{ setting('general_text_color', '#333333') }};
-            
-            /* Font size settings for desktop */
-            --desktop-h1-size: {{ setting('desktop_h1_size', 36) }}px;
-            --desktop-h2-size: {{ setting('desktop_h2_size', 30) }}px;
-            --desktop-h3-size: {{ setting('desktop_h3_size', 24) }}px;
-            --desktop-h4-size: {{ setting('desktop_h4_size', 20) }}px;
-            --desktop-h5-size: {{ setting('desktop_h5_size', 18) }}px;
-            --desktop-h6-size: {{ setting('desktop_h6_size', 16) }}px;
-            --desktop-body-size: {{ setting('desktop_body_size', 16) }}px;
-            
-            /* Font size settings for tablet */
-            --tablet-h1-size: {{ setting('tablet_h1_size', 32) }}px;
-            --tablet-h2-size: {{ setting('tablet_h2_size', 28) }}px;
-            --tablet-h3-size: {{ setting('tablet_h3_size', 22) }}px;
-            --tablet-h4-size: {{ setting('tablet_h4_size', 18) }}px;
-            --tablet-h5-size: {{ setting('tablet_h5_size', 16) }}px;
-            --tablet-h6-size: {{ setting('tablet_h6_size', 14) }}px;
-            --tablet-body-size: {{ setting('tablet_body_size', 14) }}px;
-            
-            /* Font size settings for mobile */
-            --mobile-h1-size: {{ setting('mobile_h1_size', 28) }}px;
-            --mobile-h2-size: {{ setting('mobile_h2_size', 24) }}px;
-            --mobile-h3-size: {{ setting('mobile_h3_size', 20) }}px;
-            --mobile-h4-size: {{ setting('mobile_h4_size', 16) }}px;
-            --mobile-h5-size: {{ setting('mobile_h5_size', 14) }}px;
-            --mobile-h6-size: {{ setting('mobile_h6_size', 12) }}px;
-            --mobile-body-size: {{ setting('mobile_body_size', 12) }}px;
-        }
-        
         body {
-            background-color: var(--background-color) !important;
-            color: var(--font-color) !important;
-            font-family: var(--font-style) !important;
-            font-size: var(--desktop-body-size) !important;
+            background-color: #f8f9fa !important;
+            color: #333333 !important;
+            font-family: Arial, sans-serif !important;
+            font-size: 16px !important;
         }
         
         /* Text color styles */
         .navbar-brand, .navbar-nav .nav-link {
-            color: var(--font-color) !important;
+            color: #333333 !important;
         }
         
         .sidebar-text {
-            color: var(--sidebar-text-color) !important;
+            color: #333333 !important;
         }
         
         .heading-text {
-            color: var(--heading-text-color) !important;
+            color: #333333 !important;
         }
         
         .label-text {
-            color: var(--label-text-color) !important;
+            color: #333333 !important;
         }
         
         .general-text {
-            color: var(--general-text-color) !important;
+            color: #333333 !important;
         }
         
         /* Button styles */
         .btn-theme {
-            background-color: var(--theme-color) !important;
-            border-color: var(--theme-color) !important;
+            background-color: {{ setting('theme_color', '#007bff') }} !important;
+            border-color: {{ setting('theme_color', '#007bff') }} !important;
             color: white !important;
         }
         
         .btn-theme:hover {
-            background-color: var(--link-hover-color) !important;
-            border-color: var(--link-hover-color) !important;
+            background-color: {{ setting('link_hover_color', '#0056b3') }} !important;
+            border-color: {{ setting('link_hover_color', '#0056b3') }} !important;
         }
         
         /* Link styles */
         a {
-            color: var(--link-color) !important;
+            color: {{ setting('link_color', '#007bff') }} !important;
         }
         
         a:hover {
-            color: var(--link-hover-color) !important;
+            color: {{ setting('link_hover_color', '#0056b3') }} !important;
         }
         
         /* Font size styles for headings with higher specificity */
         h1, .h1 {
-            font-size: var(--desktop-h1-size) !important;
+            font-size: 36px !important;
         }
         
         h2, .h2 {
-            font-size: var(--desktop-h2-size) !important;
+            font-size: 30px !important;
         }
         
         h3, .h3 {
-            font-size: var(--desktop-h3-size) !important;
+            font-size: 24px !important;
         }
         
         h4, .h4 {
-            font-size: var(--desktop-h4-size) !important;
+            font-size: 20px !important;
         }
         
         h5, .h5 {
-            font-size: var(--desktop-h5-size) !important;
+            font-size: 18px !important;
         }
         
         h6, .h6 {
-            font-size: var(--desktop-h6-size) !important;
+            font-size: 16px !important;
         }
         
         p, .lead {
-            font-size: var(--desktop-body-size) !important;
+            font-size: 16px !important;
         }
         
         /* Responsive font sizes with higher specificity */
         @media (max-width: 992px) {
             h1, .h1 {
-                font-size: var(--tablet-h1-size) !important;
+                font-size: 32px !important;
             }
             
             h2, .h2 {
-                font-size: var(--tablet-h2-size) !important;
+                font-size: 28px !important;
             }
             
             h3, .h3 {
-                font-size: var(--tablet-h3-size) !important;
+                font-size: 22px !important;
             }
             
             h4, .h4 {
-                font-size: var(--tablet-h4-size) !important;
+                font-size: 18px !important;
             }
             
             h5, .h5 {
-                font-size: var(--tablet-h5-size) !important;
+                font-size: 16px !important;
             }
             
             h6, .h6 {
-                font-size: var(--tablet-h6-size) !important;
+                font-size: 14px !important;
             }
             
             body, p, .lead {
-                font-size: var(--tablet-body-size) !important;
+                font-size: 14px !important;
             }
         }
         
         @media (max-width: 768px) {
             h1, .h1 {
-                font-size: var(--mobile-h1-size) !important;
+                font-size: 28px !important;
             }
             
             h2, .h2 {
-                font-size: var(--mobile-h2-size) !important;
+                font-size: 24px !important;
             }
             
             h3, .h3 {
-                font-size: var(--mobile-h3-size) !important;
+                font-size: 20px !important;
             }
             
             h4, .h4 {
-                font-size: var(--mobile-h4-size) !important;
+                font-size: 16px !important;
             }
             
             h5, .h5 {
-                font-size: var(--mobile-h5-size) !important;
+                font-size: 14px !important;
             }
             
             h6, .h6 {
-                font-size: var(--mobile-h6-size) !important;
+                font-size: 12px !important;
             }
             
             body, p, .lead {
-                font-size: var(--mobile-body-size) !important;
+                font-size: 12px !important;
             }
+        }
+        
+        /* Header and Footer Styles */
+        .site-header {
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,.05);
+        }
+        
+        .site-footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 2rem 0;
+            margin-top: auto;
+        }
+        
+        .footer-logo {
+            max-height: 40px;
         }
     </style>
     
     @yield('styles')
 </head>
-<body>
-    <div id="app">
+<body class="d-flex flex-column min-vh-100">
+    <!-- Header -->
+    <header class="site-header py-3">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    @if(setting('header_logo'))
+                        <img src="{{ asset('storage/' . setting('header_logo')) }}" alt="{{ setting('site_title', 'Frontend App') }}" class="rounded" height="50">
+                    @else
+                        <h1 class="h4 mb-0 fw-bold heading-text">{{ setting('site_title', 'Frontend App') }}</h1>
+                    @endif
+                </div>
+                
+                <nav class="d-none d-md-block">
+                    <ul class="navbar-nav flex-row">
+                        <li class="nav-item me-3">
+                            <a class="nav-link" href="/">Home</a>
+                        </li>
+                        <!-- Add more navigation items as needed -->
+                    </ul>
+                </nav>
+                
+                <div>
+                    @auth
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-theme dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ Auth::user()->name }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ route('frontend.profile') }}">Profile</a></li>
+                                <li>
+                                    <form method="POST" action="{{ route('frontend.logout') }}">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">Logout</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    @else
+                        <a href="{{ route('frontend.login') }}" class="btn btn-sm btn-theme">Login</a>
+                    @endauth
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <div id="app" class="flex-grow-1">
         @yield('content')
     </div>
+    
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="d-flex align-items-center">
+                        @if(setting('footer_logo'))
+                            <img src="{{ asset('storage/' . setting('footer_logo')) }}" alt="{{ setting('site_title', 'Frontend App') }}" class="rounded footer-logo">
+                        @else
+                            <span class="general-text">
+                                {{ setting('footer_text', '© ' . date('Y') . ' ' . config('app.name', 'Laravel') . '. All rights reserved.') }}
+                            </span>
+                        @endif
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <ul class="nav justify-content-md-end">
+                        @if(setting('facebook_url'))
+                        <li class="nav-item">
+                            <a class="nav-link text-secondary px-2 py-0" href="{{ setting('facebook_url') }}" target="_blank" data-bs-toggle="tooltip" title="Facebook">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                        </li>
+                        @endif
+                        @if(setting('twitter_url'))
+                        <li class="nav-item">
+                            <a class="nav-link text-secondary px-2 py-0" href="{{ setting('twitter_url') }}" target="_blank" data-bs-toggle="tooltip" title="Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                        </li>
+                        @endif
+                        @if(setting('instagram_url'))
+                        <li class="nav-item">
+                            <a class="nav-link text-secondary px-2 py-0" href="{{ setting('instagram_url') }}" target="_blank" data-bs-toggle="tooltip" title="Instagram">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </li>
+                        @endif
+                        @if(setting('linkedin_url'))
+                        <li class="nav-item">
+                            <a class="nav-link text-secondary px-2 py-0" href="{{ setting('linkedin_url') }}" target="_blank" data-bs-toggle="tooltip" title="LinkedIn">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                        </li>
+                        @endif
+                        @if(setting('youtube_url'))
+                        <li class="nav-item">
+                            <a class="nav-link text-secondary px-2 py-0" href="{{ setting('youtube_url') }}" target="_blank" data-bs-toggle="tooltip" title="YouTube">
+                                <i class="fab fa-youtube"></i>
+                            </a>
+                        </li>
+                        @endif
+                        @if(setting('whatsapp_url'))
+                        <li class="nav-item">
+                            <a class="nav-link text-secondary px-2 py-0" href="{{ setting('whatsapp_url') }}" target="_blank" data-bs-toggle="tooltip" title="WhatsApp">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                        </li>
+                        @endif
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
     
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

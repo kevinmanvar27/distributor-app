@@ -1,22 +1,15 @@
-@extends('frontend.layouts.app')
+@extends('frontend.layouts.auth')
 
 @section('title', 'Login - ' . setting('site_title', 'Frontend App'))
 
 @section('content')
 <div class="container">
-    <div class="row justify-content-center align-items-center min-vh-100">
+    <div class="row justify-content-center align-items-center">
         <div class="col-md-8 col-lg-6">
             <div class="card shadow-sm border-0">
                 <div class="card-body p-5">
                     <div class="text-center mb-5">
-                        @if(setting('header_logo'))
-                            <img src="{{ asset('storage/' . setting('header_logo')) }}" alt="{{ setting('site_title', 'Frontend App') }}" class="mb-4 rounded" height="60">
-                        @else
-                            <div class="bg-theme rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 60px; height: 60px; background-color: {{ setting('theme_color', '#007bff') }};">
-                                <i class="fas fa-cube text-white"></i>
-                            </div>
-                        @endif
-                        <h1 class="h2 fw-bold heading-text">Welcome to {{ setting('site_title', 'Frontend App') }}</h1>
+                        <h1 class="h2 fw-bold heading-text">Welcome</h1>
                         <p class="general-text mb-0">Please sign in to your account</p>
                     </div>
                     

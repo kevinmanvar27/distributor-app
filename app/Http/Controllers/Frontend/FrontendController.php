@@ -16,4 +16,14 @@ class FrontendController extends Controller
     {
         return view('frontend.home');
     }
+    
+    /**
+     * Show the user profile page
+     *
+     * @return \Illuminate\View\View
+     */
+    public function profile()
+    {
+        return view('frontend.profile', ['user' => auth()->user()]);
+    }
 }

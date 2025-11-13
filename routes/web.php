@@ -45,6 +45,11 @@ Route::middleware('frontend.access')->group(function () {
     Route::get('/home', [FrontendController::class, 'index'])->name('frontend.home');
 });
 
+// Frontend Authenticated Routes
+Route::middleware(['frontend.access', 'auth'])->group(function () {
+    Route::get('/profile', [FrontendController::class, 'profile'])->name('frontend.profile');
+});
+
 // Authentication Routes
 Route::get('admin/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('admin/login', [LoginController::class, 'login']);
