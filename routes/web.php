@@ -12,10 +12,22 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\UserGroupController;
+use App\Http\Controllers\Frontend\FrontendController;
+use App\Http\Controllers\Frontend\LoginController as FrontendLoginController;
 
 // Redirect root URL to admin login page
 Route::get('/', function () {
-    return redirect()->route('login');
+    return redirect()->route('frontend.login');
+});
+
+// Frontend Authentication Routes
+Route::get('login', [FrontendLoginController::class, 'showLoginForm'])->name('frontend.login');
+Route::post('login', [FrontendLoginController::class, 'login'])->name('frontend.login.post');
+Route::post('frontend/logout', [FrontendLoginController::class, 'logout'])->name('frontend.logout');
+
+// Frontend Routes (protected by frontend auth middleware)
+Route::middleware('frontend.auth')->group(function () {
+    Route::get('/home', [FrontendController::class, 'index'])->name('frontend.home');
 });
 
 // Authentication Routes

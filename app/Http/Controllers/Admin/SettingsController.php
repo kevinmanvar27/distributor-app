@@ -53,6 +53,28 @@ class SettingsController extends Controller
             'razorpay_key_secret' => null,
             'app_store_link' => null,
             'play_store_link' => null,
+            // Default font size values
+            'desktop_h1_size' => 36,
+            'desktop_h2_size' => 30,
+            'desktop_h3_size' => 24,
+            'desktop_h4_size' => 20,
+            'desktop_h5_size' => 18,
+            'desktop_h6_size' => 16,
+            'desktop_body_size' => 16,
+            'tablet_h1_size' => 32,
+            'tablet_h2_size' => 28,
+            'tablet_h3_size' => 22,
+            'tablet_h4_size' => 18,
+            'tablet_h5_size' => 16,
+            'tablet_h6_size' => 14,
+            'tablet_body_size' => 14,
+            'mobile_h1_size' => 28,
+            'mobile_h2_size' => 24,
+            'mobile_h3_size' => 20,
+            'mobile_h4_size' => 16,
+            'mobile_h5_size' => 14,
+            'mobile_h6_size' => 12,
+            'mobile_body_size' => 12,
         ]);
         
         return view('admin.settings.index', compact('setting'));
@@ -102,6 +124,28 @@ class SettingsController extends Controller
             'firebase_private_key' => 'nullable|string',
             'app_store_link' => 'nullable|url',
             'play_store_link' => 'nullable|url',
+            // Font size validation rules
+            'desktop_h1_size' => 'nullable|integer|min:1',
+            'desktop_h2_size' => 'nullable|integer|min:1',
+            'desktop_h3_size' => 'nullable|integer|min:1',
+            'desktop_h4_size' => 'nullable|integer|min:1',
+            'desktop_h5_size' => 'nullable|integer|min:1',
+            'desktop_h6_size' => 'nullable|integer|min:1',
+            'desktop_body_size' => 'nullable|integer|min:1',
+            'tablet_h1_size' => 'nullable|integer|min:1',
+            'tablet_h2_size' => 'nullable|integer|min:1',
+            'tablet_h3_size' => 'nullable|integer|min:1',
+            'tablet_h4_size' => 'nullable|integer|min:1',
+            'tablet_h5_size' => 'nullable|integer|min:1',
+            'tablet_h6_size' => 'nullable|integer|min:1',
+            'tablet_body_size' => 'nullable|integer|min:1',
+            'mobile_h1_size' => 'nullable|integer|min:1',
+            'mobile_h2_size' => 'nullable|integer|min:1',
+            'mobile_h3_size' => 'nullable|integer|min:1',
+            'mobile_h4_size' => 'nullable|integer|min:1',
+            'mobile_h5_size' => 'nullable|integer|min:1',
+            'mobile_h6_size' => 'nullable|integer|min:1',
+            'mobile_body_size' => 'nullable|integer|min:1',
             // Site Management validation rules
             'maintenance_end_time' => 'nullable|date_format:d/m/Y H:i',
             'maintenance_message' => 'nullable|string',
@@ -158,6 +202,29 @@ class SettingsController extends Controller
         $setting->firebase_private_key = $request->firebase_private_key;
         $setting->app_store_link = $request->app_store_link;
         $setting->play_store_link = $request->play_store_link;
+        
+        // Update font size fields
+        $setting->desktop_h1_size = $request->desktop_h1_size;
+        $setting->desktop_h2_size = $request->desktop_h2_size;
+        $setting->desktop_h3_size = $request->desktop_h3_size;
+        $setting->desktop_h4_size = $request->desktop_h4_size;
+        $setting->desktop_h5_size = $request->desktop_h5_size;
+        $setting->desktop_h6_size = $request->desktop_h6_size;
+        $setting->desktop_body_size = $request->desktop_body_size;
+        $setting->tablet_h1_size = $request->tablet_h1_size;
+        $setting->tablet_h2_size = $request->tablet_h2_size;
+        $setting->tablet_h3_size = $request->tablet_h3_size;
+        $setting->tablet_h4_size = $request->tablet_h4_size;
+        $setting->tablet_h5_size = $request->tablet_h5_size;
+        $setting->tablet_h6_size = $request->tablet_h6_size;
+        $setting->tablet_body_size = $request->tablet_body_size;
+        $setting->mobile_h1_size = $request->mobile_h1_size;
+        $setting->mobile_h2_size = $request->mobile_h2_size;
+        $setting->mobile_h3_size = $request->mobile_h3_size;
+        $setting->mobile_h4_size = $request->mobile_h4_size;
+        $setting->mobile_h5_size = $request->mobile_h5_size;
+        $setting->mobile_h6_size = $request->mobile_h6_size;
+        $setting->mobile_body_size = $request->mobile_body_size;
         
         // Update site management fields with mutual exclusivity
         $maintenanceMode = $request->boolean('maintenance_mode');
@@ -322,6 +389,28 @@ class SettingsController extends Controller
                 'razorpay_key_secret' => null,
                 'app_store_link' => null,
                 'play_store_link' => null,
+                // Default font size values
+                'desktop_h1_size' => 36,
+                'desktop_h2_size' => 30,
+                'desktop_h3_size' => 24,
+                'desktop_h4_size' => 20,
+                'desktop_h5_size' => 18,
+                'desktop_h6_size' => 16,
+                'desktop_body_size' => 16,
+                'tablet_h1_size' => 32,
+                'tablet_h2_size' => 28,
+                'tablet_h3_size' => 22,
+                'tablet_h4_size' => 18,
+                'tablet_h5_size' => 16,
+                'tablet_h6_size' => 14,
+                'tablet_body_size' => 14,
+                'mobile_h1_size' => 28,
+                'mobile_h2_size' => 24,
+                'mobile_h3_size' => 20,
+                'mobile_h4_size' => 16,
+                'mobile_h5_size' => 14,
+                'mobile_h6_size' => 12,
+                'mobile_body_size' => 12,
             ]);
         }
         

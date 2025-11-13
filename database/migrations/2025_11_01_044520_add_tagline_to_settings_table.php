@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('settings', function (Blueprint $table) {
-            $table->string('tagline')->nullable();
-        });
+        if (!Schema::hasColumn('settings', 'tagline')) {
+            Schema::table('settings', function (Blueprint $table) {
+                $table->string('tagline')->nullable();
+            });
+        }
     }
 
     /**
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('settings', function (Blueprint $table) {
-            $table->dropColumn('tagline');
-        });
+        if (Schema::hasColumn('settings', 'tagline')) {
+            Schema::table('settings', function (Blueprint $table) {
+                $table->dropColumn('tagline');
+            });
+        }
     }
 };

@@ -288,3 +288,256 @@ if (!function_exists('is_super_admin')) {
         return false;
     }
 }
+
+// Font size helper functions
+if (!function_exists('desktop_h1_size')) {
+    /**
+     * Get the desktop H1 font size setting
+     *
+     * @return int
+     */
+    function desktop_h1_size()
+    {
+        return setting('desktop_h1_size', 36);
+    }
+}
+
+if (!function_exists('desktop_h2_size')) {
+    /**
+     * Get the desktop H2 font size setting
+     *
+     * @return int
+     */
+    function desktop_h2_size()
+    {
+        return setting('desktop_h2_size', 30);
+    }
+}
+
+if (!function_exists('desktop_h3_size')) {
+    /**
+     * Get the desktop H3 font size setting
+     *
+     * @return int
+     */
+    function desktop_h3_size()
+    {
+        return setting('desktop_h3_size', 24);
+    }
+}
+
+if (!function_exists('desktop_h4_size')) {
+    /**
+     * Get the desktop H4 font size setting
+     *
+     * @return int
+     */
+    function desktop_h4_size()
+    {
+        return setting('desktop_h4_size', 20);
+    }
+}
+
+if (!function_exists('desktop_h5_size')) {
+    /**
+     * Get the desktop H5 font size setting
+     *
+     * @return int
+     */
+    function desktop_h5_size()
+    {
+        return setting('desktop_h5_size', 18);
+    }
+}
+
+if (!function_exists('desktop_h6_size')) {
+    /**
+     * Get the desktop H6 font size setting
+     *
+     * @return int
+     */
+    function desktop_h6_size()
+    {
+        return setting('desktop_h6_size', 16);
+    }
+}
+
+if (!function_exists('desktop_body_size')) {
+    /**
+     * Get the desktop body font size setting
+     *
+     * @return int
+     */
+    function desktop_body_size()
+    {
+        return setting('desktop_body_size', 16);
+    }
+}
+
+if (!function_exists('tablet_h1_size')) {
+    /**
+     * Get the tablet H1 font size setting
+     *
+     * @return int
+     */
+    function tablet_h1_size()
+    {
+        return setting('tablet_h1_size', 32);
+    }
+}
+
+if (!function_exists('tablet_h2_size')) {
+    /**
+     * Get the tablet H2 font size setting
+     *
+     * @return int
+     */
+    function tablet_h2_size()
+    {
+        return setting('tablet_h2_size', 28);
+    }
+}
+
+if (!function_exists('tablet_h3_size')) {
+    /**
+     * Get the tablet H3 font size setting
+     *
+     * @return int
+     */
+    function tablet_h3_size()
+    {
+        return setting('tablet_h3_size', 22);
+    }
+}
+
+if (!function_exists('tablet_h4_size')) {
+    /**
+     * Get the tablet H4 font size setting
+     *
+     * @return int
+     */
+    function tablet_h4_size()
+    {
+        return setting('tablet_h4_size', 18);
+    }
+}
+
+if (!function_exists('tablet_h5_size')) {
+    /**
+     * Get the tablet H5 font size setting
+     *
+     * @return int
+     */
+    function tablet_h5_size()
+    {
+        return setting('tablet_h5_size', 16);
+    }
+}
+
+if (!function_exists('tablet_h6_size')) {
+    /**
+     * Get the tablet H6 font size setting
+     *
+     * @return int
+     */
+    function tablet_h6_size()
+    {
+        return setting('tablet_h6_size', 14);
+    }
+}
+
+if (!function_exists('tablet_body_size')) {
+    /**
+     * Get the tablet body font size setting
+     *
+     * @return int
+     */
+    function tablet_body_size()
+    {
+        return setting('tablet_body_size', 14);
+    }
+}
+
+if (!function_exists('mobile_h1_size')) {
+    /**
+     * Get the mobile H1 font size setting
+     *
+     * @return int
+     */
+    function mobile_h1_size()
+    {
+        return setting('mobile_h1_size', 28);
+    }
+}
+
+if (!function_exists('mobile_h2_size')) {
+    /**
+     * Get the mobile H2 font size setting
+     *
+     * @return int
+     */
+    function mobile_h2_size()
+    {
+        return setting('mobile_h2_size', 24);
+    }
+}
+
+if (!function_exists('mobile_h3_size')) {
+    /**
+     * Get the mobile H3 font size setting
+     *
+     * @return int
+     */
+    function mobile_h3_size()
+    {
+        return setting('mobile_h3_size', 20);
+    }
+}
+
+if (!function_exists('mobile_h4_size')) {
+    /**
+     * Get the mobile H4 font size setting
+     *
+     * @return int
+     */
+    function mobile_h4_size()
+    {
+        return setting('mobile_h4_size', 16);
+    }
+}
+
+if (!function_exists('mobile_h5_size')) {
+    /**
+     * Get the mobile H5 font size setting
+     *
+     * @return int
+     */
+    function mobile_h5_size()
+    {
+        return setting('mobile_h5_size', 14);
+    }
+}
+
+if (!function_exists('mobile_h6_size')) {
+    /**
+     * Get the mobile H6 font size setting
+     *
+     * @return int
+     */
+    function mobile_h6_size()
+    {
+        return setting('mobile_h6_size', 12);
+    }
+}
+
+if (!function_exists('mobile_body_size')) {
+    /**
+     * Get the mobile body font size setting
+     *
+     * @return int
+     */
+    function mobile_body_size()
+    {
+        return setting('mobile_body_size', 12);
+    }
+}
