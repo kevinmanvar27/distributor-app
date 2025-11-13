@@ -56,6 +56,7 @@ class Product extends Model
      */
     public function galleryMedia()
     {
-        return $this->belongsToMany(Media::class, 'product_gallery');
+        // Gallery is stored as JSON array of media IDs, not through pivot table
+        return $this->hasMany(Media::class, 'id', 'product_gallery');
     }
 }
