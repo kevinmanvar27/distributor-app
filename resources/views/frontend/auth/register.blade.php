@@ -1,6 +1,6 @@
 @extends('frontend.layouts.app')
 
-@section('title', 'Login - ' . setting('site_title', 'Frontend App'))
+@section('title', 'Register - ' . setting('site_title', 'Frontend App'))
 
 @section('content')
 <div class="container">
@@ -16,8 +16,8 @@
                                 <i class="fas fa-cube text-white"></i>
                             </div>
                         @endif
-                        <h1 class="h2 fw-bold heading-text">Welcome to {{ setting('site_title', 'Frontend App') }}</h1>
-                        <p class="general-text mb-0">Please sign in to your account</p>
+                        <h1 class="h2 fw-bold heading-text">Create Account</h1>
+                        <p class="general-text mb-0">Fill in the details below to create your account</p>
                     </div>
                     
                     @if ($errors->any())
@@ -40,14 +40,31 @@
                     @endif
                     
                     @if (session('success'))
-                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
                             {{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
                     
-                    <form method="POST" action="{{ route('frontend.login') }}">
+                    <form method="POST" action="{{ route('frontend.register') }}">
                         @csrf
+                        
+                        <div class="mb-4">
+                            <label for="name" class="form-label fw-medium label-text">Full Name</label>
+                            <input 
+                                id="name" 
+                                type="text" 
+                                class="form-control form-control-lg @error('name') is-invalid @enderror" 
+                                name="name" 
+                                value="{{ old('name') }}" 
+                                required 
+                                autocomplete="name" 
+                                autofocus 
+                                placeholder="Enter your full name">
+                            @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                         
                         <div class="mb-4">
                             <label for="email" class="form-label fw-medium label-text">Email Address</label>
@@ -59,13 +76,9 @@
                                 value="{{ old('email') }}" 
                                 required 
                                 autocomplete="email" 
-                                autofocus 
                                 placeholder="Enter your email">
-                            
                             @error('email')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         
@@ -78,35 +91,46 @@
                                     class="form-control form-control-lg @error('password') is-invalid @enderror" 
                                     name="password" 
                                     required 
-                                    autocomplete="current-password" 
+                                    autocomplete="new-password" 
                                     placeholder="Enter your password">
                                 <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
-                            
                             @error('password')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
-                                <label class="form-check-label label-text" for="remember">
-                                    Remember Me
-                                </label>
+                        <div class="mb-4">
+                            <label for="password-confirm" class="form-label fw-medium label-text">Confirm Password</label>
+                            <div class="input-group">
+                                <input 
+                                    id="password-confirm" 
+                                    type="password" 
+                                    class="form-control form-control-lg" 
+                                    name="password_confirmation" 
+                                    required 
+                                    autocomplete="new-password" 
+                                    placeholder="Confirm your password">
+                                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password-confirm">
+                                    <i class="fas fa-eye"></i>
+                                </button>
                             </div>
                         </div>
                         
                         <div class="d-grid">
                             <button type="submit" class="btn btn-theme rounded-pill px-4">
-                                Sign In
+                                Register
                             </button>
                         </div>
                     </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="general-text mb-0">
+                            Already have an account? <a href="{{ route('frontend.login') }}">Sign In</a>
+                        </p>
+                    </div>
                 </div>
             </div>
             
@@ -115,14 +139,6 @@
                     &copy; {{ date('Y') }} {{ setting('site_title', 'Frontend App') }}. All rights reserved.
                 </p>
             </div>
-                                
-            @if(!isset($accessPermission) || $accessPermission !== 'registered_users_only')
-            <div class="text-center mt-3">
-                <p class="general-text mb-0">
-                    Don't have an account? <a href="{{ route('frontend.register') }}">Register</a>
-                </p>
-            </div>
-            @endif
         </div>
     </div>
 </div>

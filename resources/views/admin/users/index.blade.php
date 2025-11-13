@@ -47,6 +47,7 @@
                                                 <th>User</th>
                                                 <th>Email</th>
                                                 <th>Role</th>
+                                                <th>Status</th>
                                                 <th>Address</th>
                                                 <th>Mobile</th>
                                                 <th>Date of Birth</th>
@@ -82,6 +83,23 @@
                                                         <span class="badge {{ $roleClass }} rounded-pill px-3 py-2">
                                                             {{ ucfirst(str_replace('_', ' ', $user->user_role)) }}
                                                         </span>
+                                                    </td>
+                                                    <td>
+                                                        @if($user->is_approved)
+                                                            <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2">
+                                                                Approved
+                                                            </span>
+                                                        @else
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2">
+                                                                Pending
+                                                            </span>
+                                                            <form action="{{ route('admin.users.approve', $user) }}" method="POST" class="d-inline">
+                                                                @csrf
+                                                                <button type="submit" class="btn btn-sm btn-outline-success ms-2">
+                                                                    <i class="fas fa-check"></i> Approve
+                                                                </button>
+                                                            </form>
+                                                        @endif
                                                     </td>
                                                     <td>{{ $user->address ?? 'N/A' }}</td>
                                                     <td>{{ $user->mobile_number ?? 'N/A' }}</td>

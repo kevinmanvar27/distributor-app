@@ -12,8 +12,13 @@
                         Home Page
                     </h1>
                     <p class="lead mb-4 general-text">
-                        Welcome to the frontend application, {{ Auth::user()->name }}!
+                        @auth
+                            Welcome to the frontend application, {{ Auth::user()->name }}!
+                        @else
+                            Welcome to the frontend application!
+                        @endauth
                     </p>
+                    @auth
                     <div class="d-flex justify-content-center gap-3">
                         <form method="POST" action="{{ route('frontend.logout') }}">
                             @csrf
@@ -22,6 +27,7 @@
                             </button>
                         </form>
                     </div>
+                    @endauth
                 </div>
             </div>
         </div>

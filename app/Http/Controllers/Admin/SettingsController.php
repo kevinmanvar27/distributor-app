@@ -75,6 +75,8 @@ class SettingsController extends Controller
             'mobile_h5_size' => 14,
             'mobile_h6_size' => 12,
             'mobile_body_size' => 12,
+            'frontend_access_permission' => 'open_for_all',
+            'pending_approval_message' => 'Your account is pending approval. Please wait for admin approval before accessing the site.',
         ]);
         
         return view('admin.settings.index', compact('setting'));
@@ -146,6 +148,9 @@ class SettingsController extends Controller
             'mobile_h5_size' => 'nullable|integer|min:1',
             'mobile_h6_size' => 'nullable|integer|min:1',
             'mobile_body_size' => 'nullable|integer|min:1',
+            // Frontend access permission validation rules
+            'frontend_access_permission' => 'nullable|string|in:open_for_all,registered_users_only,admin_approval_required',
+            'pending_approval_message' => 'nullable|string',
             // Site Management validation rules
             'maintenance_end_time' => 'nullable|date_format:d/m/Y H:i',
             'maintenance_message' => 'nullable|string',
@@ -225,6 +230,10 @@ class SettingsController extends Controller
         $setting->mobile_h5_size = $request->mobile_h5_size;
         $setting->mobile_h6_size = $request->mobile_h6_size;
         $setting->mobile_body_size = $request->mobile_body_size;
+        
+        // Update frontend access permission settings
+        $setting->frontend_access_permission = $request->frontend_access_permission ?? 'open_for_all';
+        $setting->pending_approval_message = $request->pending_approval_message;
         
         // Update site management fields with mutual exclusivity
         $maintenanceMode = $request->boolean('maintenance_mode');
@@ -411,6 +420,8 @@ class SettingsController extends Controller
                 'mobile_h5_size' => 14,
                 'mobile_h6_size' => 12,
                 'mobile_body_size' => 12,
+                'frontend_access_permission' => 'open_for_all',
+                'pending_approval_message' => 'Your account is pending approval. Please wait for admin approval before accessing the site.',
             ]);
         }
         

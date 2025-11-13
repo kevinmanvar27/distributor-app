@@ -65,5 +65,7 @@ class Setting extends Model
         'mobile_h5_size',
         'mobile_h6_size',
         'mobile_body_size',
+        'frontend_access_permission',
+        'pending_approval_message',
     ];
 }

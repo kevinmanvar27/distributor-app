@@ -14,9 +14,20 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\UserGroupController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Frontend\LoginController as FrontendLoginController;
+use App\Http\Controllers\Frontend\RegisterController;
 
-// Redirect root URL to admin login page
+// Redirect root URL based on frontend access settings
 Route::get('/', function () {
+    // Get the frontend access permission setting
+    $setting = \App\Models\Setting::first();
+    $accessPermission = $setting->frontend_access_permission ?? 'open_for_all';
+    
+    // For "Open for all", redirect to home page
+    if ($accessPermission === 'open_for_all') {
+        return redirect()->route('frontend.home');
+    }
+    
+    // For other modes, redirect to login page
     return redirect()->route('frontend.login');
 });
 
@@ -25,8 +36,12 @@ Route::get('login', [FrontendLoginController::class, 'showLoginForm'])->name('fr
 Route::post('login', [FrontendLoginController::class, 'login'])->name('frontend.login.post');
 Route::post('frontend/logout', [FrontendLoginController::class, 'logout'])->name('frontend.logout');
 
-// Frontend Routes (protected by frontend auth middleware)
-Route::middleware('frontend.auth')->group(function () {
+// Frontend Registration Routes
+Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('frontend.register');
+Route::post('register', [RegisterController::class, 'register'])->name('frontend.register.post');
+
+// Public Frontend Routes (accessible based on settings)
+Route::middleware('frontend.access')->group(function () {
     Route::get('/home', [FrontendController::class, 'index'])->name('frontend.home');
 });
 
@@ -95,6 +110,7 @@ Route::middleware('auth')->group(function () {
         // Regular users management
         Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
         Route::get('/users/staff', [UserController::class, 'staff'])->name('admin.users.staff');
+        Route::post('/users/{user}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
         
         Route::resource('users', UserController::class)->except(['index'])->names([
             'create' => 'admin.users.create',

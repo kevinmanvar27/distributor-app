@@ -27,6 +27,7 @@ class User extends Authenticatable
         'avatar',
         'address',
         'mobile_number',
+        'is_approved',
     ];
 
     /**
@@ -192,5 +193,15 @@ class User extends Authenticatable
     public function userGroups()
     {
         return $this->belongsToMany(UserGroup::class, 'user_group_members');
+    }
+    
+    /**
+     * Check if the user is approved.
+     *
+     * @return bool
+     */
+    public function isApproved()
+    {
+        return $this->is_approved;
     }
 }

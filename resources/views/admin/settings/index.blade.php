@@ -90,6 +90,11 @@
                                         <i class="fas fa-database me-1"></i> Database Management
                                     </button>
                                 </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="frontend-tab" data-bs-toggle="tab" data-bs-target="#frontend" type="button" role="tab">
+                                        <i class="fas fa-window-maximize me-1"></i> Frontend Settings
+                                    </button>
+                                </li>
                             </ul>
                             <!-- Tab Content -->
                             <div class="tab-content" id="settingsTabsContent">
@@ -748,6 +753,53 @@
                                                             <button type="button" class="btn btn-theme w-100" data-action="export-database">
                                                                 <i class="fas fa-download me-1"></i> Export Full Database
                                                             </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Frontend Settings Tab -->
+                                <div class="tab-pane fade" id="frontend" role="tabpanel">
+                                    <div class="row g-4">
+                                        <div class="col-12">
+                                            <h4 class="mb-4">Frontend Access Permissions</h4>
+                                            <p class="text-muted">Configure who can access your website/application.</p>
+                                            
+                                            <div class="card border-0 shadow-sm mb-4">
+                                                <div class="card-body">
+                                                    <div class="row g-4">
+                                                        <div class="col-md-12">
+                                                            <label class="form-label fw-medium">Website Access Permission</label>
+                                                            <div class="form-check mb-2">
+                                                                <input class="form-check-input" type="radio" name="frontend_access_permission" id="openForAll" value="open_for_all" {{ old('frontend_access_permission', $setting->frontend_access_permission ?? 'open_for_all') == 'open_for_all' ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="openForAll">
+                                                                    Open for all
+                                                                    <div class="form-text">Anyone can view the website/application without restrictions</div>
+                                                                </label>
+                                                            </div>
+                                                            <div class="form-check mb-2">
+                                                                <input class="form-check-input" type="radio" name="frontend_access_permission" id="registeredUsersOnly" value="registered_users_only" {{ old('frontend_access_permission', $setting->frontend_access_permission ?? 'open_for_all') == 'registered_users_only' ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="registeredUsersOnly">
+                                                                    Only registered users
+                                                                    <div class="form-text">Only users with valid credentials can log in and access the site</div>
+                                                                </label>
+                                                            </div>
+                                                            <div class="form-check mb-2">
+                                                                <input class="form-check-input" type="radio" name="frontend_access_permission" id="adminApprovalRequired" value="admin_approval_required" {{ old('frontend_access_permission', $setting->frontend_access_permission ?? 'open_for_all') == 'admin_approval_required' ? 'checked' : '' }}>
+                                                                <label class="form-check-label" for="adminApprovalRequired">
+                                                                    User registration requires admin approval
+                                                                    <div class="form-text">Users can register but must be approved by an admin before they can log in</div>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="col-md-12">
+                                                            <label class="form-label fw-medium">Pending Approval Message</label>
+                                                            <textarea name="pending_approval_message" rows="3" class="form-control" placeholder="Your account is pending approval. Please wait for admin approval before accessing the site.">{{ old('pending_approval_message', $setting->pending_approval_message ?? 'Your account is pending approval. Please wait for admin approval before accessing the site.') }}</textarea>
+                                                            <div class="form-text">Message shown to users whose accounts are pending admin approval</div>
                                                         </div>
                                                     </div>
                                                 </div>

@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => CheckPermission::class,
             'frontend.auth' => FrontendAuthenticate::class,
             'frontend.guest' => FrontendRedirectIfAuthenticated::class,
+            'frontend.access' => \App\Http\Middleware\CheckFrontendAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
