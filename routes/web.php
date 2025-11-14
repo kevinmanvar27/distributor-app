@@ -43,6 +43,7 @@ Route::post('register', [RegisterController::class, 'register'])->name('frontend
 // Public Frontend Routes (accessible based on settings)
 Route::middleware('frontend.access')->group(function () {
     Route::get('/home', [FrontendController::class, 'index'])->name('frontend.home');
+    Route::get('/category/{category:slug}', [FrontendController::class, 'showCategory'])->name('frontend.category.show');
 });
 
 // Frontend Authenticated Routes

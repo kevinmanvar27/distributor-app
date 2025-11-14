@@ -47,6 +47,51 @@ class FrontendController extends Controller
     }
     
     /**
+     * Show the category detail page
+     *
+     * @param  \App\Models\Category  $category
+     * @return \Illuminate\View\View
+     */
+    public function showCategory(Category $category)
+    {
+        // Check if category is active
+        if (!$category->is_active) {
+            abort(404);
+        }
+        
+        // Load active subcategories with their images
+        $subCategories = $category->subCategories()
+            ->where('is_active', true)
+            ->with('image')
+            ->get();
+            
+        // Load products associated with this category (active or published)
+        // Products store categories in a JSON array in the product_categories field
+        $products = Product::whereIn('status', ['active', 'published'])
+            ->get()
+            ->filter(function ($product) use ($category) {
+                if (!$product->product_categories) {
+                    return false;
+                }
+                
+                foreach ($product->product_categories as $catData) {
+                    if (isset($catData['category_id']) && $catData['category_id'] == $category->id) {
+                        return true;
+                    }
+                }
+                
+                return false;
+            })
+            ->values();
+            
+        // SEO meta tags
+        $metaTitle = $category->name . ' - ' . setting('site_title', 'Frontend App');
+        $metaDescription = $category->description ?? 'Explore products in ' . $category->name . ' category';
+        
+        return view('frontend.category', compact('category', 'subCategories', 'products', 'metaTitle', 'metaDescription'));
+    }
+    
+    /**
      * Update the user profile
      *
      * @param  \Illuminate\Http\Request  $request

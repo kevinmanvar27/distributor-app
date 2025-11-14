@@ -39,6 +39,14 @@ class DatabaseSeeder extends Seeder
         
         // Seed user groups
         $this->call(UserGroupSeeder::class);
-
+        
+        // Seed homepage content
+        $this->call(HomePageSeeder::class);
+        
+        // Seed test products
+        $this->call(TestProductSeeder::class);
+        
+        // Associate products with categories
+        $this->call(CategoryProductSeeder::class);
     }
 }

@@ -1,117 +1,93 @@
 @extends('frontend.layouts.app')
 
-@section('title', 'Home - ' . setting('site_title', 'Frontend App'))
+@section('title', $metaTitle ?? 'Category - ' . setting('site_title', 'Frontend App'))
+@section('meta_description', $metaDescription ?? setting('tagline', 'Your Frontend Application'))
 
 @section('content')
-<div class="container-fluid px-0">
-    <!-- Hero Section -->
-    <div class="hero-section text-center py-5 mb-5" style="background: linear-gradient(135deg, {{ setting('theme_color', '#007bff') }} 0%, {{ setting('link_hover_color', '#0056b3') }} 100%); color: white;">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <h1 class="display-4 fw-bold mb-4">Welcome to {{ setting('site_title', 'Frontend App') }}</h1>
-                    <p class="lead mb-4">
-                        @auth
-                            Welcome back, {{ Auth::user()->name }}! Explore our latest products and categories.
-                        @else
-                            Discover our amazing products and categories. Join us today!
-                        @endauth
-                    </p>
-                    @auth
-                    <div class="d-flex justify-content-center gap-3">
-                        <a href="{{ route('frontend.profile') }}" class="btn btn-light btn-lg rounded-pill px-4">
-                            <i class="fas fa-user me-2"></i>My Profile
-                        </a>
-                        <form method="POST" action="{{ route('frontend.logout') }}" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-outline-light btn-lg rounded-pill px-4">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </button>
-                        </form>
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="my-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ route('frontend.home') }}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ $category->name }}</li>
+        </ol>
+    </nav>
+    
+    <!-- Category Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center mb-4 mb-md-0">
+                            @if($category->image)
+                                <img src="{{ $category->image->url }}" class="img-fluid rounded" alt="{{ $category->name }}" style="max-height: 200px; object-fit: cover;">
+                            @else
+                                <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 200px;">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="col-md-9">
+                            <h1 class="mb-3 heading-text">{{ $category->name }}</h1>
+                            <p class="lead general-text">{{ $category->description ?? 'No description available for this category.' }}</p>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2">{{ $subCategories->count() }} Subcategories</span>
+                                <span class="badge bg-primary">{{ $products->count() }} Products</span>
+                            </div>
+                        </div>
                     </div>
-                    @else
-                    <div class="d-flex justify-content-center gap-3">
-                        <a href="{{ route('frontend.login') }}" class="btn btn-light btn-lg rounded-pill px-4">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
-                        </a>
-                        <a href="{{ route('frontend.register') }}" class="btn btn-outline-light btn-lg rounded-pill px-4">
-                            <i class="fas fa-user-plus me-2"></i>Register
-                        </a>
-                    </div>
-                    @endauth
                 </div>
             </div>
         </div>
     </div>
-</div>
-
-<div class="container">
-    <!-- Categories Section -->
+    
+    <!-- Subcategories Section -->
+    @if($subCategories->count() > 0)
     <div class="section mb-5">
         <div class="row mb-4">
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0 heading-text" style="color: {{ setting('theme_color', '#007bff') }};">
-                        <i class="fas fa-tags me-2"></i>Categories
-                    </h2>
-                    <a href="#" class="btn btn-theme">View All</a>
-                </div>
+                <h2 class="mb-0 heading-text">
+                    <i class="fas fa-tags me-2"></i>Subcategories
+                </h2>
                 <hr class="my-3">
             </div>
         </div>
         
-        @if($categories->count() > 0)
         <div class="row">
-            @foreach($categories as $category)
+            @foreach($subCategories as $subCategory)
             <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                 <div class="card h-100 shadow-sm border-0 category-card">
                     <div class="position-relative">
-                        @if($category->image)
-                            <img src="{{ $category->image->url }}" class="card-img-top" alt="{{ $category->name }}" style="height: 200px; object-fit: cover;">
+                        @if($subCategory->image)
+                            <img src="{{ $subCategory->image->url }}" class="card-img-top" alt="{{ $subCategory->name }}" style="height: 150px; object-fit: cover;">
                         @else
-                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <i class="fas fa-image fa-3x text-muted"></i>
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                                <i class="fas fa-image fa-2x text-muted"></i>
                             </div>
                         @endif
                         <div class="position-absolute top-0 end-0 m-2">
-                            <span class="badge bg-theme text-white">{{ $category->is_active ? 'Active' : 'Inactive' }}</span>
+                            <span class="badge bg-theme text-white">{{ $subCategory->is_active ? 'Active' : 'Inactive' }}</span>
                         </div>
                     </div>
                     <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ $category->name }}</h5>
-                        <p class="card-text flex-grow-1">{{ Str::limit($category->description ?? 'No description available', 100) }}</p>
-                        <div class="mt-auto">
-                            <small class="text-muted">{{ $category->subCategories->count() }} subcategories</small>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-transparent border-0">
-                        <a href="{{ route('frontend.category.show', $category) }}" class="btn btn-theme w-100">Explore</a>
+                        <h5 class="card-title">{{ $subCategory->name }}</h5>
+                        <p class="card-text flex-grow-1">{{ Str::limit($subCategory->description ?? 'No description available', 100) }}</p>
                     </div>
                 </div>
             </div>
             @endforeach
         </div>
-        @else
-        <div class="row">
-            <div class="col-12">
-                <div class="alert alert-info text-center">
-                    <i class="fas fa-info-circle me-2"></i>No categories available at the moment.
-                </div>
-            </div>
-        </div>
-        @endif
     </div>
+    @endif
     
     <!-- Products Section -->
     <div class="section mb-5">
         <div class="row mb-4">
             <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0 heading-text" style="color: {{ setting('theme_color', '#007bff') }};">
-                        <i class="fas fa-box-open me-2"></i>Products
-                    </h2>
-                    <a href="#" class="btn btn-theme">View All</a>
-                </div>
+                <h2 class="mb-0 heading-text">
+                    <i class="fas fa-box-open me-2"></i>Products
+                </h2>
                 <hr class="my-3">
             </div>
         </div>
@@ -170,7 +146,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="alert alert-info text-center">
-                    <i class="fas fa-info-circle me-2"></i>No products available at the moment.
+                    <i class="fas fa-info-circle me-2"></i>No products available in this category at the moment.
                 </div>
             </div>
         </div>
@@ -179,11 +155,6 @@
 </div>
 
 <style>
-    .hero-section {
-        background-size: cover;
-        background-position: center;
-    }
-    
     .category-card:hover, .product-card:hover {
         transform: translateY(-5px);
         transition: transform 0.3s ease;
@@ -223,6 +194,13 @@
     @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .card-img-top {
+            height: 150px !important;
+        }
     }
 </style>
 @endsection
