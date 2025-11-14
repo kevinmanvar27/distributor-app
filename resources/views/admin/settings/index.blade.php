@@ -804,6 +804,35 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            
+                                            <div class="card border-0 shadow-sm mb-4">
+                                                <div class="card-body">
+                                                    <h5 class="card-title mb-4">Payment Method Visibility</h5>
+                                                    <p class="text-muted">Configure which payment methods are visible to users on the checkout page.</p>
+                                                    
+                                                    <div class="row g-4">
+                                                        <div class="col-md-12">
+                                                            <div class="form-check form-switch mb-3">
+                                                                <input class="form-check-input" type="checkbox" name="show_online_payment" id="showOnlinePayment" {{ old('show_online_payment', $setting->show_online_payment ?? true) ? 'checked' : '' }}>
+                                                                <label class="form-check-label fw-medium" for="showOnlinePayment">Show Online Payment Option</label>
+                                                                <div class="form-text">When enabled, the "Online Payment" button will be visible on the checkout page</div>
+                                                            </div>
+                                                            
+                                                            <div class="form-check form-switch mb-3">
+                                                                <input class="form-check-input" type="checkbox" name="show_cod_payment" id="showCodPayment" {{ old('show_cod_payment', $setting->show_cod_payment ?? true) ? 'checked' : '' }}>
+                                                                <label class="form-check-label fw-medium" for="showCodPayment">Show Cash on Delivery (COD) Option</label>
+                                                                <div class="form-text">When enabled, the "Cash on Delivery" button will be visible on the checkout page</div>
+                                                            </div>
+                                                            
+                                                            <div class="form-check form-switch mb-3">
+                                                                <input class="form-check-input" type="checkbox" name="show_invoice_payment" id="showInvoicePayment" {{ old('show_invoice_payment', $setting->show_invoice_payment ?? true) ? 'checked' : '' }}>
+                                                                <label class="form-check-label fw-medium" for="showInvoicePayment">Show Send Proforma Invoice Option</label>
+                                                                <div class="form-text">When enabled, the "Send Proforma Invoice" button will be visible on the checkout page</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

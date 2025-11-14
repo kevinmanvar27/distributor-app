@@ -173,19 +173,25 @@
                     <h5 class="card-title mb-4">Payment Options</h5>
                     
                     <!-- Online Payment -->
+                    @if(show_online_payment())
                     <button class="btn btn-theme w-100 mb-3 d-flex align-items-center justify-content-center" id="online-payment">
                         <i class="fas fa-credit-card me-2"></i>Online Payment
                     </button>
+                    @endif
                     
                     <!-- Cash on Delivery -->
+                    @if(show_cod_payment())
                     <button class="btn btn-outline-theme w-100 mb-3 d-flex align-items-center justify-content-center" id="cod-payment">
                         <i class="fas fa-money-bill-wave me-2"></i>Cash on Delivery
                     </button>
+                    @endif
                     
                     <!-- Send Proforma Invoice -->
+                    @if(show_invoice_payment())
                     <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center" id="invoice-payment">
                         <i class="fas fa-file-invoice me-2"></i>Send Proforma Invoice
                     </button>
+                    @endif
                     
                     <a href="{{ route('frontend.home') }}" class="btn btn-link w-100 mt-3">
                         <i class="fas fa-arrow-left me-2"></i>Continue Shopping

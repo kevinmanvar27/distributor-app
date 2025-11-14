@@ -67,5 +67,8 @@ class Setting extends Model
         'mobile_body_size',
         'frontend_access_permission',
         'pending_approval_message',
+        'show_online_payment',
+        'show_cod_payment',
+        'show_invoice_payment',
     ];
 }

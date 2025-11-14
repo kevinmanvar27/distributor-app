@@ -541,3 +541,40 @@ if (!function_exists('mobile_body_size')) {
         return setting('mobile_body_size', 12);
     }
 }
+
+// Payment method visibility helper functions
+if (!function_exists('show_online_payment')) {
+    /**
+     * Check if online payment option should be shown
+     *
+     * @return bool
+     */
+    function show_online_payment()
+    {
+        return setting('show_online_payment', false);
+    }
+}
+
+if (!function_exists('show_cod_payment')) {
+    /**
+     * Check if cash on delivery option should be shown
+     *
+     * @return bool
+     */
+    function show_cod_payment()
+    {
+        return setting('show_cod_payment', false);
+    }
+}
+
+if (!function_exists('show_invoice_payment')) {
+    /**
+     * Check if send proforma invoice option should be shown
+     *
+     * @return bool
+     */
+    function show_invoice_payment()
+    {
+        return setting('show_invoice_payment', false);
+    }
+}

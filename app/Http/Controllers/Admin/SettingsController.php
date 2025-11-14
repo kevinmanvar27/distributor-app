@@ -77,6 +77,9 @@ class SettingsController extends Controller
             'mobile_body_size' => 12,
             'frontend_access_permission' => 'open_for_all',
             'pending_approval_message' => 'Your account is pending approval. Please wait for admin approval before accessing the site.',
+            'show_online_payment' => true,
+            'show_cod_payment' => true,
+            'show_invoice_payment' => true,
         ]);
         
         return view('admin.settings.index', compact('setting'));
@@ -151,6 +154,10 @@ class SettingsController extends Controller
             // Frontend access permission validation rules
             'frontend_access_permission' => 'nullable|string|in:open_for_all,registered_users_only,admin_approval_required',
             'pending_approval_message' => 'nullable|string',
+            // Payment method visibility validation rules
+            'show_online_payment' => 'nullable|boolean',
+            'show_cod_payment' => 'nullable|boolean',
+            'show_invoice_payment' => 'nullable|boolean',
             // Site Management validation rules
             'maintenance_end_time' => 'nullable|date_format:d/m/Y H:i',
             'maintenance_message' => 'nullable|string',
@@ -234,6 +241,11 @@ class SettingsController extends Controller
         // Update frontend access permission settings
         $setting->frontend_access_permission = $request->frontend_access_permission ?? 'open_for_all';
         $setting->pending_approval_message = $request->pending_approval_message;
+        
+        // Update payment method visibility settings
+        $setting->show_online_payment = $request->has('show_online_payment') ? $request->boolean('show_online_payment') : false;
+        $setting->show_cod_payment = $request->has('show_cod_payment') ? $request->boolean('show_cod_payment') : false;
+        $setting->show_invoice_payment = $request->has('show_invoice_payment') ? $request->boolean('show_invoice_payment') : false;
         
         // Update site management fields with mutual exclusivity
         $maintenanceMode = $request->boolean('maintenance_mode');
@@ -422,6 +434,9 @@ class SettingsController extends Controller
                 'mobile_body_size' => 12,
                 'frontend_access_permission' => 'open_for_all',
                 'pending_approval_message' => 'Your account is pending approval. Please wait for admin approval before accessing the site.',
+                'show_online_payment' => true,
+                'show_cod_payment' => true,
+                'show_invoice_payment' => true,
             ]);
         }
         
