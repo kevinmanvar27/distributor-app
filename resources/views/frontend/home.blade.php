@@ -156,10 +156,12 @@
                     </div>
                     <div class="card-footer bg-transparent border-0">
                         <div class="d-grid gap-2">
-                            <a href="#" class="btn btn-theme">Buy Now</a>
-                            <a href="#" class="btn btn-outline-theme">
+                            <button type="button" class="btn btn-theme buy-now-btn" data-product-id="{{ $product->id }}">
+                                Buy Now
+                            </button>
+                            <button type="button" class="btn btn-outline-theme add-to-cart-btn" data-product-id="{{ $product->id }}">
                                 <i class="fas fa-shopping-cart me-1"></i>Add to Cart
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -207,8 +207,14 @@
                     </ul>
                 </nav>
                 
-                <div>
+                <div class="d-flex align-items-center">
                     @auth
+                        <a href="{{ route('frontend.cart.index') }}" class="btn btn-sm btn-outline-theme position-relative me-3">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-count">
+                                {{ Auth::user()->cartItems()->count() }}
+                            </span>
+                        </a>
                         <div class="dropdown">
                             <button class="btn btn-sm btn-theme dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                 {{ Auth::user()->name }}
@@ -303,6 +309,137 @@
     
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Function to show toast message
+        function showToast(message, type) {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0 position-fixed`;
+            toast.style = 'top: 20px; right: 20px; z-index: 9999;';
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Show toast
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            
+            // Remove toast after it's hidden
+            toast.addEventListener('hidden.bs.toast', function() {
+                document.body.removeChild(toast);
+            });
+        }
+        
+        // Function to update cart count in header
+        function updateCartCount(count) {
+            const cartCountElement = document.querySelector('.cart-count');
+            if (cartCountElement) {
+                cartCountElement.textContent = count;
+                if (count > 0) {
+                    cartCountElement.classList.remove('d-none');
+                } else {
+                    cartCountElement.classList.add('d-none');
+                }
+            }
+        }
+        
+        // Handle Add to Cart buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('add-to-cart-btn') || e.target.closest('.add-to-cart-btn')) {
+                const button = e.target.classList.contains('add-to-cart-btn') ? e.target : e.target.closest('.add-to-cart-btn');
+                const productId = button.dataset.productId;
+                
+                // Disable button and show loading state
+                button.disabled = true;
+                const originalText = button.innerHTML;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+                
+                fetch('/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        product_id: productId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update cart count
+                        updateCartCount(data.cart_count);
+                        
+                        // Show success message
+                        showToast(data.message, 'success');
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showToast('An error occurred while adding the product to cart.', 'error');
+                })
+                .finally(() => {
+                    // Re-enable button
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                });
+            }
+            
+            // Handle Buy Now buttons
+            if (e.target.classList.contains('buy-now-btn') || e.target.closest('.buy-now-btn')) {
+                const button = e.target.classList.contains('buy-now-btn') ? e.target : e.target.closest('.buy-now-btn');
+                const productId = button.dataset.productId;
+                
+                // Disable button and show loading state
+                button.disabled = true;
+                const originalText = button.innerHTML;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+                
+                fetch('/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        product_id: productId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update cart count
+                        updateCartCount(data.cart_count);
+                        
+                        // Redirect to cart page
+                        window.location.href = '/cart';
+                    } else {
+                        showToast(data.message, 'error');
+                        button.disabled = false;
+                        button.innerHTML = originalText;
+                    }
+                })
+                .catch(error => {
+                    showToast('An error occurred while adding the product to cart.', 'error');
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                });
+            }
+        });
+    </script>
     
     @yield('scripts')
 </body>

@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\UserGroupController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Frontend\LoginController as FrontendLoginController;
 use App\Http\Controllers\Frontend\RegisterController;
+use App\Http\Controllers\Frontend\ShoppingCartController;
 
 // Redirect root URL based on frontend access settings
 Route::get('/', function () {
@@ -53,6 +54,13 @@ Route::middleware(['frontend.access', 'auth'])->group(function () {
     Route::post('/profile/avatar', [FrontendController::class, 'updateAvatar'])->name('frontend.profile.avatar.update');
     Route::post('/profile/avatar/remove', [FrontendController::class, 'removeAvatar'])->name('frontend.profile.avatar.remove');
     Route::post('/profile/password', [FrontendController::class, 'changePassword'])->name('frontend.profile.password.change');
+    
+    // Shopping Cart Routes
+    Route::get('/cart', [ShoppingCartController::class, 'index'])->name('frontend.cart.index');
+    Route::post('/cart/add', [ShoppingCartController::class, 'addToCart'])->name('frontend.cart.add');
+    Route::put('/cart/update/{id}', [ShoppingCartController::class, 'updateCart'])->name('frontend.cart.update');
+    Route::delete('/cart/remove/{id}', [ShoppingCartController::class, 'removeFromCart'])->name('frontend.cart.remove');
+    Route::get('/cart/count', [ShoppingCartController::class, 'getCartCount'])->name('frontend.cart.count');
 });
 
 // Authentication Routes

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -203,5 +204,15 @@ class User extends Authenticatable
     public function isApproved()
     {
         return $this->is_approved;
+    }
+    
+    /**
+     * Get the shopping cart items for the user.
+     *
+     * @return HasMany<ShoppingCartItem>
+     */
+    public function cartItems()
+    {
+        return $this->hasMany(ShoppingCartItem::class);
     }
 }
