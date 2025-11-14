@@ -48,6 +48,10 @@ Route::middleware('frontend.access')->group(function () {
 // Frontend Authenticated Routes
 Route::middleware(['frontend.access', 'auth'])->group(function () {
     Route::get('/profile', [FrontendController::class, 'profile'])->name('frontend.profile');
+    Route::post('/profile', [FrontendController::class, 'updateProfile'])->name('frontend.profile.update');
+    Route::post('/profile/avatar', [FrontendController::class, 'updateAvatar'])->name('frontend.profile.avatar.update');
+    Route::post('/profile/avatar/remove', [FrontendController::class, 'removeAvatar'])->name('frontend.profile.avatar.remove');
+    Route::post('/profile/password', [FrontendController::class, 'changePassword'])->name('frontend.profile.password.change');
 });
 
 // Authentication Routes

@@ -215,6 +215,7 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{{ route('frontend.profile') }}">Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ route('frontend.profile') }}#change-password">Change Password</a></li>
                                 <li>
                                     <form method="POST" action="{{ route('frontend.logout') }}">
                                         @csrf
