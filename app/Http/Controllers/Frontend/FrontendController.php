@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\SubCategory;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class FrontendController extends Controller
 {
@@ -25,7 +27,63 @@ class FrontendController extends Controller
         // Fetch all active categories with their images and subcategories
         $categories = Category::where('is_active', true)
             ->with('image', 'subCategories')
-            ->get();
+            ->get()
+            ->filter(function ($category) {
+                // Check if category has any subcategories with products
+                foreach ($category->subCategories as $subCategory) {
+                    // Check if this subcategory has any products
+                    $products = Product::whereIn('status', ['active', 'published'])
+                        ->get()
+                        ->filter(function ($product) use ($category, $subCategory) {
+                            if (!$product->product_categories) {
+                                return false;
+                            }
+                            
+                            // Check if product belongs to both the main category and this specific subcategory
+                            foreach ($product->product_categories as $catData) {
+                                if (isset($catData['category_id']) && $catData['category_id'] == $category->id &&
+                                    isset($catData['subcategory_ids']) && in_array($subCategory->id, $catData['subcategory_ids'])) {
+                                    return true;
+                                }
+                            }
+                            
+                            return false;
+                        });
+                    
+                    // If we found products in this subcategory, the category should be displayed
+                    if ($products->count() > 0) {
+                        return true;
+                    }
+                }
+                
+                // No subcategories with products found
+                return false;
+            })
+            ->values()
+            ->map(function ($category) {
+                // Count products for this category
+                $productCount = Product::whereIn('status', ['active', 'published'])
+                    ->get()
+                    ->filter(function ($product) use ($category) {
+                        if (!$product->product_categories) {
+                            return false;
+                        }
+                        
+                        // Check if product belongs to this category
+                        foreach ($product->product_categories as $catData) {
+                            if (isset($catData['category_id']) && $catData['category_id'] == $category->id) {
+                                return true;
+                            }
+                        }
+                        
+                        return false;
+                    })
+                    ->count();
+                
+                // Add product count to category
+                $category->product_count = $productCount;
+                return $category;
+            });
             
         // Fetch all active or published products with their main photos
         // Note: Not loading galleryMedia due to implementation issues
@@ -43,7 +101,7 @@ class FrontendController extends Controller
      */
     public function profile()
     {
-        return view('frontend.profile', ['user' => auth()->user()]);
+        return view('frontend.profile', ['user' => Auth::user()]);
     }
     
     /**
@@ -52,7 +110,7 @@ class FrontendController extends Controller
      * @param  \App\Models\Category  $category
      * @return \Illuminate\View\View
      */
-    public function showCategory(Category $category)
+    public function showCategory(Category $category, Request $request)
     {
         // Check if category is active
         if (!$category->is_active) {
@@ -60,35 +118,137 @@ class FrontendController extends Controller
         }
         
         // Load active subcategories with their images
+        // Only show subcategories that have products
         $subCategories = $category->subCategories()
             ->where('is_active', true)
             ->with('image')
-            ->get();
+            ->get()
+            ->filter(function ($subCategory) use ($category) {
+                // Check if this subcategory has any products in this category
+                $products = Product::whereIn('status', ['active', 'published'])
+                    ->get()
+                    ->filter(function ($product) use ($category, $subCategory) {
+                        if (!$product->product_categories) {
+                            return false;
+                        }
+                        
+                        // Check if product belongs to both the main category and this specific subcategory
+                        foreach ($product->product_categories as $catData) {
+                            if (isset($catData['category_id']) && $catData['category_id'] == $category->id &&
+                                isset($catData['subcategory_ids']) && in_array($subCategory->id, $catData['subcategory_ids'])) {
+                                return true;
+                            }
+                        }
+                        
+                        return false;
+                    });
+                
+                return $products->count() > 0;
+            })
+            ->values();
             
+        // Get the selected subcategory ID from the request
+        $selectedSubcategoryId = $request->query('subcategory');
+        
+        // Get the sort parameter from the request
+        $sort = $request->query('sort', 'default');
+        
         // Load products associated with this category (active or published)
         // Products store categories in a JSON array in the product_categories field
         $products = Product::whereIn('status', ['active', 'published'])
             ->get()
-            ->filter(function ($product) use ($category) {
+            ->filter(function ($product) use ($category, $selectedSubcategoryId) {
                 if (!$product->product_categories) {
                     return false;
                 }
                 
+                // Check if product belongs to the main category
+                $belongsToCategory = false;
                 foreach ($product->product_categories as $catData) {
                     if (isset($catData['category_id']) && $catData['category_id'] == $category->id) {
-                        return true;
+                        $belongsToCategory = true;
+                        break;
                     }
                 }
                 
-                return false;
+                if (!$belongsToCategory) {
+                    return false;
+                }
+                
+                // If a subcategory filter is applied, check if product belongs to that subcategory
+                if ($selectedSubcategoryId) {
+                    foreach ($product->product_categories as $catData) {
+                        // Check if subcategory_ids array exists and contains the selected subcategory
+                        if (isset($catData['subcategory_ids']) && in_array($selectedSubcategoryId, $catData['subcategory_ids'])) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                
+                return true;
             })
             ->values();
+            
+        // Sort products based on the sort parameter
+        if ($sort === 'name') {
+            $products = $products->sortBy('name');
+        } elseif ($sort === 'price-low') {
+            $products = $products->sortBy('selling_price');
+        } elseif ($sort === 'price-high') {
+            $products = $products->sortByDesc('selling_price');
+        }
             
         // SEO meta tags
         $metaTitle = $category->name . ' - ' . setting('site_title', 'Frontend App');
         $metaDescription = $category->description ?? 'Explore products in ' . $category->name . ' category';
         
-        return view('frontend.category', compact('category', 'subCategories', 'products', 'metaTitle', 'metaDescription'));
+        // If request is AJAX, return only the products partial view
+        if ($request->ajax()) {
+            return view('frontend.partials.products-list', compact('products'));
+        }
+        
+        return view('frontend.category', compact('category', 'subCategories', 'products', 'metaTitle', 'metaDescription', 'selectedSubcategoryId', 'sort'));
+    }
+    
+    /**
+     * Show the product detail page
+     *
+     * @param  \App\Models\Product  $product
+     * @return \Illuminate\View\View
+     */
+    public function showProduct(Product $product)
+    {
+        // Check if product is active or published
+        if (!in_array($product->status, ['active', 'published'])) {
+            abort(404);
+        }
+        
+        // Load main photo and gallery media
+        $product->load('mainPhoto', 'galleryMedia');
+        
+        // SEO meta tags
+        $metaTitle = $product->name . ' - ' . setting('site_title', 'Frontend App');
+        $metaDescription = $product->meta_description ?? Str::limit($product->description, 160);
+        
+        return view('frontend.product', compact('product', 'metaTitle', 'metaDescription'));
+    }
+    
+    /**
+     * Get subcategories for a category via AJAX
+     *
+     * @param  \App\Models\Category  $category
+     * @return \Illuminate\Http\Response
+     */
+    public function getSubcategories(Category $category)
+    {
+        // Load active subcategories with their images
+        $subCategories = $category->subCategories()
+            ->where('is_active', true)
+            ->with('image')
+            ->get();
+            
+        return response()->view('frontend.partials.subcategories', compact('subCategories'));
     }
     
     /**

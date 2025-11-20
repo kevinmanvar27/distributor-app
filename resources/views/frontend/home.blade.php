@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid px-0">
     <!-- Hero Section -->
-    <div class="hero-section text-center py-5 mb-5" style="background: linear-gradient(135deg, {{ setting('theme_color', '#007bff') }} 0%, {{ setting('link_hover_color', '#0056b3') }} 100%); color: white;">
+    <div class="hero-section text-center py-5 mb-5" style="background: linear-gradient(135deg, <?php echo e(setting('theme_color', '#007bff')); ?> 0%, <?php echo e(setting('link_hover_color', '#0056b3')); ?> 100%); color: white;">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
@@ -51,7 +51,7 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0 heading-text" style="color: {{ setting('theme_color', '#007bff') }};">
+                    <h2 class="mb-0 heading-text" style="color: <?php echo e(setting('theme_color', '#007bff')); ?>;">
                         <i class="fas fa-tags me-2"></i>Categories
                     </h2>
                     <a href="#" class="btn btn-theme">View All</a>
@@ -81,7 +81,10 @@
                         <h5 class="card-title">{{ $category->name }}</h5>
                         <p class="card-text flex-grow-1">{{ Str::limit($category->description ?? 'No description available', 100) }}</p>
                         <div class="mt-auto">
-                            <small class="text-muted">{{ $category->subCategories->count() }} subcategories</small>
+                            <small class="text-muted">
+                                {{ $category->subCategories->count() }} subcategories • 
+                                {{ $category->product_count }} products
+                            </small>
                         </div>
                     </div>
                     <div class="card-footer bg-transparent border-0">
@@ -107,7 +110,7 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0 heading-text" style="color: {{ setting('theme_color', '#007bff') }};">
+                    <h2 class="mb-0 heading-text" style="color: <?php echo e(setting('theme_color', '#007bff')); ?>;">
                         <i class="fas fa-box-open me-2"></i>Products
                     </h2>
                     <a href="#" class="btn btn-theme">View All</a>
@@ -138,8 +141,40 @@
                         <p class="card-text flex-grow-1">{{ Str::limit($product->description ?? 'No description available', 100) }}</p>
                         <div class="mt-auto">
                             <div class="d-flex justify-content-between align-items-center">
-                                <p class="fw-bold text-success mb-0">₹{{ number_format($product->selling_price, 2) }}</p>
-                                @if($product->mrp > $product->selling_price)
+                                @php
+                                    // Check if selling price is set, otherwise use MRP
+                                    $hasSellingPrice = !is_null($product->selling_price) && $product->selling_price !== '';
+                                    $displayPrice = $hasSellingPrice ? $product->selling_price : $product->mrp;
+                                    $calculatedPrice = $displayPrice;
+                                    
+                                    if (Auth::check() && $hasSellingPrice) {
+                                        $user = Auth::user();
+                                        
+                                        // Check for individual discount first
+                                        if (!is_null($user->discount_percentage) && $user->discount_percentage > 0) {
+                                            $calculatedPrice = $product->selling_price * (1 - $user->discount_percentage / 100);
+                                        } 
+                                        // If no individual discount, check for group discount
+                                        else {
+                                            // Get user's groups and find the one with the highest discount
+                                            $userGroups = $user->userGroups;
+                                            if ($userGroups->count() > 0) {
+                                                $highestGroupDiscount = 0;
+                                                foreach ($userGroups as $group) {
+                                                    if (!is_null($group->discount_percentage) && $group->discount_percentage > $highestGroupDiscount) {
+                                                        $highestGroupDiscount = $group->discount_percentage;
+                                                    }
+                                                }
+                                                
+                                                if ($highestGroupDiscount > 0) {
+                                                    $calculatedPrice = $product->selling_price * (1 - $highestGroupDiscount / 100);
+                                                }
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                <p class="fw-bold text-success mb-0">₹{{ number_format($calculatedPrice, 2) }}</p>
+                                @if($hasSellingPrice && $product->mrp > $product->selling_price)
                                     <small class="text-muted text-decoration-line-through">₹{{ number_format($product->mrp, 2) }}</small>
                                 @endif
                             </div>
@@ -186,36 +221,36 @@
         background-position: center;
     }
     
-    .category-card:hover, .product-card:hover {
+    .category-card:hover, .product-card:hover, .subcategory-card:hover {
         transform: translateY(-5px);
         transition: transform 0.3s ease;
         box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
     
     .btn-theme {
-        background-color: {{ setting('theme_color', '#007bff') }} !important;
-        border-color: {{ setting('theme_color', '#007bff') }} !important;
+        background-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
+        border-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
         color: white !important;
     }
     
     .btn-theme:hover {
-        background-color: {{ setting('link_hover_color', '#0056b3') }} !important;
-        border-color: {{ setting('link_hover_color', '#0056b3') }} !important;
+        background-color: <?php echo e(setting('link_hover_color', '#0056b3')); ?> !important;
+        border-color: <?php echo e(setting('link_hover_color', '#0056b3')); ?> !important;
     }
     
     .btn-outline-theme {
-        border-color: {{ setting('theme_color', '#007bff') }} !important;
-        color: {{ setting('theme_color', '#007bff') }} !important;
+        border-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
+        color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
     }
     
     .btn-outline-theme:hover {
-        background-color: {{ setting('theme_color', '#007bff') }} !important;
-        border-color: {{ setting('theme_color', '#007bff') }} !important;
+        background-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
+        border-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
         color: white !important;
     }
     
     .badge.bg-theme {
-        background-color: {{ setting('theme_color', '#007bff') }} !important;
+        background-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
     }
     
     .section {
@@ -226,5 +261,59 @@
         from { opacity: 0; }
         to { opacity: 1; }
     }
+    
+    .subcategories-container {
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+    }
 </style>
+@endsection
+
+@section('scripts')
+<script>
+$(document).ready(function() {
+    $('.explore-btn').on('click', function() {
+        var categoryId = $(this).data('category-id');
+        var categoryName = $(this).data('category-name');
+        var card = $(this).closest('.card');
+        
+        // Check if subcategories are already loaded
+        if (card.find('.subcategories-container').length > 0) {
+            // Toggle visibility
+            card.find('.subcategories-container').toggle();
+            $(this).text(card.find('.subcategories-container').is(':visible') ? 'Hide Subcategories' : 'Explore');
+            return;
+        }
+        
+        // Show loading state
+        var originalText = $(this).text();
+        $(this).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
+        $(this).prop('disabled', true);
+        
+        // Make AJAX request
+        $.ajax({
+            url: '/frontend/category/' + categoryId + '/subcategories',
+            type: 'GET',
+            dataType: 'html',
+            success: function(response) {
+                // Create container for subcategories
+                var subContainer = $('<div class="subcategories-container mt-3"></div>');
+                subContainer.html(response);
+                card.find('.card-body').append(subContainer);
+                
+                // Update button text
+                $('.explore-btn[data-category-id="' + categoryId + '"]').text('Hide Subcategories');
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', error);
+                alert('Error loading subcategories. Please try again.');
+                $('.explore-btn[data-category-id="' + categoryId + '"]').text(originalText);
+            },
+            complete: function() {
+                $('.explore-btn[data-category-id="' + categoryId + '"]').prop('disabled', false);
+            }
+        });
+    });
+});
+</script>
 @endsection

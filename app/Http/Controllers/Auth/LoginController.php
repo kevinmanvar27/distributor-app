@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class LoginController extends Controller
 {
@@ -35,6 +36,22 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+            
+            // Check user role and redirect accordingly
+            $user = Auth::user();
+            
+            // If user has 'user' role, redirect to frontend home with access denied message
+            if ($user->user_role === 'user') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                
+                return back()->withErrors([
+                    'email' => 'You do not have access to the admin area.',
+                ]);
+            }
+            
+            // For all other roles (super_admin, admin, etc.), redirect to admin dashboard
             return redirect()->intended('admin/dashboard');
         }
 

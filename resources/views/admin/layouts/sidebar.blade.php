@@ -112,6 +112,16 @@
                         </a>
                     </li>
                 @endif -->
+                
+                <!-- Proforma Invoice Section -->
+                @if(auth()->user()->hasPermission('manage_proforma_invoices'))
+                    <li class="nav-item mb-1">
+                        <a class="nav-link {{ request()->routeIs('admin.proforma-invoice*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.proforma-invoice.index') }}">
+                            <i class="fas fa-file-invoice me-3"></i>
+                            <span class="sidebar-text">Invoice</span>
+                        </a>
+                    </li>
+                @endif
             </ul>
             
             <div class="px-3 py-3 border-top border-default mt-auto">

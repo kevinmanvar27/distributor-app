@@ -4,193 +4,248 @@
 @section('meta_description', $metaDescription ?? setting('tagline', 'Your Frontend Application'))
 
 @section('content')
-<div class="container">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="my-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('frontend.home') }}">Home</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{ $category->name }}</li>
-        </ol>
-    </nav>
-    
-    <!-- Category Header -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-3 text-center mb-4 mb-md-0">
-                            @if($category->image)
-                                <img src="{{ $category->image->url }}" class="img-fluid rounded" alt="{{ $category->name }}" style="max-height: 200px; object-fit: cover;">
-                            @else
-                                <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 200px;">
-                                    <i class="fas fa-image fa-3x text-muted"></i>
-                                </div>
-                            @endif
-                        </div>
-                        <div class="col-md-9">
-                            <h1 class="mb-3 heading-text">{{ $category->name }}</h1>
-                            <p class="lead general-text">{{ $category->description ?? 'No description available for this category.' }}</p>
-                            <div class="d-flex align-items-center">
-                                <span class="badge bg-success me-2">{{ $subCategories->count() }} Subcategories</span>
-                                <span class="badge bg-primary">{{ $products->count() }} Products</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Subcategories Section -->
-    @if($subCategories->count() > 0)
-    <div class="section mb-5">
+<div class="container mt-4">
+    <div class="row">          
+        <!-- Category Header -->
         <div class="row mb-4">
             <div class="col-12">
-                <h2 class="mb-0 heading-text">
-                    <i class="fas fa-tags me-2"></i>Subcategories
-                </h2>
-                <hr class="my-3">
-            </div>
-        </div>
-        
-        <div class="row">
-            @foreach($subCategories as $subCategory)
-            <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-                <div class="card h-100 shadow-sm border-0 category-card">
-                    <div class="position-relative">
-                        @if($subCategory->image)
-                            <img src="{{ $subCategory->image->url }}" class="card-img-top" alt="{{ $subCategory->name }}" style="height: 150px; object-fit: cover;">
-                        @else
-                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
-                                <i class="fas fa-image fa-2x text-muted"></i>
-                            </div>
-                        @endif
-                        <div class="position-absolute top-0 end-0 m-2">
-                            <span class="badge bg-theme text-white">{{ $subCategory->is_active ? 'Active' : 'Inactive' }}</span>
-                        </div>
-                    </div>
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ $subCategory->name }}</h5>
-                        <p class="card-text flex-grow-1">{{ Str::limit($subCategory->description ?? 'No description available', 100) }}</p>
-                    </div>
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ route('frontend.home') }}">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ $category->name }}</li>
+                    </ol>
+                </nav>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1 class="display-5 fw-bold mb-0">{{ $category->name }}</h1>
                 </div>
-            </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
-    
-    <!-- Products Section -->
-    <div class="section mb-5">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="mb-0 heading-text">
-                    <i class="fas fa-box-open me-2"></i>Products
-                </h2>
-                <hr class="my-3">
+                @if($category->description)
+                    <p class="lead">{{ $category->description }}</p>
+                @endif
             </div>
         </div>
-        
-        @if($products->count() > 0)
-        <div class="row">
-            @foreach($products as $product)
-            <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-                <div class="card h-100 shadow-sm border-0 product-card">
-                    <div class="position-relative">
-                        @if($product->mainPhoto)
-                            <img src="{{ $product->mainPhoto->url }}" class="card-img-top" alt="{{ $product->name }}" style="height: 200px; object-fit: cover;">
-                        @else
-                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <i class="fas fa-image fa-3x text-muted"></i>
-                            </div>
-                        @endif
-                        <div class="position-absolute top-0 end-0 m-2">
-                            <span class="badge bg-success text-white">{{ ucfirst($product->status) }}</span>
-                        </div>
-                    </div>
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ $product->name }}</h5>
-                        <p class="card-text flex-grow-1">{{ Str::limit($product->description ?? 'No description available', 100) }}</p>
-                        <div class="mt-auto">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <p class="fw-bold text-success mb-0">₹{{ number_format($product->selling_price, 2) }}</p>
-                                @if($product->mrp > $product->selling_price)
-                                    <small class="text-muted text-decoration-line-through">₹{{ number_format($product->mrp, 2) }}</small>
-                                @endif
-                            </div>
-                            <div class="mt-2">
-                                <small class="text-muted">
-                                    @if($product->in_stock)
-                                        <i class="fas fa-check-circle text-success me-1"></i>In Stock ({{ $product->stock_quantity }})
-                                    @else
-                                        <i class="fas fa-times-circle text-danger me-1"></i>Out of Stock
+        <!-- Sidebar for Subcategories -->
+        <div class="col-lg-3 col-md-4 mb-4">
+            <div class="card shadow-sm border-0 h-100 sticky-top">
+                <div class="card-header bg-theme text-white py-3">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="fas fa-tags me-2"></i>
+                        <span>{{ $category->name }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    @if($subCategories->count() > 0)
+                        <div class="list-group list-group-flush">
+                            <!-- All Products Option -->
+                            <button type="button" class="list-group-item list-group-item-action active subcategory-filter d-flex justify-content-between align-items-center" data-subcategory-id="">
+                                <span>All Products</span>
+                                <span class="badge bg-primary rounded-pill">{{ $products->count() }}</span>
+                            </button>
+                            
+                            <!-- Subcategory Items -->
+                            @foreach($subCategories as $subCategory)
+                                <button type="button" class="list-group-item list-group-item-action subcategory-filter d-flex justify-content-between align-items-center" data-subcategory-id="{{ $subCategory->id }}">
+                                    <span>{{ $subCategory->name }}</span>
+                                    <!-- Count of products in this subcategory -->
+                                    @php
+                                        $subCategoryProductCount = $products->filter(function ($product) use ($subCategory) {
+                                            if (!$product->product_categories) return false;
+                                            foreach ($product->product_categories as $catData) {
+                                                if (isset($catData['subcategory_ids']) && in_array($subCategory->id, $catData['subcategory_ids'])) {
+                                                    return true;
+                                                }
+                                            }
+                                            return false;
+                                        })->count();
+                                    @endphp
+                                    @if($subCategoryProductCount > 0)
+                                        <span class="badge bg-secondary rounded-pill">{{ $subCategoryProductCount }}</span>
                                     @endif
-                                </small>
-                            </div>
+                                </button>
+                            @endforeach
                         </div>
-                    </div>
-                    <div class="card-footer bg-transparent border-0">
-                        <div class="d-grid gap-2">
-                            <button type="button" class="btn btn-theme buy-now-btn" data-product-id="{{ $product->id }}">
-                                Buy Now
-                            </button>
-                            <button type="button" class="btn btn-outline-theme add-to-cart-btn" data-product-id="{{ $product->id }}">
-                                <i class="fas fa-shopping-cart me-1"></i>Add to Cart
-                            </button>
+                    @else
+                        <div class="p-3">
+                            <p class="text-muted text-center mb-0">
+                                <i class="fas fa-info-circle me-2"></i>No subcategories available.
+                            </p>
                         </div>
-                    </div>
-                </div>
-            </div>
-            @endforeach
-        </div>
-        @else
-        <div class="row">
-            <div class="col-12">
-                <div class="alert alert-info text-center">
-                    <i class="fas fa-info-circle me-2"></i>No products available in this category at the moment.
+                    @endif
                 </div>
             </div>
         </div>
-        @endif
+        
+        <!-- Main Content Area for Products -->
+        <div class="col-lg-9 col-md-8">
+            <!-- Products Section -->
+            <div class="section">
+                <div class="row mb-3 align-items-center">
+                    <div class="col-md-6">
+                        <h2 class="mb-0 heading-text" style="color: <?php echo e(setting('theme_color', '#007bff')); ?>;">
+                            <i class="fas fa-box-open me-2"></i>Products
+                        </h2>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <!-- Sorting options can be added here -->
+                        <div class="d-flex justify-content-md-end align-items-center">
+                            <span class="me-2 text-muted">Sort by:</span>
+                            <select class="form-select form-select-sm w-auto" id="sort-products">
+                                <option value="default" {{ (isset($sort) && $sort == 'default') ? 'selected' : '' }}>Default</option>
+                                <option value="name" {{ (isset($sort) && $sort == 'name') ? 'selected' : '' }}>Name</option>
+                                <option value="price-low" {{ (isset($sort) && $sort == 'price-low') ? 'selected' : '' }}>Price: Low to High</option>
+                                <option value="price-high" {{ (isset($sort) && $sort == 'price-high') ? 'selected' : '' }}>Price: High to Low</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-3">
+                
+                <!-- Loading Spinner -->
+                <div id="loading-spinner" class="text-center d-none my-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading products...</p>
+                </div>
+                
+                <!-- Products Container -->
+                <div id="products-container">
+                    @include('frontend.partials.products-list', ['products' => $products])
+                </div>
+                
+                <!-- Pagination or Load More Button -->
+                @if($products->count() > 12)
+                    <div class="text-center mt-4">
+                        <button class="btn btn-theme" id="load-more-products">
+                            <i class="fas fa-sync-alt me-2"></i>Load More Products
+                        </button>
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
-    .category-card:hover, .product-card:hover {
+    :root {
+        --theme-color: <?php echo e(setting('theme_color', '#007bff')); ?>;
+        --hover-color: <?php echo e(setting('link_hover_color', '#0056b3')); ?>;
+        --sidebar-active: var(--theme-color); /* Using theme primary color for active state */
+    }
+    
+    .bg-theme {
+        background-color: var(--theme-color) !important;
+    }
+    
+    .subcategory-card:hover, .product-card:hover {
         transform: translateY(-5px);
         transition: transform 0.3s ease;
         box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
     
     .btn-theme {
-        background-color: {{ setting('theme_color', '#007bff') }} !important;
-        border-color: {{ setting('theme_color', '#007bff') }} !important;
+        background-color: var(--theme-color) !important;
+        border-color: var(--theme-color) !important;
         color: white !important;
     }
     
     .btn-theme:hover {
-        background-color: {{ setting('link_hover_color', '#0056b3') }} !important;
-        border-color: {{ setting('link_hover_color', '#0056b3') }} !important;
+        background-color: var(--hover-color) !important;
+        border-color: var(--hover-color) !important;
     }
     
     .btn-outline-theme {
-        border-color: {{ setting('theme_color', '#007bff') }} !important;
-        color: {{ setting('theme_color', '#007bff') }} !important;
+        border-color: var(--theme-color) !important;
+        color: var(--theme-color) !important;
     }
     
     .btn-outline-theme:hover {
-        background-color: {{ setting('theme_color', '#007bff') }} !important;
-        border-color: {{ setting('theme_color', '#007bff') }} !important;
+        background-color: var(--theme-color) !important;
+        border-color: var(--theme-color) !important;
         color: white !important;
     }
     
     .badge.bg-theme {
-        background-color: {{ setting('theme_color', '#007bff') }} !important;
+        background-color: var(--theme-color) !important;
     }
     
     .section {
         animation: fadeIn 0.5s ease-in;
+    }
+    
+    /* Sidebar enhancements */
+    .card.h-100 {
+        min-height: 300px;
+    }
+    
+    .sticky-top {
+        top: 20px;
+    }
+    
+    .list-group-item {
+        border: none;
+        border-radius: 0 !important;
+        padding: 12px 15px;
+        transition: all 0.2s ease;
+    }
+    
+    .list-group-item:first-child {
+        border-top-left-radius: calc(0.375rem - 1px) !important;
+        border-top-right-radius: calc(0.375rem - 1px) !important;
+    }
+    
+    .list-group-item:last-child {
+        border-bottom-left-radius: calc(0.375rem - 1px) !important;
+        border-bottom-right-radius: calc(0.375rem - 1px) !important;
+    }
+    
+    .list-group-item:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+    }
+    
+    .list-group-item.active {
+        background-color: white !important; /* Using theme primary color for active state */
+        border-color: var(--sidebar-active) !important; /* Using theme primary color for active state */
+        color:  var(--sidebar-active) !important;
+    }
+    
+    .list-group-item.active:hover {
+        background-color: var(--hover-color); /* Using hover color on active hover */
+        border-color: var(--hover-color); /* Using hover color on active hover */
+    }
+    
+    /* Product card enhancements */
+    .product-card {
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    }
+    
+    .card-img-top {
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    /* Breadcrumb styling */
+    .breadcrumb {
+        background-color: #f8f9fa;
+        padding: 0.75rem 1rem;
+        border-radius: 0.375rem;
+    }
+    
+    /* Sorting dropdown */
+    #sort-products {
+        border-color: #dee2e6;
+        border-radius: 0.375rem;
+    }
+    
+    /* Loading spinner */
+    #loading-spinner {
+        padding: 2rem;
     }
     
     @keyframes fadeIn {
@@ -203,6 +258,175 @@
         .card-img-top {
             height: 150px !important;
         }
+        
+        .card.h-100 {
+            min-height: auto;
+        }
+        
+        .sticky-top {
+            position: static;
+        }
+        
+        .text-md-end {
+            text-align: left !important;
+        }
+        
+        .justify-content-md-end {
+            justify-content: flex-start !important;
+        }
     }
 </style>
+
+<!-- AJAX Script for Filtering -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the base URL for filtering
+    const baseUrl = "{{ route('frontend.category.show', $category->slug) }}";
+    
+    // Add click event to all subcategory filter buttons
+    const subcategoryFilterButtons = document.querySelectorAll('.subcategory-filter');
+    subcategoryFilterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const subcategoryId = this.getAttribute('data-subcategory-id');
+            
+            // Update active state
+            subcategoryFilterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show loading spinner
+            document.getElementById('loading-spinner').classList.remove('d-none');
+            document.getElementById('products-container').classList.add('d-none');
+            
+            // Get current sort value
+            const currentSort = document.getElementById('sort-products').value;
+            
+            // Make AJAX request with both subcategory and sort parameters
+            let url = `${baseUrl}?subcategory=${subcategoryId}`;
+            if (currentSort && currentSort !== 'default') {
+                url += `&sort=${currentSort}`;
+            }
+            
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Update products container
+                document.getElementById('products-container').innerHTML = html;
+                
+                // Hide loading spinner and show products
+                document.getElementById('loading-spinner').classList.add('d-none');
+                document.getElementById('products-container').classList.remove('d-none');
+                
+                // Update product count in header
+                const productCount = document.querySelectorAll('#products-container .col-md-6').length;
+                document.querySelector('.badge.bg-primary').textContent = `${productCount} Products`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Hide loading spinner and show products
+                document.getElementById('loading-spinner').classList.add('d-none');
+                document.getElementById('products-container').classList.remove('d-none');
+                
+                // Show error message
+                showToast('Failed to load products. Please try again.', 'error');
+            });
+        });
+    });
+    
+    // Handle sorting
+    const sortSelect = document.getElementById('sort-products');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            const sortBy = this.value;
+            const subcategoryId = document.querySelector('.subcategory-filter.active')?.getAttribute('data-subcategory-id') || '';
+            
+            // Show loading spinner
+            document.getElementById('loading-spinner').classList.remove('d-none');
+            document.getElementById('products-container').classList.add('d-none');
+            
+            // Make AJAX request with both subcategory and sort parameters
+            let url = `${baseUrl}?sort=${sortBy}`;
+            if (subcategoryId) {
+                url += `&subcategory=${subcategoryId}`;
+            }
+            
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Update products container
+                document.getElementById('products-container').innerHTML = html;
+                
+                // Hide loading spinner and show products
+                document.getElementById('loading-spinner').classList.add('d-none');
+                document.getElementById('products-container').classList.remove('d-none');
+                
+                // Update product count in header
+                const productCount = document.querySelectorAll('#products-container .col-md-6').length;
+                document.querySelector('.badge.bg-primary').textContent = `${productCount} Products`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Hide loading spinner and show products
+                document.getElementById('loading-spinner').classList.add('d-none');
+                document.getElementById('products-container').classList.remove('d-none');
+                
+                // Show error message
+                showToast('Failed to sort products. Please try again.', 'error');
+            });
+        });
+    }
+    
+    // Handle load more button
+    const loadMoreButton = document.getElementById('load-more-products');
+    if (loadMoreButton) {
+        loadMoreButton.addEventListener('click', function() {
+            // In a real implementation, this would load more products
+            // For now, we'll just show a message
+            showToast('Load more functionality would be implemented here', 'info');
+        });
+    }
+    
+    // Toast function for user feedback
+    function showToast(message, type) {
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0 position-fixed`;
+        toast.style = 'top: 20px; right: 20px; z-index: 9999;';
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Show toast
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        // Remove toast after it's hidden
+        toast.addEventListener('hidden.bs.toast', function() {
+            document.body.removeChild(toast);
+        });
+    }
+});
+</script>
 @endsection

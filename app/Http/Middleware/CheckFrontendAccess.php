@@ -31,6 +31,10 @@ class CheckFrontendAccess
             case 'registered_users_only':
                 // Only allow access to authenticated users
                 if (!Auth::check()) {
+                    // Allow access to cart page for guests to view their cart
+                    if ($request->is('cart*')) {
+                        return $next($request);
+                    }
                     return redirect()->route('frontend.login');
                 }
                 break;
@@ -43,6 +47,10 @@ class CheckFrontendAccess
                     $protectedRoutes = ['frontend.home'];
                     if (in_array($request->route()->getName(), $protectedRoutes)) {
                         return redirect()->route('frontend.login');
+                    }
+                    // Allow access to cart page for guests to view their cart
+                    if ($request->is('cart*')) {
+                        return $next($request);
                     }
                 } else {
                     // Check if user is approved

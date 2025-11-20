@@ -112,7 +112,11 @@
                                                     </td>
                                                     <td>
                                                         <div class="btn-group btn-group-sm" role="group">
-                                                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-primary rounded-start-pill px-3">
+                                                            <!-- View Button -->
+                                                            <button type="button" class="btn btn-outline-info rounded-start-pill px-3 view-user-btn" data-user-id="{{ $user->id }}" data-bs-toggle="modal" data-bs-target="#userModal">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-primary px-3">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
                                                             @if(Auth::user()->id != $user->id)
@@ -133,7 +137,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="8" class="text-center py-5">
+                                                    <td colspan="9" class="text-center py-5">
                                                         <div class="text-muted">
                                                             <i class="fas fa-users fa-2x mb-3"></i>
                                                             <p class="mb-0">No users found</p>
@@ -146,7 +150,6 @@
                                     </table>
                                 </div>
                                 
-
                             </div>
                         </div>
                     </div>
@@ -155,6 +158,29 @@
             
             @include('admin.layouts.footer')
         </main>
+    </div>
+</div>
+
+<!-- User Details Modal -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalLabel">User Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="userModalBody">
+                <!-- User details will be loaded here via AJAX -->
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
@@ -171,7 +197,7 @@
             "info": true,
             "paging": true,
             "columnDefs": [
-                { "orderable": false, "targets": [7] } // Disable sorting on Actions column
+                { "orderable": false, "targets": [8] } // Disable sorting on Actions column
             ],
             "language": {
                 "search": "Search:",
@@ -191,6 +217,7 @@
                 null, // User
                 null, // Email
                 null, // Role
+                null, // Status
                 null, // Address
                 null, // Mobile
                 null, // Date of Birth
@@ -199,12 +226,32 @@
             "preDrawCallback": function(settings) {
                 // Ensure consistent column count
                 if ($('#usersTable tbody tr').length === 0) {
-                    $('#usersTable tbody').html('<tr><td colspan="8" class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No users found</p><p class="small">Try creating a new user</p></div></td></tr>');
+                    $('#usersTable tbody').html('<tr><td colspan="9" class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No users found</p><p class="small">Try creating a new user</p></div></td></tr>');
                 }
             }
         });
         // Adjust select width after DataTable initializes
         $('.dataTables_length select').css('width', '80px');
+        
+        // Handle view user button click
+        $('.view-user-btn').on('click', function() {
+            var userId = $(this).data('user-id');
+            
+            // Show loading indicator
+            $('#userModalBody').html('<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+            
+            // Load user details via AJAX
+            $.ajax({
+                url: '/admin/users/' + userId,
+                type: 'GET',
+                success: function(data) {
+                    $('#userModalBody').html(data);
+                },
+                error: function() {
+                    $('#userModalBody').html('<div class="alert alert-danger">Failed to load user details.</div>');
+                }
+            });
+        });
     });
 </script>
 @endsection

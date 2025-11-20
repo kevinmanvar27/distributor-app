@@ -16,10 +16,10 @@ class RolesAndPermissionsSeeder extends Seeder
     public function run(): void
     {
         // Disable foreign key checks
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
         
         // Remove all existing role-permission associations first
-        DB::table('permission_role')->truncate();
+        DB::table('permission_role')->delete();
         
         // Remove all existing permissions
         Permission::truncate();
@@ -28,7 +28,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::truncate();
         
         // Re-enable foreign key checks
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         // Create default roles
         $roles = [
@@ -167,6 +167,33 @@ class RolesAndPermissionsSeeder extends Seeder
                 'display_name' => 'Delete Product',
                 'description' => 'Remove products'
             ],
+            
+            // Media Management Permissions
+            [
+                'name' => 'viewAny_media',
+                'display_name' => 'View Any Media',
+                'description' => 'View all media files'
+            ],
+            [
+                'name' => 'view_media',
+                'display_name' => 'View Media',
+                'description' => 'View a specific media file'
+            ],
+            [
+                'name' => 'create_media',
+                'display_name' => 'Create Media',
+                'description' => 'Upload new media files'
+            ],
+            [
+                'name' => 'update_media',
+                'display_name' => 'Update Media',
+                'description' => 'Modify existing media files'
+            ],
+            [
+                'name' => 'delete_media',
+                'display_name' => 'Delete Media',
+                'description' => 'Remove media files'
+            ],
         ];
 
         // Create new permissions
@@ -197,7 +224,11 @@ class RolesAndPermissionsSeeder extends Seeder
                     'viewAny_product',
                     'view_product',
                     'create_product',
-                    'update_product'
+                    'update_product',
+                    'viewAny_media',
+                    'view_media',
+                    'create_media',
+                    'update_media'
                 ])->get();
                 $role->permissions()->sync($editorPermissions);
             } else {

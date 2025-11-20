@@ -20,7 +20,15 @@ class FrontendRedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                return redirect()->route('frontend.home');
+                $user = Auth::guard($guard)->user();
+                
+                // If user has 'user' role, redirect to frontend home
+                if ($user->user_role === 'user') {
+                    return redirect()->route('frontend.home');
+                }
+                
+                // For all other roles (super_admin, admin, etc.), redirect to admin dashboard
+                return redirect()->route('dashboard');
             }
         }
 

@@ -77,6 +77,7 @@ class UserController extends Controller
             'address' => ['nullable', 'string', 'max:500'],
             'mobile_number' => ['nullable', 'string', 'max:20'],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+            'discount_percentage' => ['nullable', 'numeric', 'between:0,100'],
         ]);
 
         // Get the frontend access permission setting
@@ -91,6 +92,7 @@ class UserController extends Controller
             'date_of_birth' => $request->date_of_birth,
             'address' => $request->address,
             'mobile_number' => $request->mobile_number,
+            'discount_percentage' => $request->discount_percentage ?? 0,
             // Users are never approved by default when created by admin
             'is_approved' => false
         ]);
@@ -152,6 +154,7 @@ class UserController extends Controller
             'address' => ['nullable', 'string', 'max:500'],
             'mobile_number' => ['nullable', 'string', 'max:20'],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+            'discount_percentage' => ['nullable', 'numeric', 'between:0,100'],
         ]);
 
         $user->name = $request->name;
@@ -160,6 +163,7 @@ class UserController extends Controller
         $user->date_of_birth = $request->date_of_birth;
         $user->address = $request->address;
         $user->mobile_number = $request->mobile_number;
+        $user->discount_percentage = $request->discount_percentage ?? $user->discount_percentage;
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);

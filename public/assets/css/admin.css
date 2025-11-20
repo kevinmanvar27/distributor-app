@@ -49,6 +49,31 @@
     --label-text-color: #333333;
     --general-text-color: #333333;
     --font-style: 'Figtree', sans-serif;
+    
+    /* Font size settings */
+    --desktop-h1-size: 36px;
+    --desktop-h2-size: 30px;
+    --desktop-h3-size: 24px;
+    --desktop-h4-size: 20px;
+    --desktop-h5-size: 18px;
+    --desktop-h6-size: 16px;
+    --desktop-body-size: 16px;
+    
+    --tablet-h1-size: 32px;
+    --tablet-h2-size: 28px;
+    --tablet-h3-size: 22px;
+    --tablet-h4-size: 18px;
+    --tablet-h5-size: 16px;
+    --tablet-h6-size: 14px;
+    --tablet-body-size: 14px;
+    
+    --mobile-h1-size: 28px;
+    --mobile-h2-size: 24px;
+    --mobile-h3-size: 20px;
+    --mobile-h4-size: 16px;
+    --mobile-h5-size: 14px;
+    --mobile-h6-size: 12px;
+    --mobile-body-size: 12px;
 }
 
 /* Active Theme Variables */
@@ -85,6 +110,93 @@ body {
     background-color: var(--background-color, var(--background));
     color: var(--general-text-color, var(--font-color, var(--text)));
     font-family: var(--font-style, 'Figtree', sans-serif);
+    font-size: var(--desktop-body-size);
+}
+
+/* Font size styles for headings */
+h1, .h1 {
+    font-size: var(--desktop-h1-size);
+}
+
+h2, .h2 {
+    font-size: var(--desktop-h2-size);
+}
+
+h3, .h3 {
+    font-size: var(--desktop-h3-size);
+}
+
+h4, .h4 {
+    font-size: var(--desktop-h4-size);
+}
+
+h5, .h5 {
+    font-size: var(--desktop-h5-size);
+}
+
+h6, .h6 {
+    font-size: var(--desktop-h6-size);
+}
+
+/* Responsive font sizes */
+@media (max-width: 992px) {
+    body {
+        font-size: var(--tablet-body-size);
+    }
+    
+    h1, .h1 {
+        font-size: var(--tablet-h1-size);
+    }
+    
+    h2, .h2 {
+        font-size: var(--tablet-h2-size);
+    }
+    
+    h3, .h3 {
+        font-size: var(--tablet-h3-size);
+    }
+    
+    h4, .h4 {
+        font-size: var(--tablet-h4-size);
+    }
+    
+    h5, .h5 {
+        font-size: var(--tablet-h5-size);
+    }
+    
+    h6, .h6 {
+        font-size: var(--tablet-h6-size);
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        font-size: var(--mobile-body-size);
+    }
+    
+    h1, .h1 {
+        font-size: var(--mobile-h1-size);
+    }
+    
+    h2, .h2 {
+        font-size: var(--mobile-h2-size);
+    }
+    
+    h3, .h3 {
+        font-size: var(--mobile-h3-size);
+    }
+    
+    h4, .h4 {
+        font-size: var(--mobile-h4-size);
+    }
+    
+    h5, .h5 {
+        font-size: var(--mobile-h5-size);
+    }
+    
+    h6, .h6 {
+        font-size: var(--mobile-h6-size);
+    }
 }
 
 .btn-theme {
@@ -603,6 +715,28 @@ a:hover {
     box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
+/* Ensure Font Awesome icons are displayed correctly */
+.media-item .card-img-top i[class*="fa-"] {
+    font-size: 3rem;
+    color: #6c757d; /* Bootstrap text-muted color */
+}
+
+.media-item .card-img-top i.fa-file-pdf {
+    color: #dc3545; /* Bootstrap danger color */
+}
+
+.media-item .card-img-top i.fa-file-word {
+    color: #0d6efd; /* Bootstrap primary color */
+}
+
+.media-item .card-img-top i.fa-file-excel {
+    color: #198754; /* Bootstrap success color */
+}
+
+.media-item .card-img-top i.fa-file-powerpoint {
+    color: #ffc107; /* Bootstrap warning color */
+}
+
 .media-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -842,4 +976,22 @@ a:hover {
 
 .form-check-input:checked ~ .form-check-label #stock-status-text {
     color: var(--theme-color, var(--primary));
+}
+
+/* Ensure modals have proper z-index stacking */
+.modal {
+    z-index: 1055;
+}
+
+.modal-backdrop {
+    z-index: 1050;
+}
+
+/* Specifically ensure media library modal appears above other modals */
+#mediaLibraryModal {
+    z-index: 1060;
+}
+
+#mediaLibraryModal .modal-backdrop {
+    z-index: 1055;
 }

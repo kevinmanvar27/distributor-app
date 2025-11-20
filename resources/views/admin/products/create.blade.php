@@ -131,26 +131,35 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        
+                                        <input type="hidden" id="main_photo_id" name="main_photo_id" value="{{ old('main_photo_id') }}">
                                         <div class="col-lg-8">
                                             <div class="mb-4">
                                                 <label class="form-label fw-bold">Main Photo</label>
                                                 <div class="border rounded-3 p-3 text-center" id="main-photo-preview">
-                                                    <i class="fas fa-image fa-2x text-muted mb-2"></i>
-                                                    <p class="text-muted mb-2">No image selected</p>
-                                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#mediaLibraryModal" data-target="main_photo">
-                                                        <i class="fas fa-folder-open me-1"></i> Select from Media Library
-                                                    </button>
-                                                    <input type="hidden" id="main_photo_id" name="main_photo_id" value="{{ old('main_photo_id') }}">
+                                                    <div class="upload-area" id="main-photo-upload-area" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                                        <div>
+                                                            <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                                            <p class="text-muted mb-2">Drag & drop an image here or click to select</p>
+                                                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#mediaLibraryModal" data-target="main_photo">
+                                                                <i class="fas fa-folder-open me-1"></i> Select from Media Library
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             
                                             <div class="mb-4">
                                                 <label class="form-label fw-bold">Gallery Photos</label>
                                                 <div class="border rounded-3 p-3" id="gallery-photos-container">
+                                                    <div class="upload-area mb-3" id="gallery-upload-area" style="min-height: 150px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                                        <div>
+                                                            <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                                            <p class="text-muted mb-2">Drag & drop images here or click to select</p>
+                                                        </div>
+                                                    </div>
                                                     <div id="gallery-preview" class="d-flex flex-wrap gap-2 mb-3"></div>
                                                     <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#mediaLibraryModal" data-target="gallery">
-                                                        <i class="fas fa-plus me-1"></i> Add Photos
+                                                        <i class="fas fa-plus me-1"></i> Add Photos from Media Library
                                                     </button>
                                                     <input type="hidden" id="product_gallery" name="product_gallery" value="[]">
                                                 </div>
@@ -199,136 +208,141 @@
                 </div>
             </div>
             
-            @include('admin.layouts.footer')
+            <!-- Media Library Modal -->
+            <div class="modal fade" id="mediaLibraryModal" tabindex="-1" aria-labelledby="mediaLibraryModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold" id="mediaLibraryModalLabel">Media Library</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body pt-0">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <button class="btn btn-outline-primary btn-sm rounded-pill" id="upload-media-btn">
+                                        <i class="fas fa-upload me-1"></i> Upload New
+                                    </button>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <input type="text" class="form-control form-control-sm rounded-pill" id="media-search" placeholder="Search media..." style="width: 200px;">
+                                    <select class="form-select form-select-sm rounded-pill" id="media-filter">
+                                        <option value="all">All Media</option>
+                                        <option value="images">Images</option>
+                                        <option value="videos">Videos</option>
+                                        <option value="documents">Documents</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden form for media upload -->
+                            <form id="mediaUploadForm" class="d-none">
+                                @csrf
+                                <input type="file" id="mediaFile" name="file" accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/csv">
+                                <input type="text" id="mediaName" name="name">
+                            </form>
+                            
+                            <div class="row g-3" id="media-library-items">
+                                <!-- Media items will be loaded here via AJAX -->
+                                <div class="col-12 text-center py-5" id="media-loading">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                                <div class="col-12 text-center py-5 d-none" id="no-media-message">
+                                    <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                                    <h5 class="mb-2">No media found</h5>
+                                    <p class="text-muted mb-3">Upload your first media file to get started</p>
+                                    <div class="upload-area" id="empty-state-upload">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <p class="mb-0">Drag & drop files here or click to upload</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-center mt-4" id="load-more-container">
+                                <button class="btn btn-outline-primary rounded-pill d-none" id="load-more-btn">
+                                    <i class="fas fa-sync me-1"></i> Load More
+                                </button>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </button>
+                            <button type="button" class="btn btn-theme rounded-pill px-4" id="select-media-btn" disabled>
+                                <i class="fas fa-check me-2"></i> Select
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unified Category Management Modal -->
+            <div class="modal fade" id="categoryManagementModal" tabindex="-1" aria-labelledby="categoryManagementModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="categoryManagementModalLabel">Manage Categories & Subcategories</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">Categories</h6>
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control rounded-pill" id="new-category-name" placeholder="Enter category name">
+                                            <button class="btn btn-outline-primary rounded-pill" type="button" id="add-category-btn">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="categories-list" class="border rounded-3 p-3" style="max-height: 300px; overflow-y: auto;">
+                                        <!-- Categories will be loaded here dynamically -->
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold mb-3">Subcategories</h6>
+                                    <div class="mb-3">
+                                        <select class="form-select rounded-pill mb-2" id="subcategory-parent-category">
+                                            <option value="">Select a category first</option>
+                                            @if(isset($categories))
+                                                @foreach($categories as $category)
+                                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                                @endforeach
+                                            @endif
+                                        </select>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control rounded-pill" id="new-subcategory-name" placeholder="Enter subcategory name">
+                                            <button class="btn btn-outline-primary rounded-pill" type="button" id="add-subcategory-btn" disabled>
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="subcategories-list" class="border rounded-3 p-3" style="max-height: 300px; overflow-y: auto;">
+                                        <!-- Subcategories will be loaded here dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Close
+                            </button>
+                            <button type="button" class="btn btn-theme rounded-pill" id="save-category-selections">
+                                <i class="fas fa-save me-2"></i>Save Selections
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 </div>
-
-<!-- Media Library Modal -->
-<div class="modal fade" id="mediaLibraryModal" tabindex="-1" aria-labelledby="mediaLibraryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="mediaLibraryModalLabel">Media Library</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body pt-0">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <button class="btn btn-outline-primary btn-sm rounded-pill" id="upload-media-btn">
-                            <i class="fas fa-upload me-1"></i> Upload New
-                        </button>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <input type="text" class="form-control form-control-sm rounded-pill" id="media-search" placeholder="Search media..." style="width: 200px;">
-                        <select class="form-select form-select-sm rounded-pill" id="media-filter">
-                            <option value="all">All Media</option>
-                            <option value="images">Images</option>
-                            <option value="videos">Videos</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="row g-3" id="media-library-items">
-                    <!-- Media items will be loaded here via AJAX -->
-                    <div class="col-12 text-center py-5" id="media-loading">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    <div class="col-12 text-center py-5 d-none" id="no-media-message">
-                        <i class="fas fa-image fa-3x text-muted mb-3"></i>
-                        <h5 class="mb-2">No media found</h5>
-                        <p class="text-muted mb-3">Upload your first image to get started</p>
-                        <div class="upload-area" id="empty-state-upload">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p class="mb-0">Drag & drop files here or click to upload</p>
-                        </div>
-                    </div>
-
-                </div>
-                
-                <div class="d-flex justify-content-center mt-4" id="load-more-container">
-                    <button class="btn btn-outline-primary rounded-pill d-none" id="load-more-btn">
-                        <i class="fas fa-sync me-1"></i> Load More
-                    </button>
-                </div>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i> Cancel
-                </button>
-                <button type="button" class="btn btn-theme rounded-pill px-4" id="select-media-btn" disabled>
-                    <i class="fas fa-check me-2"></i> Select
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Unified Category Management Modal -->
-<div class="modal fade" id="categoryManagementModal" tabindex="-1" aria-labelledby="categoryManagementModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="categoryManagementModalLabel">Manage Categories & Subcategories</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="fw-bold mb-3">Categories</h6>
-                        <div class="mb-3">
-                            <div class="input-group">
-                                <input type="text" class="form-control rounded-pill" id="new-category-name" placeholder="Enter category name">
-                                <button class="btn btn-outline-primary rounded-pill" type="button" id="add-category-btn">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div id="categories-list" class="border rounded-3 p-3" style="max-height: 300px; overflow-y: auto;">
-                            <!-- Categories will be loaded here dynamically -->
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="fw-bold mb-3">Subcategories</h6>
-                        <div class="mb-3">
-                            <select class="form-select rounded-pill mb-2" id="subcategory-parent-category">
-                                <option value="">Select a category first</option>
-                                @if(isset($categories))
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                    @endforeach
-                                @endif
-                            </select>
-                            <div class="input-group">
-                                <input type="text" class="form-control rounded-pill" id="new-subcategory-name" placeholder="Enter subcategory name">
-                                <button class="btn btn-outline-primary rounded-pill" type="button" id="add-subcategory-btn" disabled>
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div id="subcategories-list" class="border rounded-3 p-3" style="max-height: 300px; overflow-y: auto;">
-                            <!-- Subcategories will be loaded here dynamically -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Close
-                </button>
-                <button type="button" class="btn btn-theme rounded-pill" id="save-category-selections">
-                    <i class="fas fa-save me-2"></i>Save Selections
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+@endsection
 
 @push('scripts')
 <script>
     // All JavaScript functionality has been moved to resources/js/common.js
 </script>
 @endpush
-@endsection

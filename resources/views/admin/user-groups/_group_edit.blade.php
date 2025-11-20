@@ -129,6 +129,7 @@
 </form>
 
 <script>
+$(document).ready(function() {
     // Handle user search
     $('#user-search').on('input', function() {
         const searchTerm = $(this).val().toLowerCase();
@@ -235,8 +236,8 @@
                 // Show success message
                 showAlert('success', 'User group updated successfully.');
                 
-                // Reload the table
-                $('#userGroupsTable').DataTable().ajax.reload();
+                // Reload the page to reflect changes
+                location.reload();
             },
             error: function(xhr) {
                 // Handle validation errors
@@ -255,4 +256,24 @@
             }
         });
     });
+    
+    // Function to show alerts
+    function showAlert(type, message) {
+        let alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        let iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        
+        let alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                <i class="fas ${iconClass} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        
+        // Remove any existing alerts
+        $('.alert').remove();
+        
+        // Add the new alert to the card body
+        $('.card-body').prepend(alertHtml);
+    }
+});
 </script>

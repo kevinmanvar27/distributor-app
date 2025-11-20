@@ -56,7 +56,7 @@
                                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                                 @enderror
                                                 
-                                                @if($user->avatar)
+                                                <!-- @if($user->avatar)
                                                     <div class="mt-2">
                                                         <a href="{{ route('admin.users.avatar.remove', $user) }}" 
                                                            class="btn btn-sm btn-outline-danger rounded-pill"
@@ -64,7 +64,7 @@
                                                             <i class="fas fa-trash me-1"></i> Remove Avatar
                                                         </a>
                                                     </div>
-                                                @endif
+                                                @endif -->
                                             </div>
                                         </div>
                                     </div>
@@ -204,6 +204,27 @@
                                                            id="mobile_number" name="mobile_number" value="{{ old('mobile_number', $user->mobile_number) }}" placeholder="Enter mobile number">
                                                 </div>
                                                 @error('mobile_number')
+                                                    <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="discount_percentage" class="form-label fw-medium">Discount Percentage</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
+                                                        <i class="fas fa-percent text-muted"></i>
+                                                    </span>
+                                                    <input type="number" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2 @error('discount_percentage') is-invalid @enderror" 
+                                                           id="discount_percentage" name="discount_percentage" 
+                                                           value="{{ old('discount_percentage', $user->discount_percentage) }}" 
+                                                           min="0" max="100" step="0.01" placeholder="Enter discount percentage">
+                                                </div>
+                                                <div class="form-text ms-4">Enter a discount percentage for this user (0-100%)</div>
+                                                @error('discount_percentage')
                                                     <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
                                                 @enderror
                                             </div>

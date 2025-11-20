@@ -1,5 +1,9 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\UserGroup;
+
 if (!function_exists('tagline')) {
     /**
      * Get the tagline setting
@@ -12,9 +16,52 @@ if (!function_exists('tagline')) {
     }
 }
 
+if (!function_exists('calculateDiscountedPrice')) {
+    /**
+     * Calculate the discounted price for a product based on user's individual or group discount
+     *
+     * @param float $originalPrice
+     * @param User|null $user
+     * @return float
+     */
+    function calculateDiscountedPrice($originalPrice, $user = null)
+    {
+        // If no user provided or not logged in, return original price
+        if (!$user && !Auth::check()) {
+            return $originalPrice;
+        }
+        
+        // Use provided user or get from auth
+        $user = $user ?: Auth::user();
+        
+        // Check for individual discount first
+        if (!is_null($user->discount_percentage) && $user->discount_percentage > 0) {
+            return $originalPrice * (1 - $user->discount_percentage / 100);
+        }
+        
+        // If no individual discount, check for group discount
+        $userGroups = $user->userGroups;
+        if ($userGroups->count() > 0) {
+            $highestGroupDiscount = 0;
+            foreach ($userGroups as $group) {
+                if (!is_null($group->discount_percentage) && $group->discount_percentage > $highestGroupDiscount) {
+                    $highestGroupDiscount = $group->discount_percentage;
+                }
+            }
+            
+            if ($highestGroupDiscount > 0) {
+                return $originalPrice * (1 - $highestGroupDiscount / 100);
+            }
+        }
+        
+        // No applicable discount, return original price
+        return $originalPrice;
+    }
+}
+
 if (!function_exists('setting')) {
     /**
-     * Get a setting value by key
+     * Get a setting value by key with an optional default.
      *
      * @param string $key
      * @param mixed $default
@@ -22,15 +69,6 @@ if (!function_exists('setting')) {
      */
     function setting($key, $default = null)
     {
-        // Skip caching in testing environment
-        if (app()->environment('testing')) {
-            $settings = \App\Models\Setting::first();
-            if ($settings && isset($settings->$key)) {
-                return $settings->$key;
-            }
-            return $default;
-        }
-        
         static $settings = null;
         
         if ($settings === null) {
@@ -207,48 +245,6 @@ if (!function_exists('user_role')) {
     }
 }
 
-if (!function_exists('has_role')) {
-    /**
-     * Check if the current user has a specific role
-     *
-     * @param string $role
-     * @return bool
-     */
-    function has_role($role)
-    {
-        if (\Illuminate\Support\Facades\Auth::check()) {
-            $user = \Illuminate\Support\Facades\Auth::user();
-            // Handle IDE false positive by explicitly checking type
-            if ($user instanceof \App\Models\User) {
-                return $user->hasRole($role);
-            }
-        }
-        
-        return false;
-    }
-}
-
-if (!function_exists('has_any_role')) {
-    /**
-     * Check if the current user has any of the specified roles
-     *
-     * @param array $roles
-     * @return bool
-     */
-    function has_any_role($roles)
-    {
-        if (\Illuminate\Support\Facades\Auth::check()) {
-            $user = \Illuminate\Support\Facades\Auth::user();
-            // Handle IDE false positive by explicitly checking type
-            if ($user instanceof \App\Models\User) {
-                return $user->hasAnyRole($roles);
-            }
-        }
-        
-        return false;
-    }
-}
-
 if (!function_exists('is_admin')) {
     /**
      * Check if the current user is an admin
@@ -262,26 +258,6 @@ if (!function_exists('is_admin')) {
             // Handle IDE false positive by explicitly checking type
             if ($user instanceof \App\Models\User) {
                 return $user->isAdmin();
-            }
-        }
-        
-        return false;
-    }
-}
-
-if (!function_exists('is_super_admin')) {
-    /**
-     * Check if the current user is a super admin
-     *
-     * @return bool
-     */
-    function is_super_admin()
-    {
-        if (\Illuminate\Support\Facades\Auth::check()) {
-            $user = \Illuminate\Support\Facades\Auth::user();
-            // Handle IDE false positive by explicitly checking type
-            if ($user instanceof \App\Models\User) {
-                return $user->isSuperAdmin();
             }
         }
         
@@ -542,22 +518,21 @@ if (!function_exists('mobile_body_size')) {
     }
 }
 
-// Payment method visibility helper functions
 if (!function_exists('show_online_payment')) {
     /**
-     * Check if online payment option should be shown
+     * Check if online payment option should be shown.
      *
      * @return bool
      */
     function show_online_payment()
     {
-        return setting('show_online_payment', false);
+        return setting('show_online_payment', true);
     }
 }
 
 if (!function_exists('show_cod_payment')) {
     /**
-     * Check if cash on delivery option should be shown
+     * Check if cash on delivery option should be shown.
      *
      * @return bool
      */
@@ -569,7 +544,7 @@ if (!function_exists('show_cod_payment')) {
 
 if (!function_exists('show_invoice_payment')) {
     /**
-     * Check if send proforma invoice option should be shown
+     * Check if invoice payment option should be shown.
      *
      * @return bool
      */

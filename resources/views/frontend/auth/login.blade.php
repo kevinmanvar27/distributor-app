@@ -39,7 +39,7 @@
                         </div>
                     @endif
                     
-                    <form method="POST" action="{{ route('frontend.login') }}">
+                    <form method="POST" action="{{ route('frontend.login') }}" id="login-form">
                         @csrf
                         
                         <div class="mb-4">
@@ -84,6 +84,9 @@
                                 </div>
                             @enderror
                         </div>
+                        
+                        <!-- Hidden input to store guest cart data -->
+                        <input type="hidden" name="guest_cart" id="guest_cart" value="[]">
                         
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div class="form-check">
@@ -141,6 +144,27 @@
                 }
             });
         });
+        
+        // Add guest cart data to form before submission
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                // Get guest cart from localStorage
+                const guestCart = localStorage.getItem('guest_cart') || '[]';
+                document.getElementById('guest_cart').value = guestCart;
+            });
+        }
+    });
+    
+    // Clear localStorage cart after successful login
+    window.addEventListener('load', function() {
+        // Check if we just came from a successful login
+        if (window.location.search.includes('login=success') || 
+            document.querySelector('.alert-success') || 
+            document.querySelector('.alert-info')) {
+            // Clear guest cart from localStorage
+            localStorage.removeItem('guest_cart');
+        }
     });
 </script>
 @endsection

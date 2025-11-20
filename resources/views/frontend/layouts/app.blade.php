@@ -4,6 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- Site settings for JavaScript access -->
+    <meta name="site-title" content="{{ setting('site_title', 'Frontend App') }}">
+    <meta name="company-address" content="{{ setting('address', 'Company Address') }}">
+    <meta name="company-email" content="{{ setting('company_email', 'company@example.com') }}">
+    <meta name="company-phone" content="{{ setting('company_phone', '+1 (555) 123-4567') }}">
     
     <title>{{ setting('site_title', 'Frontend App') }} - {{ setting('tagline', 'Your Frontend Application') }}</title>
     
@@ -222,6 +227,7 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{{ route('frontend.profile') }}">Profile</a></li>
                                 <li><a class="dropdown-item" href="{{ route('frontend.profile') }}#change-password">Change Password</a></li>
+                                <li><a class="dropdown-item" href="{{ route('frontend.cart.proforma.invoices') }}">Proforma Invoice</a></li>
                                 <li>
                                     <form method="POST" action="{{ route('frontend.logout') }}">
                                         @csrf
@@ -231,6 +237,12 @@
                             </ul>
                         </div>
                     @else
+                        <a href="{{ route('frontend.cart.index') }}" class="btn btn-sm btn-outline-theme position-relative me-3">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-count">
+                                0
+                            </span>
+                        </a>
                         <a href="{{ route('frontend.login') }}" class="btn btn-sm btn-theme">Login</a>
                     @endauth
                 </div>
@@ -310,6 +322,9 @@
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
     <script>
         // Function to show toast message
         function showToast(message, type) {
@@ -355,6 +370,69 @@
             }
         }
         
+        // Function to get guest cart from localStorage
+        function getGuestCart() {
+            const cart = localStorage.getItem('guest_cart');
+            return cart ? JSON.parse(cart) : [];
+        }
+        
+        // Function to save guest cart to localStorage
+        function saveGuestCart(cart) {
+            localStorage.setItem('guest_cart', JSON.stringify(cart));
+        }
+        
+        // Function to add item to guest cart
+        function addToGuestCart(productId, quantity = 1) {
+            let cart = getGuestCart();
+            
+            // Check if product already exists in cart
+            const existingItemIndex = cart.findIndex(item => item.product_id == productId);
+            
+            if (existingItemIndex !== -1) {
+                // Update quantity if product already exists
+                cart[existingItemIndex].quantity += quantity;
+            } else {
+                // Add new item to cart
+                cart.push({
+                    product_id: productId,
+                    quantity: quantity,
+                    added_at: new Date().toISOString()
+                });
+            }
+            
+            saveGuestCart(cart);
+            return cart;
+        }
+        
+        // Function to get guest cart count
+        function getGuestCartCount() {
+            const cart = getGuestCart();
+            return cart.reduce((total, item) => total + item.quantity, 0);
+        }
+        
+        // Function to update guest cart count display
+        function updateGuestCartCount() {
+            const count = getGuestCartCount();
+            updateCartCount(count);
+        }
+        
+        // Function to clear guest cart from localStorage
+        function clearGuestCart() {
+            localStorage.removeItem('guest_cart');
+        }
+        
+        // Initialize cart count on page load for guests
+        document.addEventListener('DOMContentLoaded', function() {
+            @guest
+                updateGuestCartCount();
+            @endguest
+            
+            // Check if we just logged in successfully and clear localStorage cart
+            @if(session('login_success'))
+                clearGuestCart();
+            @endif
+        });
+        
         // Handle Add to Cart buttons
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('add-to-cart-btn') || e.target.closest('.add-to-cart-btn')) {
@@ -366,36 +444,52 @@
                 const originalText = button.innerHTML;
                 button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
                 
-                fetch('/cart/add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        product_id: productId
+                @auth
+                    // For authenticated users, use AJAX request
+                    fetch('/cart/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            product_id: productId
+                        })
                     })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Update cart count
-                        updateCartCount(data.cart_count);
-                        
-                        // Show success message
-                        showToast(data.message, 'success');
-                    } else {
-                        showToast(data.message, 'error');
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update cart count
+                            updateCartCount(data.cart_count);
+                            
+                            // Show success message
+                            showToast(data.message, 'success');
+                        } else {
+                            showToast(data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        showToast('An error occurred while adding the product to cart.', 'error');
+                    })
+                    .finally(() => {
+                        // Re-enable button
+                        button.disabled = false;
+                        button.innerHTML = originalText;
+                    });
+                @else
+                    // For guests, use localStorage
+                    try {
+                        addToGuestCart(productId);
+                        updateGuestCartCount();
+                        showToast('Product added to cart successfully!', 'success');
+                    } catch (error) {
+                        showToast('An error occurred while adding the product to cart.', 'error');
+                    } finally {
+                        // Re-enable button
+                        button.disabled = false;
+                        button.innerHTML = originalText;
                     }
-                })
-                .catch(error => {
-                    showToast('An error occurred while adding the product to cart.', 'error');
-                })
-                .finally(() => {
-                    // Re-enable button
-                    button.disabled = false;
-                    button.innerHTML = originalText;
-                });
+                @endauth
             }
             
             // Handle Buy Now buttons
@@ -408,35 +502,50 @@
                 const originalText = button.innerHTML;
                 button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
                 
-                fetch('/cart/add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        product_id: productId
+                @auth
+                    // For authenticated users, use AJAX request
+                    fetch('/cart/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            product_id: productId
+                        })
                     })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Update cart count
-                        updateCartCount(data.cart_count);
-                        
-                        // Redirect to cart page
-                        window.location.href = '/cart';
-                    } else {
-                        showToast(data.message, 'error');
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update cart count
+                            updateCartCount(data.cart_count);
+                            
+                            // Redirect to cart page
+                            window.location.href = '/cart';
+                        } else {
+                            showToast(data.message, 'error');
+                            button.disabled = false;
+                            button.innerHTML = originalText;
+                        }
+                    })
+                    .catch(error => {
+                        showToast('An error occurred while adding the product to cart.', 'error');
+                        button.disabled = false;
+                        button.innerHTML = originalText;
+                    });
+                @else
+                    // For guests, use localStorage and redirect to login
+                    try {
+                        addToGuestCart(productId);
+                        updateGuestCartCount();
+                        // Redirect to login page
+                        window.location.href = '/login';
+                    } catch (error) {
+                        showToast('An error occurred while adding the product to cart.', 'error');
                         button.disabled = false;
                         button.innerHTML = originalText;
                     }
-                })
-                .catch(error => {
-                    showToast('An error occurred while adding the product to cart.', 'error');
-                    button.disabled = false;
-                    button.innerHTML = originalText;
-                });
+                @endauth
             }
         });
     </script>

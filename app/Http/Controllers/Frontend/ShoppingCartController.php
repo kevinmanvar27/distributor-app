@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ShoppingCartItem;
+use App\Models\ProformaInvoice;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -18,8 +19,34 @@ class ShoppingCartController extends Controller
      */
     public function index()
     {
-        $cartItems = Auth::user()->cartItems()->with('product.mainPhoto')->get();
+        // Check if frontend requires authentication and user is not logged in
+        $setting = \App\Models\Setting::first();
+        $accessPermission = $setting->frontend_access_permission ?? 'open_for_all';
+        
+        // For registered_users_only and admin_approval_required modes, 
+        // redirect guests from cart pages to login, unless it's open_for_all
+        if ($accessPermission !== 'open_for_all' && !Auth::check()) {
+            // Check if there are any items in the guest cart
+            $sessionId = session()->getId();
+            $guestCartCount = ShoppingCartItem::forSession($sessionId)->count();
+            
+            // If guest has items in cart, allow access to cart page
+            // Otherwise, redirect to login
+            if ($guestCartCount == 0) {
+                return redirect()->route('frontend.login');
+            }
+        }
+        
+        if (Auth::check()) {
+            $cartItems = Auth::user()->cartItems()->with('product.mainPhoto')->get();
+        } else {
+            // For guests, get cart items by session ID
+            $sessionId = session()->getId();
+            $cartItems = ShoppingCartItem::forSession($sessionId)->with('product.mainPhoto')->get();
+        }
+        
         $total = $cartItems->sum(function ($item) {
+            // Use the price stored in the cart item, which was calculated at time of adding
             return $item->price * $item->quantity;
         });
         
@@ -50,20 +77,46 @@ class ShoppingCartController extends Controller
             ]);
         }
 
-        // Add or update cart item
+        // Calculate discounted price using our helper function
+        // If selling price is null, blank, or not set, use MRP instead
+        $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) ? 
+                      $product->selling_price : $product->mrp;
+        
+        // For guests, use null user and calculate price without discount
+        // For authenticated users, calculate with their discount
+        $discountedPrice = $priceToUse;
+        if (Auth::check()) {
+            $discountedPrice = calculateDiscountedPrice($priceToUse, Auth::user());
+        }
+
+        // Prepare data for cart item
+        $cartData = [
+            'product_id' => $product->id,
+            'quantity' => $quantity,
+            'price' => $discountedPrice,
+        ];
+
+        // Add user_id or session_id based on authentication status
+        if (Auth::check()) {
+            $cartData['user_id'] = Auth::id();
+        } else {
+            $cartData['session_id'] = session()->getId();
+        }
+
+        // Add or update cart item with the discounted price
         $cartItem = ShoppingCartItem::updateOrCreate(
-            [
-                'user_id' => Auth::id(),
-                'product_id' => $product->id,
-            ],
-            [
-                'quantity' => $quantity,
-                'price' => $product->selling_price,
-            ]
+            Auth::check() ? 
+                ['user_id' => Auth::id(), 'product_id' => $product->id] :
+                ['session_id' => session()->getId(), 'product_id' => $product->id],
+            $cartData
         );
 
         // Get updated cart count
-        $cartCount = Auth::user()->cartItems->count();
+        if (Auth::check()) {
+            $cartCount = Auth::user()->cartItems()->count();
+        } else {
+            $cartCount = ShoppingCartItem::forSession(session()->getId())->count();
+        }
 
         return response()->json([
             'success' => true,
@@ -85,7 +138,13 @@ class ShoppingCartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $cartItem = ShoppingCartItem::where('user_id', Auth::id())->where('id', $id)->firstOrFail();
+        // Find cart item based on authentication status
+        if (Auth::check()) {
+            $cartItem = ShoppingCartItem::where('user_id', Auth::id())->where('id', $id)->firstOrFail();
+        } else {
+            $cartItem = ShoppingCartItem::where('session_id', session()->getId())->where('id', $id)->firstOrFail();
+        }
+        
         $product = $cartItem->product;
 
         // Check if product is in stock
@@ -102,7 +161,13 @@ class ShoppingCartController extends Controller
 
         // Calculate item total and cart total
         $itemTotal = $cartItem->price * $cartItem->quantity;
-        $cartItems = Auth::user()->cartItems()->get();
+        
+        if (Auth::check()) {
+            $cartItems = Auth::user()->cartItems()->get();
+        } else {
+            $cartItems = ShoppingCartItem::forSession(session()->getId())->get();
+        }
+        
         $cartTotal = $cartItems->sum(function ($item) {
             return $item->price * $item->quantity;
         });
@@ -123,12 +188,24 @@ class ShoppingCartController extends Controller
      */
     public function removeFromCart($id)
     {
-        $cartItem = ShoppingCartItem::where('user_id', Auth::id())->where('id', $id)->firstOrFail();
+        // Find cart item based on authentication status
+        if (Auth::check()) {
+            $cartItem = ShoppingCartItem::where('user_id', Auth::id())->where('id', $id)->firstOrFail();
+        } else {
+            $cartItem = ShoppingCartItem::where('session_id', session()->getId())->where('id', $id)->firstOrFail();
+        }
+        
         $cartItem->delete();
 
         // Get updated cart count and total
-        $cartCount = Auth::user()->cartItems()->count();
-        $cartItems = Auth::user()->cartItems()->get();
+        if (Auth::check()) {
+            $cartCount = Auth::user()->cartItems()->count();
+            $cartItems = Auth::user()->cartItems()->get();
+        } else {
+            $cartCount = ShoppingCartItem::forSession(session()->getId())->count();
+            $cartItems = ShoppingCartItem::forSession(session()->getId())->get();
+        }
+        
         $cartTotal = $cartItems->sum(function ($item) {
             return $item->price * $item->quantity;
         });
@@ -142,13 +219,342 @@ class ShoppingCartController extends Controller
     }
 
     /**
-     * Get the cart count for the authenticated user.
+     * Get the cart count for the current user or session.
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function getCartCount()
     {
-        $cartCount = Auth::user()->cartItems()->count();
+        if (Auth::check()) {
+            $cartCount = Auth::user()->cartItems()->count();
+        } else {
+            $cartCount = ShoppingCartItem::forSession(session()->getId())->count();
+        }
+        
         return response()->json(['cart_count' => $cartCount]);
     }
+    
+    /**
+     * Migrate guest cart items to authenticated user's cart.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function migrateGuestCart(Request $request)
+    {
+        if (!Auth::check()) {
+            return response()->json(['success' => false, 'message' => 'User not authenticated.']);
+        }
+        
+        $userId = Auth::id();
+        
+        // First, migrate database guest cart items (items added when session was active)
+        $this->migrateDatabaseGuestCart($userId);
+        
+        // Then, migrate localStorage guest cart items (items added before session)
+        $this->migrateLocalStorageGuestCart($request, $userId);
+        
+        return response()->json(['success' => true, 'message' => 'Cart items migrated successfully.']);
+    }
+    
+    /**
+     * Migrate database guest cart items to authenticated user's cart.
+     *
+     * @param  int  $userId
+     * @return void
+     */
+    private function migrateDatabaseGuestCart($userId)
+    {
+        $sessionId = session()->getId();
+        
+        // Get guest cart items from database
+        $guestCartItems = ShoppingCartItem::forSession($sessionId)->get();
+        
+        // Migrate each guest cart item to user's cart
+        foreach ($guestCartItems as $guestCartItem) {
+            // Check if user already has this product in their cart
+            $existingCartItem = ShoppingCartItem::where('user_id', $userId)
+                ->where('product_id', $guestCartItem->product_id)
+                ->first();
+                
+            if ($existingCartItem) {
+                // If user already has this product, update quantity (combine quantities)
+                // Make sure we don't exceed stock quantity
+                $product = $guestCartItem->product;
+                $newQuantity = min($existingCartItem->quantity + $guestCartItem->quantity, $product->stock_quantity);
+                $existingCartItem->update([
+                    'quantity' => $newQuantity
+                ]);
+                
+                // Delete the guest cart item
+                $guestCartItem->delete();
+            } else {
+                // If user doesn't have this product, transfer the guest cart item to user
+                // Make sure we don't exceed stock quantity
+                $product = $guestCartItem->product;
+                $newQuantity = min($guestCartItem->quantity, $product->stock_quantity);
+                $guestCartItem->update([
+                    'user_id' => $userId,
+                    'session_id' => null,
+                    'quantity' => $newQuantity
+                ]);
+            }
+        }
+    }
+    
+    /**
+     * Migrate localStorage guest cart items to authenticated user's cart.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $userId
+     * @return void
+     */
+    private function migrateLocalStorageGuestCart(Request $request, $userId)
+    {
+        // Get guest cart data from request
+        $localStorageCart = $request->get('guest_cart', '[]');
+        
+        // Decode the cart data
+        $guestCartItems = json_decode($localStorageCart, true);
+        
+        // If we don't have valid cart data, return
+        if (!is_array($guestCartItems)) {
+            return;
+        }
+        
+        // Process each item in the localStorage cart
+        foreach ($guestCartItems as $guestCartItem) {
+            // Validate the cart item data
+            if (!isset($guestCartItem['product_id']) || !isset($guestCartItem['quantity'])) {
+                continue;
+            }
+            
+            $productId = $guestCartItem['product_id'];
+            $quantity = (int) $guestCartItem['quantity'];
+            
+            // Validate product exists and is available
+            $product = Product::find($productId);
+            if (!$product || !$product->in_stock || $product->stock_quantity < $quantity) {
+                continue;
+            }
+            
+            // Calculate the price for this product
+            $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) ? 
+                          $product->selling_price : $product->mrp;
+            
+            $discountedPrice = calculateDiscountedPrice($priceToUse, Auth::user());
+            
+            // Check if user already has this product in their cart
+            $existingCartItem = ShoppingCartItem::where('user_id', $userId)
+                ->where('product_id', $productId)
+                ->first();
+                
+            if ($existingCartItem) {
+                // If user already has this product, update quantity (combine quantities)
+                $newQuantity = min($existingCartItem->quantity + $quantity, $product->stock_quantity);
+                $existingCartItem->update([
+                    'quantity' => $newQuantity
+                ]);
+            } else {
+                // If user doesn't have this product, create a new cart item
+                $newQuantity = min($quantity, $product->stock_quantity);
+                ShoppingCartItem::create([
+                    'user_id' => $userId,
+                    'product_id' => $productId,
+                    'quantity' => $newQuantity,
+                    'price' => $discountedPrice
+                ]);
+            }
+        }
+    }
+    
+    /**
+     * Generate and display the proforma invoice.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function generateProformaInvoice()
+    {
+        // Check if frontend requires authentication and user is not logged in
+        $setting = \App\Models\Setting::first();
+        $accessPermission = $setting->frontend_access_permission ?? 'open_for_all';
+        
+        // For registered_users_only and admin_approval_required modes, 
+        // redirect guests from cart pages to login, unless it's open_for_all
+        if ($accessPermission !== 'open_for_all' && !Auth::check()) {
+            return redirect()->route('frontend.login');
+        }
+        
+        if (Auth::check()) {
+            $cartItems = Auth::user()->cartItems()->with('product.mainPhoto')->get();
+        } else {
+            // For guests, get cart items by session ID
+            $sessionId = session()->getId();
+            $cartItems = ShoppingCartItem::forSession($sessionId)->with('product.mainPhoto')->get();
+        }
+        
+        $total = $cartItems->sum(function ($item) {
+            // Use the price stored in the cart item, which was calculated at time of adding
+            return $item->price * $item->quantity;
+        });
+        
+        // Generate serialized invoice number
+        $invoiceNumber = $this->generateInvoiceNumber();
+        
+        // Generate invoice date
+        $invoiceDate = now()->format('Y-m-d');
+        
+        // Prepare invoice data for storage
+        $invoiceData = [
+            'cart_items' => $cartItems->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name,
+                    'product_description' => $item->product->description,
+                    'quantity' => $item->quantity,
+                    'price' => $item->price,
+                    'total' => $item->price * $item->quantity
+                ];
+            })->toArray(),
+            'total' => $total,
+            'invoice_date' => $invoiceDate,
+            'customer' => Auth::check() ? [
+                'id' => Auth::id(),
+                'name' => Auth::user()->name,
+                'email' => Auth::user()->email,
+                'address' => Auth::user()->address,
+                'mobile_number' => Auth::user()->mobile_number
+            ] : null,
+            'session_id' => Auth::check() ? null : session()->getId()
+        ];
+        
+        // Save the proforma invoice to the database
+        $proformaInvoice = ProformaInvoice::create([
+            'invoice_number' => $invoiceNumber,
+            'user_id' => Auth::check() ? Auth::id() : null,
+            'session_id' => Auth::check() ? null : session()->getId(),
+            'total_amount' => $total,
+            'invoice_data' => json_encode($invoiceData),
+            'status' => ProformaInvoice::STATUS_DRAFT, // Set status to 'Draft' when creating
+        ]);
+        
+        // Redirect to the invoices list instead of showing the proforma invoice page
+        return redirect()->route('frontend.cart.proforma.invoices')->with('success', 'Proforma invoice generated successfully!');
+    }
+    
+    /**
+     * Display a listing of the user's proforma invoices.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function listProformaInvoices()
+    {
+        // Check if frontend requires authentication and user is not logged in
+        $setting = \App\Models\Setting::first();
+        $accessPermission = $setting->frontend_access_permission ?? 'open_for_all';
+        
+        // For registered_users_only and admin_approval_required modes, 
+        // redirect guests from cart pages to login, unless it's open_for_all
+        if ($accessPermission !== 'open_for_all' && !Auth::check()) {
+            return redirect()->route('frontend.login');
+        }
+        
+        // Get all proforma invoices for the authenticated user
+        if (Auth::check()) {
+            $proformaInvoices = ProformaInvoice::where('user_id', Auth::id())
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            // For guests, get invoices by session ID
+            $sessionId = session()->getId();
+            $proformaInvoices = ProformaInvoice::where('session_id', $sessionId)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+        
+        return view('frontend.proforma-invoice-list', compact('proformaInvoices'));
+    }
+    
+    /**
+     * Get the details of a specific proforma invoice.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getProformaInvoiceDetails($id)
+    {
+        // Check if frontend requires authentication and user is not logged in
+        $setting = \App\Models\Setting::first();
+        $accessPermission = $setting->frontend_access_permission ?? 'open_for_all';
+        
+        // For registered_users_only and admin_approval_required modes, 
+        // redirect guests from cart pages to login, unless it's open_for_all
+        if ($accessPermission !== 'open_for_all' && !Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        
+        // Find the proforma invoice
+        if (Auth::check()) {
+            $proformaInvoice = ProformaInvoice::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->first();
+        } else {
+            // For guests, get invoice by session ID
+            $sessionId = session()->getId();
+            $proformaInvoice = ProformaInvoice::where('id', $id)
+                ->where('session_id', $sessionId)
+                ->first();
+        }
+        
+        if (!$proformaInvoice) {
+            return response()->json(['error' => 'Invoice not found'], 404);
+        }
+        
+        // Decode the invoice data
+        $invoiceData = json_decode($proformaInvoice->invoice_data, true);
+        
+        return response()->json([
+            'invoice' => $proformaInvoice,
+            'data' => $invoiceData
+        ]);
+    }
+
+    /**
+     * Generate a serialized invoice number.
+     *
+     * @return string
+     */
+    private function generateInvoiceNumber()
+    {
+        // Get the current year
+        $year = date('Y');
+        
+        // Get the latest invoice to determine the next sequence number
+        $latestInvoice = ProformaInvoice::orderBy('id', 'desc')->first();
+        
+        if ($latestInvoice) {
+            // Extract the sequence number from the latest invoice
+            $latestNumber = $latestInvoice->invoice_number;
+            $parts = explode('-', $latestNumber);
+            
+            // If the latest invoice is from the current year, increment the sequence
+            if (count($parts) >= 3 && $parts[1] == $year) {
+                $sequence = (int)$parts[2] + 1;
+            } else {
+                // If it's a new year or no previous invoices, start from 1
+                $sequence = 1;
+            }
+        } else {
+            // If no previous invoices, start from 1
+            $sequence = 1;
+        }
+        
+        // Format the sequence number with leading zeros (e.g., 0001)
+        $sequenceFormatted = str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        
+        // Return the formatted invoice number (e.g., INV-2025-0001)
+        return "INV-{$year}-{$sequenceFormatted}";
+    }
+
 }

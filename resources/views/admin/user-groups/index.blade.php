@@ -143,49 +143,52 @@
 
 @section('scripts')
 <script>
-    $(document).ready(function() {
-        // Initialize DataTable
-        $('#userGroupsTable').DataTable({
-            "pageLength": 10,
-            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-            "ordering": true,
-            "searching": true,
-            "info": true,
-            "paging": true,
-            "columnDefs": [
-                { "orderable": false, "targets": [5] } // Disable sorting on Actions column
-            ],
-            "language": {
-                "search": "Search:",
-                "lengthMenu": "Show _MENU_ entries per page",
-                "info": "Showing _START_ to _END_ of _TOTAL_ user groups",
-                "infoEmpty": "Showing 0 to 0 of 0 user groups",
-                "infoFiltered": "(filtered from _MAX_ total user groups)",
-                "paginate": {
-                    "first": "First",
-                    "last": "Last",
-                    "next": "Next",
-                    "previous": "Previous"
+    // Wait for the document to be ready and jQuery to be available
+    function initializeUserGroupsPage() {
+        $(document).ready(function() {
+            // Initialize DataTable
+            $('#userGroupsTable').DataTable({
+                "pageLength": 10,
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                "ordering": true,
+                "searching": true,
+                "info": true,
+                "paging": true,
+                "columnDefs": [
+                    { "orderable": false, "targets": [5] } // Disable sorting on Actions column
+                ],
+                "language": {
+                    "search": "Search:",
+                    "lengthMenu": "Show _MENU_ entries per page",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ user groups",
+                    "infoEmpty": "Showing 0 to 0 of 0 user groups",
+                    "infoFiltered": "(filtered from _MAX_ total user groups)",
+                    "paginate": {
+                        "first": "First",
+                        "last": "Last",
+                        "next": "Next",
+                        "previous": "Previous"
+                    }
+                },
+                "aoColumns": [
+                    null, // #
+                    null, // Group Name
+                    null, // Description
+                    null, // Discount %
+                    null, // Members
+                    null  // Actions
+                ],
+                "preDrawCallback": function(settings) {
+                    // Ensure consistent column count
+                    if ($('#userGroupsTable tbody tr').length === 0) {
+                        $('#userGroupsTable tbody').html('<tr><td colspan="6" class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No user groups found</p><p class="small">Try creating a new user group</p></div></td></tr>');
+                    }
                 }
-            },
-            "aoColumns": [
-                null, // #
-                null, // Group Name
-                null, // Description
-                null, // Discount %
-                null, // Members
-                null  // Actions
-            ],
-            "preDrawCallback": function(settings) {
-                // Ensure consistent column count
-                if ($('#userGroupsTable tbody tr').length === 0) {
-                    $('#userGroupsTable tbody').html('<tr><td colspan="6" class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No user groups found</p><p class="small">Try creating a new user group</p></div></td></tr>');
-                }
-            }
+            });
+            // Adjust select width after DataTable initializes
+            $('.dataTables_length select').css('width', '80px');
         });
-        // Adjust select width after DataTable initializes
-        $('.dataTables_length select').css('width', '80px');
-    });
+    }
     
     // Function to show user group details in modal
     function showUserGroupDetails(userGroupId) {
@@ -248,8 +251,8 @@
                     // Show success message
                     showAlert('success', 'User group deleted successfully.');
                     
-                    // Reload the table
-                    $('#userGroupsTable').DataTable().ajax.reload();
+                    // Reload the page to reflect changes
+                    location.reload();
                 },
                 error: function() {
                     showAlert('error', 'Error deleting user group.');
@@ -275,6 +278,19 @@
         
         // Add the new alert to the card body
         $('.card-body').prepend(alertHtml);
+    }
+    
+    // Initialize the page once jQuery is available
+    if (typeof jQuery !== 'undefined') {
+        initializeUserGroupsPage();
+    } else {
+        // If jQuery isn't available yet, wait for it
+        const checkjQuery = setInterval(function() {
+            if (typeof jQuery !== 'undefined') {
+                clearInterval(checkjQuery);
+                initializeUserGroupsPage();
+            }
+        }, 100);
     }
 </script>
 @endsection

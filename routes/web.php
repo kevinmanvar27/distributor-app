@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\UserGroupController;
+use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\ProformaInvoiceController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Frontend\LoginController as FrontendLoginController;
 use App\Http\Controllers\Frontend\RegisterController;
@@ -45,6 +47,9 @@ Route::post('register', [RegisterController::class, 'register'])->name('frontend
 Route::middleware('frontend.access')->group(function () {
     Route::get('/home', [FrontendController::class, 'index'])->name('frontend.home');
     Route::get('/category/{category:slug}', [FrontendController::class, 'showCategory'])->name('frontend.category.show');
+    Route::get('/product/{product:slug}', [FrontendController::class, 'showProduct'])->name('frontend.product.show');
+    // AJAX route for fetching subcategories
+    Route::get('/frontend/category/{category}/subcategories', [FrontendController::class, 'getSubcategories'])->name('frontend.category.subcategories');
 });
 
 // Frontend Authenticated Routes
@@ -61,6 +66,11 @@ Route::middleware(['frontend.access', 'auth'])->group(function () {
     Route::put('/cart/update/{id}', [ShoppingCartController::class, 'updateCart'])->name('frontend.cart.update');
     Route::delete('/cart/remove/{id}', [ShoppingCartController::class, 'removeFromCart'])->name('frontend.cart.remove');
     Route::get('/cart/count', [ShoppingCartController::class, 'getCartCount'])->name('frontend.cart.count');
+    Route::post('/cart/migrate', [ShoppingCartController::class, 'migrateGuestCart'])->name('frontend.cart.migrate');
+    Route::get('/cart/proforma-invoice', [ShoppingCartController::class, 'generateProformaInvoice'])->name('frontend.cart.proforma.invoice');
+    Route::get('/cart/proforma-invoices', [ShoppingCartController::class, 'listProformaInvoices'])->name('frontend.cart.proforma.invoices');
+    Route::get('/cart/proforma-invoice/{id}', [ShoppingCartController::class, 'getProformaInvoiceDetails'])->name('frontend.cart.proforma.invoice.details');
+
 });
 
 // Authentication Routes
@@ -88,6 +98,31 @@ Route::get('/css/dynamic.css', function () {
     $linkColor = $setting && $setting->link_color ? $setting->link_color : '#333333';
     $linkHoverColor = $setting && $setting->link_hover_color ? $setting->link_hover_color : '#FF6B00';
     
+    // Font size settings
+    $desktopH1Size = $setting && $setting->desktop_h1_size ? $setting->desktop_h1_size : 36;
+    $desktopH2Size = $setting && $setting->desktop_h2_size ? $setting->desktop_h2_size : 30;
+    $desktopH3Size = $setting && $setting->desktop_h3_size ? $setting->desktop_h3_size : 24;
+    $desktopH4Size = $setting && $setting->desktop_h4_size ? $setting->desktop_h4_size : 20;
+    $desktopH5Size = $setting && $setting->desktop_h5_size ? $setting->desktop_h5_size : 18;
+    $desktopH6Size = $setting && $setting->desktop_h6_size ? $setting->desktop_h6_size : 16;
+    $desktopBodySize = $setting && $setting->desktop_body_size ? $setting->desktop_body_size : 16;
+    
+    $tabletH1Size = $setting && $setting->tablet_h1_size ? $setting->tablet_h1_size : 32;
+    $tabletH2Size = $setting && $setting->tablet_h2_size ? $setting->tablet_h2_size : 28;
+    $tabletH3Size = $setting && $setting->tablet_h3_size ? $setting->tablet_h3_size : 22;
+    $tabletH4Size = $setting && $setting->tablet_h4_size ? $setting->tablet_h4_size : 18;
+    $tabletH5Size = $setting && $setting->tablet_h5_size ? $setting->tablet_h5_size : 16;
+    $tabletH6Size = $setting && $setting->tablet_h6_size ? $setting->tablet_h6_size : 14;
+    $tabletBodySize = $setting && $setting->tablet_body_size ? $setting->tablet_body_size : 14;
+    
+    $mobileH1Size = $setting && $setting->mobile_h1_size ? $setting->mobile_h1_size : 28;
+    $mobileH2Size = $setting && $setting->mobile_h2_size ? $setting->mobile_h2_size : 24;
+    $mobileH3Size = $setting && $setting->mobile_h3_size ? $setting->mobile_h3_size : 20;
+    $mobileH4Size = $setting && $setting->mobile_h4_size ? $setting->mobile_h4_size : 16;
+    $mobileH5Size = $setting && $setting->mobile_h5_size ? $setting->mobile_h5_size : 14;
+    $mobileH6Size = $setting && $setting->mobile_h6_size ? $setting->mobile_h6_size : 12;
+    $mobileBodySize = $setting && $setting->mobile_body_size ? $setting->mobile_body_size : 12;
+    
     $css = ":root { 
         --font-color: {$fontColor}; 
         --font-style: {$fontStyle};
@@ -99,6 +134,31 @@ Route::get('/css/dynamic.css', function () {
         --general-text-color: {$generalTextColor};
         --link-color: {$linkColor};
         --link-hover-color: {$linkHoverColor};
+        
+        /* Font size settings */
+        --desktop-h1-size: {$desktopH1Size}px;
+        --desktop-h2-size: {$desktopH2Size}px;
+        --desktop-h3-size: {$desktopH3Size}px;
+        --desktop-h4-size: {$desktopH4Size}px;
+        --desktop-h5-size: {$desktopH5Size}px;
+        --desktop-h6-size: {$desktopH6Size}px;
+        --desktop-body-size: {$desktopBodySize}px;
+        
+        --tablet-h1-size: {$tabletH1Size}px;
+        --tablet-h2-size: {$tabletH2Size}px;
+        --tablet-h3-size: {$tabletH3Size}px;
+        --tablet-h4-size: {$tabletH4Size}px;
+        --tablet-h5-size: {$tabletH5Size}px;
+        --tablet-h6-size: {$tabletH6Size}px;
+        --tablet-body-size: {$tabletBodySize}px;
+        
+        --mobile-h1-size: {$mobileH1Size}px;
+        --mobile-h2-size: {$mobileH2Size}px;
+        --mobile-h3-size: {$mobileH3Size}px;
+        --mobile-h4-size: {$mobileH4Size}px;
+        --mobile-h5-size: {$mobileH5Size}px;
+        --mobile-h6-size: {$mobileH6Size}px;
+        --mobile-body-size: {$mobileBodySize}px;
     }";
     
     return response($css, 200)->header('Content-Type', 'text/css');
@@ -110,9 +170,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/color-palette', function () {
         return view('admin.color-palette');
     })->name('admin.color-palette');
-    Route::get('/admin/test-links', function () {
-        return view('admin.test-links');
-    })->name('admin.test-links');
     Route::get('/admin/settings', [SettingsController::class, 'index'])->name('admin.settings');
     Route::post('/admin/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
     Route::post('/admin/settings/reset', [SettingsController::class, 'reset'])->name('admin.settings.reset');
@@ -164,6 +221,11 @@ Route::middleware('auth')->group(function () {
                 'destroy' => 'admin.permissions.destroy',
             ]);
         });
+            
+        // Test route for debugging
+        Route::get('/test-media', function () {
+            return response()->json(['message' => 'Test route working']);
+        });
         
         // User Group Management Routes
         Route::resource('user-groups', UserGroupController::class)->names([
@@ -180,16 +242,6 @@ Route::middleware('auth')->group(function () {
     // Database Management Routes
     Route::post('/admin/settings/database/clean', [SettingsController::class, 'cleanDatabase'])->name('admin.settings.database.clean');
     Route::post('/admin/settings/database/export', [SettingsController::class, 'exportDatabase'])->name('admin.settings.database.export');
-    
-    // Firebase Notification Test Route
-    Route::get('/admin/test-firebase', function () {
-        return response()->json([
-            'configured' => is_firebase_configured(),
-            'project_id' => firebase_project_id(),
-            'client_email' => firebase_client_email(),
-            'has_private_key' => !empty(firebase_private_key())
-        ]);
-    })->name('admin.test.firebase');
     
     // Firebase Configuration Test Route
     Route::get('/admin/firebase/test', [FirebaseController::class, 'testConfiguration'])->name('admin.firebase.test');
@@ -213,9 +265,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/products/{product}/details', [ProductController::class, 'showDetails'])->name('admin.products.details');
         
         // Media Library Routes
-        Route::get('/media', [ProductController::class, 'getMedia'])->name('admin.media.index');
-        Route::post('/media', [ProductController::class, 'storeMedia'])->name('admin.media.store');
-        Route::delete('/media/{media}', [ProductController::class, 'destroyMedia'])->name('admin.media.destroy');
+        // Media Management Routes
+        Route::get('/media', [MediaController::class, 'index'])->name('admin.media.index');
+        Route::get('/media/list', [MediaController::class, 'getMedia'])->name('admin.media.list');
+        Route::post('/media', [MediaController::class, 'store'])->name('admin.media.store');
+        Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('admin.media.destroy');
+        Route::post('/media/cleanup', [MediaController::class, 'cleanup'])->name('admin.media.cleanup');
+        Route::get('/media/check-storage', [MediaController::class, 'checkStorage'])->name('admin.media.check-storage');
         
     });
 
@@ -239,4 +295,26 @@ Route::middleware('auth')->group(function () {
         Route::put('/subcategories/{subCategory}', [CategoryController::class, 'updateSubCategory'])->name('admin.subcategories.update');
         Route::delete('/subcategories/{subCategory}', [CategoryController::class, 'destroySubCategory'])->name('admin.subcategories.destroy');
     });
+    
+    // Test route for debugging
+    Route::get('/test-media', function () {
+        return response()->json(['message' => 'Test route working']);
+    });
+
+    // Test route to check categories and subcategories
+    Route::get('/test-categories', function () {
+        $categories = \App\Models\Category::with('subCategories')->get();
+        return response()->json($categories);
+    });
+
+    // Proforma Invoice Routes
+    Route::prefix('admin')->middleware(['permission:manage_proforma_invoices'])->group(function () {
+        Route::get('/proforma-invoice', [ProformaInvoiceController::class, 'index'])->name('admin.proforma-invoice.index');
+        Route::get('/proforma-invoice/{id}', [ProformaInvoiceController::class, 'show'])->name('admin.proforma-invoice.show');
+        Route::put('/proforma-invoice/{id}', [ProformaInvoiceController::class, 'update'])->name('admin.proforma-invoice.update');
+        Route::put('/proforma-invoice/{id}/status', [ProformaInvoiceController::class, 'updateStatus'])->name('admin.proforma-invoice.update-status');
+        Route::delete('/proforma-invoice/{id}/remove-item', [ProformaInvoiceController::class, 'removeItem'])->name('admin.proforma-invoice.remove-item');
+        Route::delete('/proforma-invoice/{id}', [ProformaInvoiceController::class, 'destroy'])->name('admin.proforma-invoice.destroy');
+    });
+
 });

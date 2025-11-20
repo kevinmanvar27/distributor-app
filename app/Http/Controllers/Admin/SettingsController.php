@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use App\Models\Setting;
 use App\Models\User;
 
@@ -24,6 +25,11 @@ class SettingsController extends Controller
             'site_description' => 'Your one-stop shop for all hardware needs',
             'tagline' => 'Quality hardware solutions for everyone',
             'footer_text' => '© 2025 Hardware Store. All rights reserved.',
+            'address' => null,
+            'company_email' => null,
+            'company_phone' => null,
+            'gst_number' => null,
+            'authorized_signatory' => null,
             'theme_color' => '#FF6B00',
             'background_color' => '#FFFFFF',
             'font_color' => '#333333',
@@ -106,6 +112,11 @@ class SettingsController extends Controller
             'site_description' => 'nullable|string',
             'tagline' => 'nullable|string|max:255',
             'footer_text' => 'nullable|string',
+            'address' => 'nullable|string',
+            'company_email' => 'nullable|email|max:255',
+            'company_phone' => 'nullable|string|max:20',
+            'gst_number' => 'nullable|string|max:15',
+            'authorized_signatory' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'theme_color' => 'nullable|string|max:7',
             'background_color' => 'nullable|string|max:7',
             'font_color' => 'nullable|string|max:7',
@@ -181,16 +192,37 @@ class SettingsController extends Controller
             $this->removeImage($setting, 'favicon');
         }
         
+        // Handle authorized signatory removal
+        if ($request->has('remove_authorized_signatory')) {
+            $this->removeFile($setting, 'authorized_signatory');
+        }
+        
         // Handle image uploads and delete old images
         $this->handleImageUpload($request, $setting, 'header_logo');
         $this->handleImageUpload($request, $setting, 'footer_logo');
         $this->handleImageUpload($request, $setting, 'favicon');
+        
+        // Handle authorized signatory file upload
+        if ($request->hasFile('authorized_signatory')) {
+            // Delete old authorized signatory if exists
+            if ($setting->authorized_signatory) {
+                Storage::disk('public')->delete($setting->authorized_signatory);
+            }
+            
+            // Store new authorized signatory file
+            $path = $request->file('authorized_signatory')->store('settings', 'public');
+            $setting->authorized_signatory = $path;
+        }
         
         // Update text fields
         $setting->site_title = $request->site_title;
         $setting->site_description = $request->site_description;
         $setting->tagline = $request->tagline;
         $setting->footer_text = $request->footer_text;
+        $setting->address = $request->address;
+        $setting->company_email = $request->company_email;
+        $setting->company_phone = $request->company_phone;
+        $setting->gst_number = $request->gst_number;
         $setting->theme_color = $request->theme_color;
         $setting->background_color = $request->background_color;
         $setting->font_color = $request->font_color;
@@ -243,9 +275,10 @@ class SettingsController extends Controller
         $setting->pending_approval_message = $request->pending_approval_message;
         
         // Update payment method visibility settings
-        $setting->show_online_payment = $request->has('show_online_payment') ? $request->boolean('show_online_payment') : false;
-        $setting->show_cod_payment = $request->has('show_cod_payment') ? $request->boolean('show_cod_payment') : false;
-        $setting->show_invoice_payment = $request->has('show_invoice_payment') ? $request->boolean('show_invoice_payment') : false;
+        // Using input() with default value false for better handling of checkbox inputs
+        $setting->show_online_payment = $request->input('show_online_payment', false);
+        $setting->show_cod_payment = $request->input('show_cod_payment', false);
+        $setting->show_invoice_payment = $request->input('show_invoice_payment', false);
         
         // Update site management fields with mutual exclusivity
         $maintenanceMode = $request->boolean('maintenance_mode');
@@ -358,6 +391,21 @@ class SettingsController extends Controller
     }
     
     /**
+     * Remove a file and delete it from storage
+     *
+     * @param  \App\Models\Setting  $setting
+     * @param  string  $fieldName
+     * @return void
+     */
+    private function removeFile(Setting $setting, string $fieldName)
+    {
+        if ($setting->$fieldName) {
+            Storage::disk('public')->delete($setting->$fieldName);
+            $setting->$fieldName = null;
+        }
+    }
+    
+    /**
      * Reset settings to default values
      *
      * @param  \Illuminate\Http\Request  $request
@@ -367,9 +415,9 @@ class SettingsController extends Controller
     {
         $setting = Setting::first();
         if ($setting) {
-            // Delete existing images
-            $imageFields = ['header_logo', 'footer_logo', 'favicon'];
-            foreach ($imageFields as $field) {
+            // Delete existing images and files
+            $fileFields = ['header_logo', 'footer_logo', 'favicon', 'authorized_signatory'];
+            foreach ($fileFields as $field) {
                 if ($setting->$field) {
                     Storage::disk('public')->delete($setting->$field);
                 }
@@ -381,6 +429,11 @@ class SettingsController extends Controller
                 'site_description' => 'Your one-stop shop for all hardware needs',
                 'tagline' => 'Quality hardware solutions for everyone',
                 'footer_text' => '© 2025 Hardware Store. All rights reserved.',
+                'address' => null,
+                'company_email' => null,
+                'company_phone' => null,
+                'gst_number' => null,
+                'authorized_signatory' => null,
                 'theme_color' => '#FF6B00',
                 'background_color' => '#FFFFFF',
                 'font_color' => '#333333',

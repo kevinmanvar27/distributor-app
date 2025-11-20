@@ -176,6 +176,49 @@
                                             <label class="form-label fw-medium">Footer Text</label>
                                             <textarea name="footer_text" rows="3" class="form-control" placeholder="Enter footer text">{{ old('footer_text', $setting->footer_text) }}</textarea>
                                         </div>
+                                        
+                                        <!-- Address -->
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-medium">Address</label>
+                                            <textarea name="address" rows="3" class="form-control" placeholder="Enter company address">{{ old('address', $setting->address) }}</textarea>
+                                        </div>
+                                        
+                                        <!-- GST Number -->
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-medium">GST Number</label>
+                                            <input type="text" name="gst_number" value="{{ old('gst_number', $setting->gst_number) }}" class="form-control" placeholder="Enter GST number">
+                                        </div>
+                                        
+                                        <!-- Authorized Signatory -->
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-medium">Authorized Signatory</label>
+                                            <input type="file" name="authorized_signatory" class="form-control">
+                                            @if($setting->authorized_signatory)
+                                                <div class="mt-2">
+                                                    <a href="{{ asset('storage/' . $setting->authorized_signatory) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-file-download me-1"></i> View Current Signatory
+                                                    </a>
+                                                    <div class="form-check mt-2">
+                                                        <input class="form-check-input" type="checkbox" name="remove_authorized_signatory" id="removeAuthorizedSignatory">
+                                                        <label class="form-check-label" for="removeAuthorizedSignatory">
+                                                            Remove authorized signatory
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        
+                                        <!-- Company Email -->
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-medium">Company Email</label>
+                                            <input type="email" name="company_email" value="{{ old('company_email', $setting->company_email) }}" class="form-control" placeholder="Enter company email">
+                                        </div>
+                                        
+                                        <!-- Company Phone -->
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-medium">Company Phone</label>
+                                            <input type="number" name="company_phone" value="{{ old('company_phone', $setting->company_phone) }}" class="form-control" placeholder="Enter company phone">
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -813,19 +856,19 @@
                                                     <div class="row g-4">
                                                         <div class="col-md-12">
                                                             <div class="form-check form-switch mb-3">
-                                                                <input class="form-check-input" type="checkbox" name="show_online_payment" id="showOnlinePayment" {{ old('show_online_payment', $setting->show_online_payment ?? true) ? 'checked' : '' }}>
+                                                                <input class="form-check-input" type="checkbox" name="show_online_payment" id="showOnlinePayment" value="1" {{ old('show_online_payment', $setting->show_online_payment ?? true) ? 'checked' : '' }}>
                                                                 <label class="form-check-label fw-medium" for="showOnlinePayment">Show Online Payment Option</label>
                                                                 <div class="form-text">When enabled, the "Online Payment" button will be visible on the checkout page</div>
                                                             </div>
                                                             
                                                             <div class="form-check form-switch mb-3">
-                                                                <input class="form-check-input" type="checkbox" name="show_cod_payment" id="showCodPayment" {{ old('show_cod_payment', $setting->show_cod_payment ?? true) ? 'checked' : '' }}>
+                                                                <input class="form-check-input" type="checkbox" name="show_cod_payment" id="showCodPayment" value="1" {{ old('show_cod_payment', $setting->show_cod_payment ?? true) ? 'checked' : '' }}>
                                                                 <label class="form-check-label fw-medium" for="showCodPayment">Show Cash on Delivery (COD) Option</label>
                                                                 <div class="form-text">When enabled, the "Cash on Delivery" button will be visible on the checkout page</div>
                                                             </div>
                                                             
                                                             <div class="form-check form-switch mb-3">
-                                                                <input class="form-check-input" type="checkbox" name="show_invoice_payment" id="showInvoicePayment" {{ old('show_invoice_payment', $setting->show_invoice_payment ?? true) ? 'checked' : '' }}>
+                                                                <input class="form-check-input" type="checkbox" name="show_invoice_payment" id="showInvoicePayment" value="1" {{ old('show_invoice_payment', $setting->show_invoice_payment ?? true) ? 'checked' : '' }}>
                                                                 <label class="form-check-label fw-medium" for="showInvoicePayment">Show Send Proforma Invoice Option</label>
                                                                 <div class="form-text">When enabled, the "Send Proforma Invoice" button will be visible on the checkout page</div>
                                                             </div>

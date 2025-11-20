@@ -178,7 +178,7 @@
                                                 @error('address')
                                                     <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
                                                 @enderror
-                                            </div>
+                                            </div>  
                                         </div>
                                         
                                         <div class="col-md-6">
@@ -198,6 +198,27 @@
                                         </div>
                                     </div>
                                     
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="discount_percentage" class="form-label fw-medium">Discount Percentage</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
+                                                        <i class="fas fa-percent text-muted"></i>
+                                                    </span>
+                                                    <input type="number" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2 @error('discount_percentage') is-invalid @enderror" 
+                                                           id="discount_percentage" name="discount_percentage" 
+                                                           value="{{ old('discount_percentage', 0) }}" 
+                                                           min="0" max="100" step="0.01" placeholder="Enter discount percentage">
+                                                </div>
+                                                <div class="form-text ms-4">Enter a discount percentage for this user (0-100%)</div>
+                                                @error('discount_percentage')
+                                                    <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="d-flex justify-content-between mt-5">
                                         <a href="{{ $role !== 'user' ? route('admin.users.staff') : route('admin.users.index') }}" class="btn btn-light rounded-pill px-4">
                                             <i class="fas fa-arrow-left me-2"></i> Back

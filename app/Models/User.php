@@ -29,6 +29,7 @@ class User extends Authenticatable
         'address',
         'mobile_number',
         'is_approved',
+        'discount_percentage',
     ];
 
     /**
@@ -52,6 +53,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'date_of_birth' => 'date',
+            'discount_percentage' => 'decimal:2',
         ];
     }
 

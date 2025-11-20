@@ -56,7 +56,7 @@ class ProductController extends Controller
             'in_stock' => 'required|boolean',
             'stock_quantity' => 'nullable|integer|min:0',
             'status' => 'required|in:draft,published',
-            'main_photo_id' => 'nullable|exists:media,id',
+            'main_photo_id' => 'nullable|integer|exists:media,id',
             'product_gallery' => 'nullable',
             'product_categories' => 'nullable|array',
             'product_categories.*.category_id' => 'required|exists:categories,id',
@@ -66,7 +66,7 @@ class ProductController extends Controller
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:255',
         ]);
-        
+
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
@@ -157,6 +157,9 @@ class ProductController extends Controller
     {
         $this->authorize('update', $product);
         
+        // Log the request data for debugging
+        Log::info('Product update request data:', $request->all());
+        
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -165,7 +168,7 @@ class ProductController extends Controller
             'in_stock' => 'required|boolean',
             'stock_quantity' => 'nullable|integer|min:0',
             'status' => 'required|in:draft,published',
-            'main_photo_id' => 'nullable|exists:media,id',
+            'main_photo_id' => 'nullable|integer|exists:media,id',
             'product_gallery' => 'nullable',
             'product_categories' => 'nullable|array',
             'product_categories.*.category_id' => 'required|exists:categories,id',
@@ -175,7 +178,6 @@ class ProductController extends Controller
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:255',
         ]);
-        
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
@@ -185,6 +187,9 @@ class ProductController extends Controller
             'status', 'main_photo_id', 'meta_title', 
             'meta_description', 'meta_keywords'
         ]);
+        
+        // Log the data that will be saved
+        Log::info('Product data to be updated:', $data);
         
         // Handle stock quantity - set to 0 if not in stock or not provided
         $data['stock_quantity'] = $request->in_stock ? ($request->stock_quantity ?? 0) : 0;
@@ -212,6 +217,9 @@ class ProductController extends Controller
         Log::info('Final product data before update:', $data);
         
         $product->update($data);
+        
+        // Log the updated product
+        Log::info('Product updated:', $product->toArray());
         
         return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
     }
@@ -252,12 +260,12 @@ class ProductController extends Controller
     public function storeMedia(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'file' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,wmv|max:10240', // 10MB max
+            'file' => 'required|file|mimes:jpeg,png,jpg,gif,webp,mp4,mov,avi,wmv,mpg,ogg,webm,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv|max:20480', // 20MB max
             'name' => 'nullable|string|max:255',
         ]);
         
         if ($validator->fails()) {
-            return response()->json(['success' => false, 'error' => $validator->errors()], 422);
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
         
         $file = $request->file('file');

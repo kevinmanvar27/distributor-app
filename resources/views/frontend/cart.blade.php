@@ -94,6 +94,7 @@
                     <h5 class="mb-0 fw-bold heading-text">Personal Details & Shipping Address</h5>
                 </div>
                 <div class="card-body">
+                    @auth
                     <form action="{{ route('frontend.profile.update') }}" method="POST">
                         @csrf
                         @method('POST')
@@ -131,6 +132,31 @@
                             </button>
                         </div>
                     </form>
+                    @else
+                    <form id="guest-details-form">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="guest_name" class="form-label fw-medium label-text">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="guest_name" name="name" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="guest_email" class="form-label fw-medium label-text">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="guest_email" name="email" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="guest_mobile_number" class="form-label fw-medium label-text">Mobile Number</label>
+                                <input type="text" class="form-control" id="guest_mobile_number" name="mobile_number">
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <label for="guest_address" class="form-label fw-medium label-text">Shipping Address</label>
+                                <textarea class="form-control" id="guest_address" name="address" rows="3" placeholder="Enter your complete shipping address"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                    @endauth
                 </div>
             </div>
         </div>
@@ -164,6 +190,17 @@
                         <h5>Total:</h5>
                         <h5 class="fw-bold cart-total">₹{{ number_format($total, 2) }}</h5>
                     </div>
+                    
+                    <!-- Checkout Button -->
+                    @auth
+                    <button class="btn btn-theme w-100 mb-3 d-flex align-items-center justify-content-center" id="checkout-btn">
+                        <i class="fas fa-shopping-cart me-2"></i>Proceed to Checkout
+                    </button>
+                    @else
+                    <button class="btn btn-theme w-100 mb-3 d-flex align-items-center justify-content-center" id="guest-checkout-btn">
+                        <i class="fas fa-shopping-cart me-2"></i>Proceed to Checkout
+                    </button>
+                    @endauth
                 </div>
             </div>
             
@@ -188,7 +225,7 @@
                     
                     <!-- Send Proforma Invoice -->
                     @if(show_invoice_payment())
-                    <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center" id="invoice-payment">
+                    <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mb-2" id="invoice-payment">
                         <i class="fas fa-file-invoice me-2"></i>Send Proforma Invoice
                     </button>
                     @endif
@@ -313,43 +350,74 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.getElementById('invoice-payment').addEventListener('click', function() {
-        alert('Proforma Invoice will be sent to your email address.');
-        // In a real implementation, this would generate and send an invoice
+        // Redirect to the proforma invoice page
+        window.location.href = '{{ route("frontend.cart.proforma.invoice") }}';
+    });
+    
+    // Handle checkout button for authenticated users
+    document.getElementById('checkout-btn')?.addEventListener('click', function() {
+        alert('Proceeding to checkout...');
+        // In a real implementation, this would redirect to the checkout page
+    });
+    
+    // Handle checkout button for guests
+    document.getElementById('guest-checkout-btn')?.addEventListener('click', function() {
+        // Validate guest form
+        const name = document.getElementById('guest_name').value;
+        const email = document.getElementById('guest_email').value;
+        
+        if (!name || !email) {
+            alert('Please fill in your name and email address.');
+            return;
+        }
+        
+        // In a real implementation, this would redirect to the checkout page
+        // For now, we'll redirect to the login page
+        if (confirm('To complete your purchase, please login or register. Your cart items will be preserved.')) {
+            window.location.href = '/login';
+        }
     });
     
     // Function to update cart item
     function updateCartItem(itemId, quantity) {
-        fetch(`/cart/update/${itemId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                quantity: quantity
+        // Check if user is authenticated
+        if (document.querySelector('meta[name="csrf-token"]')) {
+            fetch(`/cart/update/${itemId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    quantity: quantity
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update item total
-                const row = document.querySelector(`tr[data-cart-item-id="${itemId}"]`);
-                row.querySelector('.item-total').textContent = '₹' + data.item_total;
-                
-                // Update cart totals
-                document.querySelectorAll('.cart-subtotal, .cart-total').forEach(el => {
-                    el.textContent = '₹' + data.cart_total;
-                });
-                
-                // Show success message
-                showToast(data.message, 'success');
-            } else {
-                showToast(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            showToast('An error occurred while updating the cart.', 'error');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update item total
+                    const row = document.querySelector(`tr[data-cart-item-id="${itemId}"]`);
+                    row.querySelector('.item-total').textContent = '₹' + data.item_total;
+                    
+                    // Update cart totals
+                    document.querySelectorAll('.cart-subtotal, .cart-total').forEach(el => {
+                        el.textContent = '₹' + data.cart_total;
+                    });
+                    
+                    // Show success message
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showToast('An error occurred while updating the cart.', 'error');
+            });
+        } else {
+            // For guests, we would update localStorage
+            // This would require more complex implementation
+            showToast('Please login to update cart items.', 'error');
+        }
     }
     
     // Function to remove cart item
@@ -358,43 +426,50 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        fetch(`/cart/remove/${itemId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Remove the row from the table
-                document.querySelector(`tr[data-cart-item-id="${itemId}"]`).remove();
-                
-                // Update cart totals
-                document.querySelectorAll('.cart-subtotal, .cart-total').forEach(el => {
-                    el.textContent = '₹' + data.cart_total;
-                });
-                
-                // Update cart count in header
-                updateCartCount(data.cart_count);
-                
-                // Show success message
-                showToast(data.message, 'success');
-                
-                // If cart is empty, show empty message
-                if (data.cart_count === 0) {
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
+        // Check if user is authenticated
+        if (document.querySelector('meta[name="csrf-token"]')) {
+            fetch(`/cart/remove/${itemId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
-            } else {
-                showToast(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            showToast('An error occurred while removing the item.', 'error');
-        });
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove the row from the table
+                    document.querySelector(`tr[data-cart-item-id="${itemId}"]`).remove();
+                    
+                    // Update cart totals
+                    document.querySelectorAll('.cart-subtotal, .cart-total').forEach(el => {
+                        el.textContent = '₹' + data.cart_total;
+                    });
+                    
+                    // Update cart count in header
+                    updateCartCount(data.cart_count);
+                    
+                    // Show success message
+                    showToast(data.message, 'success');
+                    
+                    // If cart is empty, show empty message
+                    if (data.cart_count === 0) {
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    }
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showToast('An error occurred while removing the item.', 'error');
+            });
+        } else {
+            // For guests, we would remove from localStorage
+            // This would require more complex implementation
+            showToast('Please login to remove cart items.', 'error');
+        }
     }
     
     // Function to show toast message

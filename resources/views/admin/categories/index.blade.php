@@ -91,13 +91,14 @@
                                                     </td>
                                                     <td>
                                                         <div class="btn-group btn-group-sm" role="group">
-                                                            <button type="button" class="btn btn-outline-info rounded-start-pill px-3" onclick="showSubCategories({{ $category->id }})">
+                                                            <?php $categoryId = $category->id; ?>
+                                                            <button type="button" class="btn btn-outline-info rounded-start-pill px-3" onclick="showSubCategories(<?php echo $categoryId; ?>)">
                                                                 <i class="fas fa-list"></i>
                                                             </button>
-                                                            <button type="button" class="btn btn-outline-secondary px-3" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="editCategory({{ $category->id }})">
+                                                            <button type="button" class="btn btn-outline-secondary px-3" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="editCategory(<?php echo $categoryId; ?>)">
                                                                 <i class="fas fa-edit"></i>
                                                             </button>
-                                                            <button type="button" class="btn btn-outline-danger rounded-end-pill px-3" onclick="deleteCategory({{ $category->id }})">
+                                                            <button type="button" class="btn btn-outline-danger rounded-end-pill px-3" onclick="deleteCategory(<?php echo $categoryId; ?>)">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
                                                         </div>
@@ -134,7 +135,7 @@
     </div>
 </div>
 
-<!-- Category Modal -->
+<!-- Add Category Modal -->
 <div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -142,58 +143,124 @@
                 <h5 class="modal-title" id="categoryModalLabel">Add New Category</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="categoryForm" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" id="categoryId" name="id">
-                <div class="modal-body">
+            <div class="modal-body">
+                <form id="categoryForm">
+                    @csrf
+                    <input type="hidden" id="categoryId" name="id">
+                    <input type="hidden" id="categoryMethod" name="_method">
+                    <input type="hidden" id="categoryImageId" name="image_id">
+                    
                     <div class="mb-3">
-                        <label for="categoryName" class="form-label fw-bold">Category Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control rounded-pill px-4 py-2" id="categoryName" name="name" required>
+                        <label for="categoryName" class="form-label">Category Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control rounded-pill" id="categoryName" name="name" required>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="categoryDescription" class="form-label fw-bold">Description</label>
+                        <label for="categoryDescription" class="form-label">Description</label>
                         <textarea class="form-control" id="categoryDescription" name="description" rows="3"></textarea>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Category Image</label>
+                        <label class="form-label">Category Image</label>
                         <div class="border rounded-3 p-3 text-center" id="category-image-preview">
-                            <div class="py-3">
-                                <i class="fas fa-image fa-2x text-muted mb-2"></i>
-                                <p class="text-muted mb-2">No image selected</p>
-                                <button type="button" class="btn btn-outline-theme btn-sm rounded-pill" onclick="openMediaLibrary('category')">
-                                    <i class="fas fa-folder-open me-1"></i> Select Image
-                                </button>
+                            <div class="upload-area" id="category-image-upload-area" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <div>
+                                    <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted mb-2">Drag & drop an image here or click to select</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="openMediaLibrary('category')">
+                                        <i class="fas fa-folder-open me-1"></i> Select from Media Library
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <input type="hidden" id="categoryImageId" name="image_id">
                     </div>
                     
                     <div class="mb-3">
-                        <label for="categoryStatus" class="form-label fw-bold">Status</label>
-                        <select class="form-select rounded-pill px-4 py-2" id="categoryStatus" name="is_active" required>
+                        <label for="categoryStatus" class="form-label">Status</label>
+                        <select class="form-select rounded-pill" id="categoryStatus" name="is_active">
                             <option value="1">Active</option>
                             <option value="0">Inactive</option>
                         </select>
                     </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-theme rounded-pill" onclick="saveCategory()">
+                    <i class="fas fa-save me-2"></i>Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Media Library Modal -->
+<div class="modal fade" id="mediaLibraryModal" tabindex="-1" aria-labelledby="mediaLibraryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mediaLibraryModalLabel">Media Library</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="border rounded-3 p-3 mb-3">
+                            <h6 class="mb-3">Upload New Media</h6>
+                            <form id="mediaUploadForm">
+                                @csrf
+                                <div class="mb-3">
+                                    <label for="mediaFile" class="form-label">Select File</label>
+                                    <div class="upload-area" id="media-upload-area" style="min-height: 100px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                        <div>
+                                            <i class="fas fa-cloud-upload-alt text-muted mb-2"></i>
+                                            <p class="text-muted mb-0 small">Drag & drop file here or click</p>
+                                        </div>
+                                    </div>
+                                    <input type="file" class="form-control d-none" id="mediaFile" name="file" accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/csv">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="mediaName" class="form-label">Name (Optional)</label>
+                                    <input type="text" class="form-control rounded-pill" id="mediaName" name="name">
+                                </div>
+                                <button type="submit" class="btn btn-theme rounded-pill w-100">
+                                    <i class="fas fa-upload me-2"></i>Upload
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6>Existing Media</h6>
+                            <div class="d-flex">
+                                <input type="text" class="form-control rounded-pill me-2" id="mediaSearch" placeholder="Search media...">
+                            </div>
+                        </div>
+                        
+                        <div id="mediaLibraryContent" class="row">
+                            <!-- Media items will be loaded here -->
+                        </div>
+                        
+                        <div id="mediaLibraryPagination" class="d-flex justify-content-center mt-3">
+                            <!-- Pagination will be loaded here -->
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Close
-                    </button>
-                    <button type="submit" class="btn btn-theme rounded-pill">
-                        <i class="fas fa-save me-2"></i>Save Category
-                    </button>
-                </div>
-            </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Close
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Subcategories Modal -->
 <div class="modal fade" id="subcategoriesModal" tabindex="-1" aria-labelledby="subcategoriesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="subcategoriesModalLabel">Subcategories</h5>
@@ -202,13 +269,13 @@
             <div class="modal-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 id="subcategoryParentName">Subcategories</h6>
-                    <button type="button" class="btn btn-theme rounded-pill btn-sm" data-bs-toggle="modal" data-bs-target="#subcategoryModal" onclick="showSubCategoryModal()">
-                        <i class="fas fa-plus me-1"></i> Add Subcategory
+                    <button type="button" class="btn btn-theme rounded-pill" data-bs-toggle="modal" data-bs-target="#subcategoryModal" onclick="showSubCategoryModal()">
+                        <i class="fas fa-plus me-2"></i> Add Subcategory
                     </button>
                 </div>
                 
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle" id="subcategoriesTable">
+                    <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
                                 <th>ID</th>
@@ -245,114 +312,79 @@
                 <h5 class="modal-title" id="subcategoryModalLabel">Add New Subcategory</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="subcategoryForm" enctype="multipart/form-data">
-                @csrf
-                <input type="hidden" id="subcategoryId" name="id">
-                <input type="hidden" id="subcategoryCategoryId" name="category_id">
-                <div class="modal-body">
+            <div class="modal-body">
+                <form id="subcategoryForm">
+                    @csrf
+                    <input type="hidden" id="subcategoryId" name="id">
+                    <input type="hidden" id="subcategoryMethod" name="_method">
+                    <input type="hidden" id="subcategoryCategoryId" name="category_id">
+                    <input type="hidden" id="subcategoryImageId" name="image_id">
+                    
                     <div class="mb-3">
-                        <label for="subcategoryName" class="form-label fw-bold">Subcategory Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control rounded-pill px-4 py-2" id="subcategoryName" name="name" required>
+                        <label for="subcategoryName" class="form-label">Subcategory Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control rounded-pill" id="subcategoryName" name="name" required>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="subcategoryDescription" class="form-label fw-bold">Description</label>
+                        <label for="subcategoryDescription" class="form-label">Description</label>
                         <textarea class="form-control" id="subcategoryDescription" name="description" rows="3"></textarea>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Subcategory Image</label>
+                        <label class="form-label">Subcategory Image</label>
                         <div class="border rounded-3 p-3 text-center" id="subcategory-image-preview">
-                            <div class="py-3">
-                                <i class="fas fa-image fa-2x text-muted mb-2"></i>
-                                <p class="text-muted mb-2">No image selected</p>
-                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="openMediaLibrary('subcategory')">
-                                    <i class="fas fa-folder-open me-1"></i> Select Image
-                                </button>
+                            <div class="upload-area" id="subcategory-image-upload-area" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <div>
+                                    <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted mb-2">Drag & drop an image here or click to select</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="openMediaLibrary('subcategory')">
+                                        <i class="fas fa-folder-open me-1"></i> Select from Media Library
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <input type="hidden" id="subcategoryImageId" name="image_id">
                     </div>
                     
                     <div class="mb-3">
-                        <label for="subcategoryStatus" class="form-label fw-bold">Status</label>
-                        <select class="form-select rounded-pill px-4 py-2" id="subcategoryStatus" name="is_active" required>
+                        <label for="subcategoryStatus" class="form-label">Status</label>
+                        <select class="form-select rounded-pill" id="subcategoryStatus" name="is_active">
                             <option value="1">Active</option>
                             <option value="0">Inactive</option>
                         </select>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Close
-                    </button>
-                    <button type="submit" class="btn btn-theme rounded-pill">
-                        <i class="fas fa-save me-2"></i>Save Subcategory
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Media Library Modal -->
-<div class="modal fade" id="mediaLibraryModal" tabindex="-1" aria-labelledby="mediaLibraryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="mediaLibraryModalLabel">Media Library</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="border rounded-3 p-3 mb-3">
-                            <h6 class="mb-3">Upload New Media</h6>
-                            <form id="mediaUploadForm">
-                                @csrf
-                                <div class="mb-3">
-                                    <label for="mediaFile" class="form-label">Select File</label>
-                                    <input type="file" class="form-control" id="mediaFile" name="file" accept="image/*">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="mediaName" class="form-label">Name (Optional)</label>
-                                    <input type="text" class="form-control" id="mediaName" name="name">
-                                </div>
-                                <button type="submit" class="btn btn-theme rounded-pill w-100">
-                                    <i class="fas fa-upload me-2"></i>Upload
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="col-md-9">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6>Existing Media</h6>
-                            <div class="d-flex">
-                                <input type="text" class="form-control rounded-pill me-2" id="mediaSearch" placeholder="Search media...">
-                                <button class="btn btn-theme rounded-pill" onclick="loadMedia()">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div id="mediaLibraryContent" class="row">
-                            <!-- Media items will be loaded here -->
-                        </div>
-                        
-                        <div id="mediaLibraryPagination" class="d-flex justify-content-center mt-3">
-                            <!-- Pagination will be loaded here -->
-                        </div>
-                    </div>
-                </div>
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Close
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-theme rounded-pill" onclick="saveSubCategory()">
+                    <i class="fas fa-save me-2"></i>Save
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+@endsection
+
+@section('styles')
+<style>
+    #media-upload-area.drag-over {
+        border-color: var(--theme-color, #FF6B00) !important;
+        background-color: rgba(255, 107, 0, 0.05);
+    }
+    
+    /* Add more specific styles for better visual feedback */
+    #media-upload-area {
+        transition: all 0.2s ease;
+    }
+    
+    #media-upload-area:hover {
+        border-color: var(--theme-color, #FF6B00);
+        background-color: rgba(255, 107, 0, 0.03);
+    }
+</style>
 @endsection
 
 @section('scripts')
@@ -361,62 +393,62 @@
     let currentCategoryId = null;
     
     $(document).ready(function() {
-        // Initialize DataTable
-        $('#categoriesTable').DataTable({
-            "pageLength": 10,
-            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-            "ordering": true,
-            "searching": true,
-            "info": true,
-            "paging": true,
-            "columnDefs": [
-                { "orderable": false, "targets": [4] } // Disable sorting on Actions column
-            ],
-            "language": {
-                "search": "Search:",
-                "lengthMenu": "Show _MENU_ entries per page",
-                "info": "Showing _START_ to _END_ of _TOTAL_ categories",
-                "infoEmpty": "Showing 0 to 0 of 0 categories",
-                "infoFiltered": "(filtered from _MAX_ total categories)",
-                "paginate": {
-                    "first": "First",
-                    "last": "Last",
-                    "next": "Next",
-                    "previous": "Previous"
-                }
-            },
-            "aoColumns": [
-                null, // ID
-                null, // Category
-                null, // Description
-                null, // Status
-                null  // Actions
-            ],
-            "preDrawCallback": function(settings) {
-                // Ensure consistent column count
-                if ($('#categoriesTable tbody tr').length === 0) {
-                    $('#categoriesTable tbody').html('<tr><td colspan="5" class="text-center py-5"><div class="text-muted"><i class="fas fa-tags fa-2x mb-3"></i><p class="mb-0">No categories found</p><p class="small">Try creating a new category</p></div></td></tr>');
-                }
-            },
-            "drawCallback": function(settings) {
-                // Reinitialize tooltips after each draw
-                $('[data-bs-toggle="tooltip"]').tooltip();
+        // Debug: Check what's available on jQuery
+        console.log('jQuery version:', $.fn.jquery);
+        console.log('DataTables available:', typeof $.fn.DataTable !== 'undefined');
+        
+        // Initialize DataTable with a more robust check and delay
+        setTimeout(function() {
+            if (typeof $.fn.DataTable !== 'undefined') {
+                $('#categoriesTable').DataTable({
+                    "pageLength": 10,
+                    "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                    "ordering": true,
+                    "searching": true,
+                    "info": true,
+                    "paging": true,
+                    "columnDefs": [
+                        { "orderable": false, "targets": [4] } // Disable sorting on Actions column
+                    ],
+                    "language": {
+                        "search": "Search:",
+                        "lengthMenu": "Show _MENU_ entries per page",
+                        "info": "Showing _START_ to _END_ of _TOTAL_ categories",
+                        "infoEmpty": "Showing 0 to 0 of 0 categories",
+                        "infoFiltered": "(filtered from _MAX_ total categories)",
+                        "paginate": {
+                            "first": "First",
+                            "last": "Last",
+                            "next": "Next",
+                            "previous": "Previous"
+                        }
+                    },
+                    "aoColumns": [
+                        null, // ID
+                        null, // Category
+                        null, // Description
+                        null, // Status
+                        null  // Actions
+                    ],
+                    "preDrawCallback": function(settings) {
+                        // Ensure consistent column count
+                        if ($('#categoriesTable tbody tr').length === 0) {
+                            $('#categoriesTable tbody').html('<tr><td colspan="5" class="text-center py-5"><div class="text-muted"><i class="fas fa-tags fa-2x mb-3"></i><p class="mb-0">No categories found</p><p class="small">Try creating a new category</p></div></td></tr>');
+                        }
+                    },
+                    "drawCallback": function(settings) {
+                        // Reinitialize tooltips after each draw
+                        $('[data-bs-toggle="tooltip"]').tooltip();
+                    }
+                });
+                // Adjust select width after DataTable initializes
+                $('.dataTables_length select').css('width', '80px');
+            } else {
+                console.error('DataTables is not available. Please check if the library is properly loaded.');
             }
-        });
+        }, 100); // Small delay to ensure all scripts are loaded
         // Adjust select width after DataTable initializes
         $('.dataTables_length select').css('width', '80px');
-        
-        // Category form submission
-        $('#categoryForm').on('submit', function(e) {
-            e.preventDefault();
-            saveCategory();
-        });
-        
-        // Subcategory form submission
-        $('#subcategoryForm').on('submit', function(e) {
-            e.preventDefault();
-            saveSubCategory();
-        });
         
         // Media upload form submission
         $('#mediaUploadForm').on('submit', function(e) {
@@ -424,19 +456,133 @@
             uploadMedia();
         });
         
-        // Media search
-        $('#mediaSearch').on('keyup', function() {
-            if ($(this).val().length > 2 || $(this).val().length === 0) {
-                loadMedia();
+        // Media search with debounce
+        let mediaSearchTimeout;
+        $('#mediaSearch').on('input', function() {
+            clearTimeout(mediaSearchTimeout);
+            const searchTerm = $(this).val();
+            
+            mediaSearchTimeout = setTimeout(function() {
+                loadMedia(1); // Reset to first page when searching
+            }, 300); // 300ms debounce
+        });
+        
+        // Use event delegation for media upload area click handler
+        $(document).on('click', '#media-upload-area', function() {
+            $('#mediaFile').click();
+        });
+        
+        // Add change handler for file input to display file information
+        $('#mediaFile').on('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                displayFileInfo(file);
+            } else {
+                // Hide file info when no file is selected
+                $('.file-info-container').remove();
             }
         });
+        
+        // Add drag and drop functionality for media upload area using event delegation
+        $(document).on('dragover', '#media-upload-area', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).addClass('drag-over');
+        });
+        
+        $(document).on('dragenter', '#media-upload-area', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).addClass('drag-over');
+        });
+        
+        $(document).on('dragleave', '#media-upload-area', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Only remove drag-over class if we're actually leaving the element
+            if (e.target === this || $(e.target).closest('#media-upload-area').length === 0) {
+                $(this).removeClass('drag-over');
+            }
+        });
+        
+        $(document).on('drop', '#media-upload-area', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).removeClass('drag-over');
+            
+            const files = e.originalEvent.dataTransfer.files;
+            if (files.length > 0) {
+                // Set the file input value
+                $('#mediaFile')[0].files = files;
+                
+                // Display file information
+                const file = files[0];
+                displayFileInfo(file);
+            } else {
+                // Hide file info when no file is dropped
+                $('.file-info-container').remove();
+            }
+        });
+        
+        // Initialize media library
+        loadMedia();
     });
+    
+    // Function to display file information
+    function displayFileInfo(file) {
+        // Create a container for file information
+        let fileInfoHtml = `
+            <div class="file-info-container mt-3 p-3 bg-light rounded">
+                <h6>Selected File Information:</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Filename:</strong> ${file.name}</p>
+                        <p><strong>File Size:</strong> ${(file.size / 1024).toFixed(2)} KB</p>
+                        <p><strong>MIME Type:</strong> ${file.type}</p>
+                        <div id="image-dimensions">Detecting dimensions...</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove any existing file info container
+        $('.file-info-container').remove();
+        
+        // Add the file info container after the upload area
+        $('#media-upload-area').after(fileInfoHtml);
+        
+        // If it's an image file, get dimensions
+        if (file.type.startsWith('image/')) {
+            getImageDimensions(file);
+        } else {
+            $('#image-dimensions').html('<p><strong>Dimensions:</strong> Not applicable for non-image files</p>');
+        }
+    }
+    
+    // Function to get image dimensions
+    function getImageDimensions(file) {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+        
+        img.onload = function() {
+            $('#image-dimensions').html(`<p><strong>Dimensions:</strong> ${this.naturalWidth} x ${this.naturalHeight} pixels</p>`);
+            URL.revokeObjectURL(objectUrl);
+        };
+        
+        img.onerror = function() {
+            $('#image-dimensions').html('<p><strong>Dimensions:</strong> Unable to detect</p>');
+            URL.revokeObjectURL(objectUrl);
+        };
+        
+        img.src = objectUrl;
+    }
     
     // Show category modal for creating new category
     function showCategoryModal() {
         $('#categoryModalLabel').text('Add New Category');
         $('#categoryForm')[0].reset();
         $('#categoryId').val('');
+        $('#categoryMethod').val('');
         $('#category-image-preview').html(`
             <div class="py-3">
                 <i class="fas fa-image fa-2x text-muted mb-2"></i>
@@ -455,8 +601,10 @@
             url: '/admin/categories/' + id,
             type: 'GET',
             success: function(data) {
+                console.log(data);
                 $('#categoryModalLabel').text('Edit Category');
                 $('#categoryId').val(data.id);
+                $('#categoryMethod').val('PUT');
                 $('#categoryName').val(data.name);
                 $('#categoryDescription').val(data.description);
                 $('#categoryStatus').val(data.is_active ? '1' : '0');
@@ -496,12 +644,14 @@
     function saveCategory() {
         const id = $('#categoryId').val();
         const url = id ? '/admin/categories/' + id : '/admin/categories';
-        const method = id ? 'PUT' : 'POST';
+        
+        // For updates, we need to use POST with _method=PUT due to form serialization
+        const formData = $('#categoryForm').serialize();
         
         $.ajax({
             url: url,
-            type: method,
-            data: $('#categoryForm').serialize(),
+            type: 'POST',
+            data: formData,
             success: function(response) {
                 if (response.success) {
                     $('#categoryModal').modal('hide');
@@ -661,6 +811,7 @@
         $('#subcategoryModalLabel').text('Add New Subcategory');
         $('#subcategoryForm')[0].reset();
         $('#subcategoryId').val('');
+        $('#subcategoryMethod').val('');
         $('#subcategoryCategoryId').val(currentCategoryId);
         $('#subcategory-image-preview').html(`
             <div class="py-3">
@@ -682,6 +833,7 @@
             success: function(data) {
                 $('#subcategoryModalLabel').text('Edit Subcategory');
                 $('#subcategoryId').val(data.id);
+                $('#subcategoryMethod').val('PUT');
                 $('#subcategoryCategoryId').val(data.category_id);
                 $('#subcategoryName').val(data.name);
                 $('#subcategoryDescription').val(data.description);
@@ -723,12 +875,14 @@
     function saveSubCategory() {
         const id = $('#subcategoryId').val();
         const url = id ? '/admin/subcategories/' + id : '/admin/subcategories';
-        const method = id ? 'PUT' : 'POST';
+        
+        // For updates, we need to use POST with _method=PUT due to form serialization
+        const formData = $('#subcategoryForm').serialize();
         
         $.ajax({
             url: url,
-            type: method,
-            data: $('#subcategoryForm').serialize(),
+            type: 'POST',
+            data: formData,
             success: function(response) {
                 if (response.success) {
                     $('#subcategoryModal').modal('hide');
@@ -783,11 +937,13 @@
     function loadMedia(page = 1) {
         const search = $('#mediaSearch').val();
         const params = new URLSearchParams();
-        if (search) params.append('search', search);
         params.append('page', page);
+        if (search && search.length > 0) {
+            params.append('search', search);
+        }
         
         $.ajax({
-            url: '/admin/media?' + params.toString(),
+            url: '/admin/media/list?' + params.toString(),
             type: 'GET',
             success: function(data) {
                 let html = '';
@@ -914,18 +1070,66 @@
     
     // Upload media
     function uploadMedia() {
+        const fileInput = $('#mediaFile')[0];
+        if (!fileInput.files || fileInput.files.length === 0) {
+            alert('Please select a file to upload.');
+            return;
+        }
+        
+        const file = fileInput.files[0];
+        
+        // Validate file type
+        const validTypes = [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+            'video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv', 'video/mpeg', 'video/ogg', 'video/webm',
+            'application/pdf', 'application/msword', 
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'text/plain', 'text/csv'
+        ];
+        
+        if (!validTypes.includes(file.type)) {
+            alert('Please upload a valid file (JPEG, PNG, GIF, WEBP, MP4, MOV, AVI, WMV, MPEG, OGG, WEBM, PDF, DOC, DOCX, XLSX, PPTX, TXT, CSV).');
+            return;
+        }
+        
+        // Validate file size - 25MB limit
+        const maxSize = 25 * 1024 * 1024; // 25MB in bytes
+        if (file.size > maxSize) {
+            alert('File size must be less than 25MB.');
+            return;
+        }
+        
         const formData = new FormData($('#mediaUploadForm')[0]);
+        
+        // Show loading indicator
+        const uploadButton = $('#mediaUploadForm button[type="submit"]');
+        const originalText = uploadButton.html();
+        uploadButton.html('<i class="fas fa-spinner fa-spin me-2"></i>Uploading...');
+        uploadButton.prop('disabled', true);
         
         $.ajax({
             url: '/admin/media',
             type: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
             data: formData,
             processData: false,
             contentType: false,
             success: function(response) {
                 if (response.success) {
-                    loadMedia();
+                    // Reset form
                     $('#mediaUploadForm')[0].reset();
+                    
+                    // Reload media library
+                    loadMedia();
+                    
+                    // Show success message
+                    alert('File uploaded successfully!');
+                } else {
+                    alert('Error uploading file: ' + (response.error || 'Unknown error'));
                 }
             },
             error: function(xhr) {
@@ -936,9 +1140,16 @@
                         errorMessages += errors[field].join(', ') + '\n';
                     }
                     alert('Validation errors:\n' + errorMessages);
+                } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                    alert('Error uploading media: ' + xhr.responseJSON.error);
                 } else {
-                    alert('Error uploading media.');
+                    alert('Error uploading media. Please try again.');
                 }
+            },
+            complete: function() {
+                // Restore button state
+                uploadButton.html(originalText);
+                uploadButton.prop('disabled', false);
             }
         });
     }
