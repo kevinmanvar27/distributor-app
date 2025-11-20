@@ -192,7 +192,7 @@
                     </div>
                     
                     <!-- Checkout Button -->
-                    @auth
+                    <!-- @auth
                     <button class="btn btn-theme w-100 mb-3 d-flex align-items-center justify-content-center" id="checkout-btn">
                         <i class="fas fa-shopping-cart me-2"></i>Proceed to Checkout
                     </button>
@@ -200,7 +200,7 @@
                     <button class="btn btn-theme w-100 mb-3 d-flex align-items-center justify-content-center" id="guest-checkout-btn">
                         <i class="fas fa-shopping-cart me-2"></i>Proceed to Checkout
                     </button>
-                    @endauth
+                    @endauth -->
                 </div>
             </div>
             

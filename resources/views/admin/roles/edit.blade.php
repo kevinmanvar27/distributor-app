@@ -12,7 +12,7 @@
             
             <div class="pt-4 pb-2 mb-3">
                 <div class="row justify-content-center">
-                    <div class="col-lg-8">
+                    <div class="col-lg-12">
                         <div class="card border-0 shadow-sm">
                             <div class="card-header bg-white border-0 py-3">
                                 <h4 class="card-title mb-0 fw-bold">Edit Role</h4>

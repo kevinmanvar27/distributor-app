@@ -69,6 +69,27 @@
                                             <button class="btn btn-sm btn-outline-primary view-invoice" data-invoice-id="{{ $invoice->id }}">
                                                 <i class="fas fa-eye me-1"></i>View
                                             </button>
+                                            
+                                            @if($invoice->status === 'Draft')
+                                                <form action="{{ route('frontend.cart.proforma.invoice.add-to-cart', $invoice->id) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('Are you sure you want to add all products from this invoice to your cart and remove this invoice?')">
+                                                        <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('frontend.cart.proforma.invoice.delete', $invoice->id) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this proforma invoice?')">
+                                                        <i class="fas fa-trash me-1"></i>Delete
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <a href="{{ route('frontend.cart.proforma.invoice.download-pdf', $invoice->id) }}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-file-pdf me-1"></i>PDF
+                                                </a>
+                                            @endif
+                                            
                                         </td>
                                     </tr>
                                     @endforeach
@@ -109,8 +130,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-theme" id="printInvoiceBtn">
-                    <i class="fas fa-print me-2"></i>Print
+                <button type="button" class="btn btn-theme" id="downloadPdfBtn">
+                    <i class="fas fa-file-pdf me-2"></i>Download PDF
                 </button>
             </div>
         </div>
@@ -161,14 +182,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // View invoice button click handler
     document.querySelectorAll('.view-invoice').forEach(button => {
         button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            document.querySelectorAll('.view-invoice').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
             const invoiceId = this.getAttribute('data-invoice-id');
             loadInvoiceDetails(invoiceId);
         });
     });
     
-    // Print invoice button handler
-    document.getElementById('printInvoiceBtn').addEventListener('click', function() {
-        window.print();
+    // Download PDF button handler
+    document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+        // Get the currently loaded invoice ID from the active button
+        const activeButton = document.querySelector('.view-invoice.active');
+        if (activeButton) {
+            const invoiceId = activeButton.getAttribute('data-invoice-id');
+            if (invoiceId) {
+                // Redirect to the PDF download route
+                window.location.href = `/cart/proforma-invoice/${invoiceId}/download-pdf`;
+            }
+        }
     });
     
     // Load invoice details via AJAX
@@ -251,6 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let cartItemsHtml = '';
         if (invoiceData.cart_items && invoiceData.cart_items.length > 0) {
+            let index = 1;
             invoiceData.cart_items.forEach(item => {
                 // Ensure price and total are valid numbers
                 const price = parseFloat(item.price) || 0;
@@ -259,6 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 cartItemsHtml += `
                     <tr>
+                        <td>${index++}</td>
                         <td>
                             <div>
                                 <h6 class="mb-0">${item.product_name || 'Product'}</h6>
@@ -280,6 +319,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const shipping = parseFloat(invoiceData.shipping) || 0;
         const discountAmount = parseFloat(invoiceData.discount_amount) || 0;
         const invoiceTotal = parseFloat(invoiceData.total) || 0;
+        
+        if (invoice.status === 'Draft') {
+            // Always show the download button
+            $('#downloadPdfBtn').addClass('d-none');
+        } else {
+            // Hide the download button for other statuses
+            $('#downloadPdfBtn').removeClass('d-none');
+        }
         
         document.getElementById('invoiceModalBody').innerHTML = `
             <div class="container-fluid">
@@ -314,6 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <table class="table table-bordered">
                         <thead class="table-light">
                             <tr>
+                                <th>#</th>
                                 <th>Product</th>
                                 <th>Price</th>
                                 <th>Quantity</th>

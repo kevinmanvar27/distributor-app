@@ -725,9 +725,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     e.stopPropagation();
                     // The link already has target="_blank" so it will open in a new tab
                     const url = this.getAttribute('href');
-                    if (url && url !== '#') {
-                        window.open(url, '_blank');
-                    }
+                    // if (url && url !== '#') {
+                    //     window.open(url, '_blank');
+                    // }
                 });
             }
             

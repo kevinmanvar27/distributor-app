@@ -40,7 +40,6 @@
                                                     <th>Date</th>
                                                     <th>Amount</th>
                                                     <th>Status</th>
-                                                    <th>Update Status</th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
@@ -81,26 +80,9 @@
                                                         @endswitch
                                                     </td>
                                                     <td>
-                                                        <!-- Status Update Form -->
-                                                        <form action="{{ route('admin.proforma-invoice.update-status', $invoice->id) }}" method="POST" class="d-inline status-form">
-                                                            @csrf
-                                                            @method('PUT')
-                                                            <div class="input-group input-group-sm" style="width: auto;">
-                                                                <select name="status" class="form-select form-select-sm status-select">
-                                                                    @foreach(\App\Models\ProformaInvoice::STATUS_OPTIONS as $statusOption)
-                                                                        <option value="{{ $statusOption }}" {{ $invoice->status == $statusOption ? 'selected' : '' }}>{{ $statusOption }}</option>
-                                                                    @endforeach
-                                                                </select>
-                                                                <span class="input-group-text status-updating" style="display: none;">
-                                                                    <i class="fas fa-spinner fa-spin"></i>
-                                                                </span>
-                                                            </div>
-                                                        </form>
-                                                    </td>
-                                                    <td>
                                                         <div class="btn-group btn-group-sm" role="group">
                                                             <a href="{{ route('admin.proforma-invoice.show', $invoice->id) }}" class="btn btn-outline-primary rounded-start-pill px-3">
-                                                                <i class="fas fa-eye"></i>
+                                                                <i class="fas fa-edit"></i>
                                                             </a>
                                                             <form action="{{ route('admin.proforma-invoice.destroy', $invoice->id) }}" method="POST" class="d-inline">
                                                                 @csrf

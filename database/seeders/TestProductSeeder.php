@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Product;
 use App\Models\Media;
+use Illuminate\Support\Str;
 
 class TestProductSeeder extends Seeder
 {
@@ -19,6 +20,7 @@ class TestProductSeeder extends Seeder
         if ($media) {
             Product::create([
                 'name' => 'Test Product with Image',
+                'slug' => Str::slug('Test Product with Image'),
                 'description' => 'This is a test product to verify image display',
                 'mrp' => 100.00,
                 'selling_price' => 80.00,

@@ -23,10 +23,10 @@
             </li>
             
             <!-- Product Section -->
-            @if(auth()->user()->hasPermission('viewAny', App\Models\Product::class) || 
-                auth()->user()->hasPermission('create', App\Models\Product::class) || 
-                auth()->user()->hasPermission('update', App\Models\Product::class) || 
-                auth()->user()->hasPermission('delete', App\Models\Product::class))
+            @if(auth()->user()->hasPermission('viewAny_product') || 
+                auth()->user()->hasPermission('create_product') || 
+                auth()->user()->hasPermission('update_product') || 
+                auth()->user()->hasPermission('delete_product'))
                 <li class="nav-item mb-1">
                     <a class="nav-link {{ request()->routeIs('admin.products*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.products.index') }}">
                         <i class="fas fa-box me-3"></i>
@@ -36,12 +36,17 @@
             @endif
             
             <!-- Category Section -->
-            <li class="nav-item mb-1">
-                <a class="nav-link {{ request()->routeIs('admin.categories*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.categories.index') }}">
+            @if(auth()->user()->hasPermission('viewAny_category') || 
+                auth()->user()->hasPermission('create_category') || 
+                auth()->user()->hasPermission('update_category') || 
+                auth()->user()->hasPermission('delete_category'))
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('admin.categories*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.categories.index') }}">
                         <i class="fas fa-tags me-3"></i>
                         <span class="sidebar-text">Category</span>
                     </a>
                 </li>
+            @endif
                 
                 @if(auth()->user()->hasPermission('manage_settings'))
                     <li class="nav-item mb-1">
@@ -104,14 +109,15 @@
                     </li>
                 @endif
 
-                <!-- @if(auth()->user()->hasPermission('manage_color_palette'))
+                <!-- Here i want media library link -->
+                @if(auth()->user()->hasPermission('viewAny_media'))
                     <li class="nav-item mb-1">
-                        <a class="nav-link hover-bg rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.color-palette') }}">
-                            <i class="fas fa-palette me-3"></i>
-                            <span class="sidebar-text">Color Palette</span>
+                        <a class="nav-link {{ request()->routeIs('admin.media*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.media.index') }}">
+                            <i class="fas fa-photo-video me-3"></i>
+                            <span class="sidebar-text">Media Library</span>
                         </a>
                     </li>
-                @endif -->
+                @endif
                 
                 <!-- Proforma Invoice Section -->
                 @if(auth()->user()->hasPermission('manage_proforma_invoices'))
@@ -122,6 +128,7 @@
                         </a>
                     </li>
                 @endif
+
             </ul>
             
             <div class="px-3 py-3 border-top border-default mt-auto">

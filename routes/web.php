@@ -70,6 +70,9 @@ Route::middleware(['frontend.access', 'auth'])->group(function () {
     Route::get('/cart/proforma-invoice', [ShoppingCartController::class, 'generateProformaInvoice'])->name('frontend.cart.proforma.invoice');
     Route::get('/cart/proforma-invoices', [ShoppingCartController::class, 'listProformaInvoices'])->name('frontend.cart.proforma.invoices');
     Route::get('/cart/proforma-invoice/{id}', [ShoppingCartController::class, 'getProformaInvoiceDetails'])->name('frontend.cart.proforma.invoice.details');
+    Route::get('/cart/proforma-invoice/{id}/download-pdf', [ShoppingCartController::class, 'downloadProformaInvoicePDF'])->name('frontend.cart.proforma.invoice.download-pdf');
+    Route::post('/cart/proforma-invoice/{id}/add-to-cart', [ShoppingCartController::class, 'addInvoiceToCart'])->name('frontend.cart.proforma.invoice.add-to-cart');
+    Route::delete('/cart/proforma-invoice/{id}', [ShoppingCartController::class, 'deleteProformaInvoice'])->name('frontend.cart.proforma.invoice.delete');
 
 });
 
@@ -311,8 +314,9 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin')->middleware(['permission:manage_proforma_invoices'])->group(function () {
         Route::get('/proforma-invoice', [ProformaInvoiceController::class, 'index'])->name('admin.proforma-invoice.index');
         Route::get('/proforma-invoice/{id}', [ProformaInvoiceController::class, 'show'])->name('admin.proforma-invoice.show');
+        Route::get('/proforma-invoice/{id}/download-pdf', [ProformaInvoiceController::class, 'downloadPDF'])->name('admin.proforma-invoice.download-pdf');
         Route::put('/proforma-invoice/{id}', [ProformaInvoiceController::class, 'update'])->name('admin.proforma-invoice.update');
-        Route::put('/proforma-invoice/{id}/status', [ProformaInvoiceController::class, 'updateStatus'])->name('admin.proforma-invoice.update-status');
+        Route::put('/proforma-invoice/{id}/update-status', [ProformaInvoiceController::class, 'updateStatus'])->name('admin.proforma-invoice.update-status');
         Route::delete('/proforma-invoice/{id}/remove-item', [ProformaInvoiceController::class, 'removeItem'])->name('admin.proforma-invoice.remove-item');
         Route::delete('/proforma-invoice/{id}', [ProformaInvoiceController::class, 'destroy'])->name('admin.proforma-invoice.destroy');
     });

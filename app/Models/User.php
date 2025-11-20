@@ -102,12 +102,16 @@ class User extends Authenticatable
             return true;
         }
 
-        // Check if user has the permission through their role
-        $userRole = $this->user_role;
-        $role = \App\Models\Role::where('name', $userRole)->first();
-        
-        if ($role) {
-            return $role->permissions()->where('name', $permission)->exists();
+        // Check if user has the permission through their roles
+        foreach ($this->roles as $role) {
+            if ($role->permissions()->where('name', $permission)->exists()) {
+                return true;
+            }
+        }
+
+        // Also check direct user permissions
+        if ($this->permissions()->where('name', $permission)->exists()) {
+            return true;
         }
 
         return false;

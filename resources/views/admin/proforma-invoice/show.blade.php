@@ -24,9 +24,11 @@
                                         <a href="{{ route('admin.proforma-invoice.index') }}" class="btn btn-outline-secondary rounded-pill">
                                             <i class="fas fa-arrow-left me-2"></i>Back to Invoices
                                         </a>
-                                        <button class="btn btn-theme rounded-pill ms-2" onclick="window.print()">
-                                            <i class="fas fa-print me-2"></i>Print Invoice
-                                        </button>
+                                        @if(!$proformaInvoice->isDraft())
+                                        <a href="{{ route('admin.proforma-invoice.download-pdf', $proformaInvoice->id) }}" class="btn btn-theme rounded-pill ms-2">
+                                            <i class="fas fa-file-pdf me-2"></i>Download PDF
+                                        </a>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -66,58 +68,52 @@
                                     </div>
                                 </div>
                                 
-                                <div class="row mb-4">
-                                    <div class="col-md-6">
-                                        <p class="mb-1"><strong>Invoice #:</strong> {{ $invoiceNumber }}</p>
-                                        <p class="mb-1"><strong>Date:</strong> {{ $invoiceDate }}</p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p class="mb-1">
-                                            <strong>Status:</strong> 
-                                            @switch($proformaInvoice->status)
-                                                @case('Draft')
-                                                    <span class="badge bg-secondary">Draft</span>
-                                                    @break
-                                                @case('Approved')
-                                                    <span class="badge bg-success">Approved</span>
-                                                    @break
-                                                @case('Dispatch')
-                                                    <span class="badge bg-info">Dispatch</span>
-                                                    @break
-                                                @case('Out for Delivery')
-                                                    <span class="badge bg-primary">Out for Delivery</span>
-                                                    @break
-                                                @case('Delivered')
-                                                    <span class="badge bg-success">Delivered</span>
-                                                    @break
-                                                @case('Return')
-                                                    <span class="badge bg-danger">Return</span>
-                                                    @break
-                                            @endswitch
-                                        </p>
-                                        
-                                        <!-- Status Update Form -->
-                                        <form action="{{ route('admin.proforma-invoice.update-status', $proformaInvoice->id) }}" method="POST" class="d-inline status-form">
-                                            @csrf
-                                            @method('PUT')
-                                            <div class="input-group input-group-sm" style="width: auto;">
-                                                <select name="status" class="form-select form-select-sm status-select">
-                                                    @foreach(\App\Models\ProformaInvoice::STATUS_OPTIONS as $statusOption)
-                                                        <option value="{{ $statusOption }}" {{ $proformaInvoice->status == $statusOption ? 'selected' : '' }}>{{ $statusOption }}</option>
-                                                    @endforeach
-                                                </select>
-                                                <span class="input-group-text status-updating" style="display: none;">
-                                                    <i class="fas fa-spinner fa-spin"></i>
-                                                </span>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                                
                                 <!-- Editable Invoice Form -->
                                 <form id="invoiceForm" action="{{ route('admin.proforma-invoice.update', $proformaInvoice->id) }}" method="POST">
                                     @csrf
                                     @method('PUT')
+                            
+                                    <div class="row mb-4">
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Invoice #:</strong> {{ $invoiceNumber }}</p>
+                                            <p class="mb-1"><strong>Date:</strong> {{ $invoiceDate }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-1">
+                                                <strong>Status:</strong> 
+                                                @switch($proformaInvoice->status)
+                                                    @case('Draft')
+                                                        <span class="badge bg-secondary">Draft</span>
+                                                        @break
+                                                    @case('Approved')
+                                                        <span class="badge bg-success">Approved</span>
+                                                        @break
+                                                    @case('Dispatch')
+                                                        <span class="badge bg-info">Dispatch</span>
+                                                        @break
+                                                    @case('Out for Delivery')
+                                                        <span class="badge bg-primary">Out for Delivery</span>
+                                                        @break
+                                                    @case('Delivered')
+                                                        <span class="badge bg-success">Delivered</span>
+                                                        @break
+                                                    @case('Return')
+                                                        <span class="badge bg-danger">Return</span>
+                                                        @break
+                                                @endswitch
+                                            </p>
+                                            
+                                            <!-- Status selection moved inside main form -->
+                                            <div class="mt-2">
+                                                <label for="status" class="form-label">Update Status:</label>
+                                                <select name="status" class="form-select form-select-sm status-select" id="status">
+                                                    @foreach(\App\Models\ProformaInvoice::STATUS_OPTIONS as $statusOption)
+                                                        <option value="{{ $statusOption }}" {{ $proformaInvoice->status == $statusOption ? 'selected' : '' }}>{{ $statusOption }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
                                     
                                     <div class="table-responsive mb-4">
                                         <table class="table table-bordered">
@@ -204,7 +200,7 @@
                                                             <td class="fw-bold">GST (%):</td>
                                                             <td class="text-end">
                                                                 <div class="input-group">
-                                                                    <input type="number" name="tax_percentage" class="form-control tax-percentage" value="{{ $invoiceData['tax_percentage'] ?? 0 }}" step="0.01" min="0" max="100">
+                                                                    <input type="number" name="tax_percentage" class="form-control tax-percentage" value="{{ $invoiceData['tax_percentage'] ?? 18 }}" step="0.01" min="0" max="100">
                                                                     <span class="input-group-text">%</span>
                                                                 </div>
                                                             </td>
@@ -277,25 +273,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle status form submission
-    document.querySelectorAll('.status-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const select = form.querySelector('.status-select');
-            const selectedStatus = select.value;
-            const currentStatus = select.options[select.selectedIndex].text;
-            
-            this.submit();
-        });
-        
-        // Auto-submit when status changes
-        const select = form.querySelector('.status-select');
-        select.addEventListener('change', function() {
-            form.dispatchEvent(new Event('submit'));
-        });
-    });
-    
     // Calculate item totals and overall invoice totals
     function calculateItemTotal(row) {
         const priceInput = row.querySelector('.item-price');

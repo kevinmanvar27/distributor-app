@@ -141,6 +141,33 @@ class RolesAndPermissionsSeeder extends Seeder
                 'description' => 'Access and modify application settings'
             ],
             
+            // Category Management Permissions
+            [
+                'name' => 'viewAny_category',
+                'display_name' => 'View Any Category',
+                'description' => 'View all categories'
+            ],
+            [
+                'name' => 'view_category',
+                'display_name' => 'View Category',
+                'description' => 'View a specific category'
+            ],
+            [
+                'name' => 'create_category',
+                'display_name' => 'Create Category',
+                'description' => 'Create new categories'
+            ],
+            [
+                'name' => 'update_category',
+                'display_name' => 'Update Category',
+                'description' => 'Modify existing categories'
+            ],
+            [
+                'name' => 'delete_category',
+                'display_name' => 'Delete Category',
+                'description' => 'Remove categories'
+            ],
+
             // Product Management Permissions
             [
                 'name' => 'viewAny_product',
@@ -193,6 +220,13 @@ class RolesAndPermissionsSeeder extends Seeder
                 'name' => 'delete_media',
                 'display_name' => 'Delete Media',
                 'description' => 'Remove media files'
+            ],
+            
+            // Proforma Invoice Management Permissions
+            [
+                'name' => 'manage_proforma_invoices',
+                'display_name' => 'Manage Proforma Invoices',
+                'description' => 'Access and manage proforma invoices'
             ],
         ];
 

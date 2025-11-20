@@ -9,6 +9,7 @@ use App\Models\ShoppingCartItem;
 use App\Models\ProformaInvoice;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ShoppingCartController extends Controller
 {
@@ -439,8 +440,17 @@ class ShoppingCartController extends Controller
             'status' => ProformaInvoice::STATUS_DRAFT, // Set status to 'Draft' when creating
         ]);
         
+        // Clear the cart after generating the proforma invoice
+        if (Auth::check()) {
+            // For authenticated users, delete all cart items for the user
+            ShoppingCartItem::where('user_id', Auth::id())->delete();
+        } else {
+            // For guests, delete all cart items for the session
+            ShoppingCartItem::where('session_id', session()->getId())->delete();
+        }
+        
         // Redirect to the invoices list instead of showing the proforma invoice page
-        return redirect()->route('frontend.cart.proforma.invoices')->with('success', 'Proforma invoice generated successfully!');
+        return redirect()->route('frontend.cart.proforma.invoices')->with('success', 'Proforma invoice generated successfully! Cart has been emptied.');
     }
     
     /**
@@ -521,6 +531,123 @@ class ShoppingCartController extends Controller
     }
 
     /**
+     * Add products from a proforma invoice back to the cart.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function addInvoiceToCart($id)
+    {
+        // Check if frontend requires authentication and user is not logged in
+        $setting = \App\Models\Setting::first();
+        $accessPermission = $setting->frontend_access_permission ?? 'open_for_all';
+        
+        // For registered_users_only and admin_approval_required modes, 
+        // redirect guests from cart pages to login, unless it's open_for_all
+        if ($accessPermission !== 'open_for_all' && !Auth::check()) {
+            return redirect()->route('frontend.login');
+        }
+        
+        // Find the proforma invoice
+        if (Auth::check()) {
+            $proformaInvoice = ProformaInvoice::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->first();
+        } else {
+            // For guests, get invoice by session ID
+            $sessionId = session()->getId();
+            $proformaInvoice = ProformaInvoice::where('id', $id)
+                ->where('session_id', $sessionId)
+                ->first();
+        }
+        
+        if (!$proformaInvoice) {
+            return redirect()->route('frontend.cart.proforma.invoices')->with('error', 'Invoice not found.');
+        }
+        
+        // Check if the invoice is in draft status
+        if ($proformaInvoice->status !== ProformaInvoice::STATUS_DRAFT) {
+            return redirect()->route('frontend.cart.proforma.invoices')->with('error', 'Only draft invoices can be added to cart.');
+        }
+        
+        // Decode the invoice data
+        $invoiceData = json_decode($proformaInvoice->invoice_data, true);
+        
+        // Add each item from the invoice to the cart
+        if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
+            foreach ($invoiceData['cart_items'] as $item) {
+                // Prepare data for cart item
+                $cartData = [
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                ];
+                
+                // Add user_id or session_id based on authentication status
+                if (Auth::check()) {
+                    $cartData['user_id'] = Auth::id();
+                } else {
+                    $cartData['session_id'] = session()->getId();
+                }
+                
+                // Add or update cart item
+                $cartItem = ShoppingCartItem::updateOrCreate(
+                    Auth::check() ? 
+                        ['user_id' => Auth::id(), 'product_id' => $item['product_id']] :
+                        ['session_id' => session()->getId(), 'product_id' => $item['product_id']],
+                    $cartData
+                );
+            }
+        }
+        
+        // Delete the proforma invoice after adding items to cart
+        $proformaInvoice->delete();
+        
+        return redirect()->route('frontend.cart.index')->with('success', 'Products from proforma invoice added to cart successfully! The proforma invoice has been removed.');
+    }
+    
+    /**
+     * Delete a proforma invoice.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function deleteProformaInvoice($id)
+    {
+        // Check if frontend requires authentication and user is not logged in
+        $setting = \App\Models\Setting::first();
+        $accessPermission = $setting->frontend_access_permission ?? 'open_for_all';
+        
+        // For registered_users_only and admin_approval_required modes, 
+        // redirect guests from cart pages to login, unless it's open_for_all
+        if ($accessPermission !== 'open_for_all' && !Auth::check()) {
+            return redirect()->route('frontend.login');
+        }
+        
+        // Find the proforma invoice
+        if (Auth::check()) {
+            $proformaInvoice = ProformaInvoice::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->first();
+        } else {
+            // For guests, get invoice by session ID
+            $sessionId = session()->getId();
+            $proformaInvoice = ProformaInvoice::where('id', $id)
+                ->where('session_id', $sessionId)
+                ->first();
+        }
+        
+        if (!$proformaInvoice) {
+            return redirect()->route('frontend.cart.proforma.invoices')->with('error', 'Invoice not found.');
+        }
+        
+        // Delete the proforma invoice
+        $proformaInvoice->delete();
+        
+        return redirect()->route('frontend.cart.proforma.invoices')->with('success', 'Proforma invoice deleted successfully!');
+    }
+    
+    /**
      * Generate a serialized invoice number.
      *
      * @return string
@@ -555,6 +682,64 @@ class ShoppingCartController extends Controller
         
         // Return the formatted invoice number (e.g., INV-2025-0001)
         return "INV-{$year}-{$sequenceFormatted}";
+    }
+    
+    /**
+     * Generate and download PDF for a proforma invoice.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadProformaInvoicePDF($id)
+    {
+        // Check if frontend requires authentication and user is not logged in
+        $setting = \App\Models\Setting::first();
+        $accessPermission = $setting->frontend_access_permission ?? 'open_for_all';
+        
+        // For registered_users_only and admin_approval_required modes, 
+        // redirect guests from cart pages to login, unless it's open_for_all
+        if ($accessPermission !== 'open_for_all' && !Auth::check()) {
+            return redirect()->route('frontend.login');
+        }
+        
+        // Find the proforma invoice
+        if (Auth::check()) {
+            $proformaInvoice = ProformaInvoice::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->first();
+        } else {
+            // For guests, get invoice by session ID
+            $sessionId = session()->getId();
+            $proformaInvoice = ProformaInvoice::where('id', $id)
+                ->where('session_id', $sessionId)
+                ->first();
+        }
+        
+        if (!$proformaInvoice) {
+            return redirect()->route('frontend.cart.proforma.invoices')->with('error', 'Invoice not found.');
+        }
+        
+        // Decode the invoice data
+        $invoiceData = json_decode($proformaInvoice->invoice_data, true);
+        
+        // Prepare data for the PDF view
+        $data = [
+            'invoice' => $proformaInvoice,
+            'invoiceData' => $invoiceData,
+            'siteTitle' => setting('site_title', 'Frontend App'),
+            'companyAddress' => setting('address', 'Company Address'),
+            'companyEmail' => setting('email', 'company@example.com'),
+            'companyPhone' => setting('phone', '+1 (555) 123-4567')
+        ];
+        
+        // Load the PDF view
+        $pdf = Pdf::loadView('frontend.proforma-invoice-pdf', $data);
+        
+        // Set paper size and orientation
+        $pdf->setPaper('A4', 'portrait');
+        
+        // Download the PDF with a meaningful filename
+        return $pdf->download('proforma-invoice-' . $proformaInvoice->invoice_number . '.pdf');
     }
 
 }

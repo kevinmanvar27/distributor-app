@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ProformaInvoice;
 use Illuminate\Http\Request;
+use App\Models\ProformaInvoice;
+use App\Models\Setting;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ProformaInvoiceController extends Controller
 {
@@ -59,6 +61,17 @@ class ProformaInvoiceController extends Controller
         
         // Get the existing invoice data
         $invoiceData = json_decode($proformaInvoice->invoice_data, true);
+        
+        // Update status if provided
+        if ($request->has('status')) {
+            // Validate the status input
+            $request->validate([
+                'status' => 'required|in:' . implode(',', ProformaInvoice::STATUS_OPTIONS)
+            ]);
+            
+            // Update the status
+            $proformaInvoice->status = $request->input('status');
+        }
         
         // Update cart items if provided
         if ($request->has('items')) {
@@ -165,6 +178,58 @@ class ProformaInvoiceController extends Controller
         $proformaInvoice->save();
         
         return redirect()->back()->with('success', 'Item removed successfully. Total updated.');
+    }
+    
+    /**
+     * Generate and download PDF for a proforma invoice.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadPDF($id)
+    {
+        $proformaInvoice = ProformaInvoice::with('user')->findOrFail($id);
+        
+        // Decode the invoice data
+        $invoiceData = json_decode($proformaInvoice->invoice_data, true);
+        
+        // Extract cart items and customer info
+        $cartItems = $invoiceData['cart_items'] ?? [];
+        $total = $invoiceData['total'] ?? 0;
+        $invoiceDate = $invoiceData['invoice_date'] ?? $proformaInvoice->created_at->format('Y-m-d');
+        $customer = $invoiceData['customer'] ?? null;
+        
+        // Generate invoice number (for display consistency)
+        $invoiceNumber = $proformaInvoice->invoice_number;
+        
+        // Get settings
+        $settings = Setting::first();
+        
+        // Prepare data for the PDF view
+        $data = [
+            'proformaInvoice' => $proformaInvoice,
+            'cartItems' => $cartItems,
+            'total' => $total,
+            'invoiceNumber' => $invoiceNumber,
+            'invoiceDate' => $invoiceDate,
+            'customer' => $customer,
+            'invoiceData' => $invoiceData,
+            'siteTitle' => setting('site_title', 'Admin Panel'),
+            'companyAddress' => setting('address', 'Company Address'),
+            'companyEmail' => setting('email', 'company@example.com'),
+            'companyPhone' => setting('phone', '+1 (555) 123-4567'),
+            'headerLogo' => setting('header_logo', null),
+            'settings' => $settings
+        ];
+        
+        // Load the PDF view
+        $pdf = Pdf::loadView('admin.proforma-invoice-pdf', $data);
+        
+        // Set paper size and orientation
+        $pdf->setPaper('A4', 'portrait');
+        
+        // Download the PDF with a meaningful filename
+        return $pdf->download('proforma-invoice-' . $proformaInvoice->invoice_number . '.pdf');
     }
     
     /**
