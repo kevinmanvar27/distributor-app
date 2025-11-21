@@ -228,6 +228,33 @@ class RolesAndPermissionsSeeder extends Seeder
                 'display_name' => 'Manage Proforma Invoices',
                 'description' => 'Access and manage proforma invoices'
             ],
+            
+            // Page Management Permissions
+            [
+                'name' => 'viewAny_page',
+                'display_name' => 'View Any Page',
+                'description' => 'View all pages'
+            ],
+            [
+                'name' => 'view_page',
+                'display_name' => 'View Page',
+                'description' => 'View a specific page'
+            ],
+            [
+                'name' => 'create_page',
+                'display_name' => 'Create Page',
+                'description' => 'Create new pages'
+            ],
+            [
+                'name' => 'update_page',
+                'display_name' => 'Update Page',
+                'description' => 'Modify existing pages'
+            ],
+            [
+                'name' => 'delete_page',
+                'display_name' => 'Delete Page',
+                'description' => 'Remove pages'
+            ],
         ];
 
         // Create new permissions
@@ -262,7 +289,11 @@ class RolesAndPermissionsSeeder extends Seeder
                     'viewAny_media',
                     'view_media',
                     'create_media',
-                    'update_media'
+                    'update_media',
+                    'viewAny_page',
+                    'view_page',
+                    'create_page',
+                    'update_page'
                 ])->get();
                 $role->permissions()->sync($editorPermissions);
             } else {

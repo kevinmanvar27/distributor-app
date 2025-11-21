@@ -208,6 +208,22 @@
                         <li class="nav-item me-3">
                             <a class="nav-link" href="/">Home</a>
                         </li>
+                        <!-- Pages Links - Display as normal links based on priorities -->
+                        @php
+                            $activePages = \App\Models\Page::where('active', true)
+                                ->orderBy('priority', 'asc')
+                                ->get();
+                        @endphp
+                        
+                        @foreach($activePages as $page)
+                            @if($page->title != 'Home')
+                                <li class="nav-item me-3">
+                                    <a class="nav-link" href="{{ route('frontend.page.show', $page->slug) }}">
+                                        {{ $page->title }}
+                                    </a>
+                                </li>
+                            @endif
+                        @endforeach
                         <!-- Add more navigation items as needed -->
                     </ul>
                 </nav>

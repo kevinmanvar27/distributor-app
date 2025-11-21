@@ -128,6 +128,19 @@
                         </a>
                     </li>
                 @endif
+                
+                <!-- Pages Section -->
+                @if(auth()->user()->hasPermission('viewAny_page') || 
+                    auth()->user()->hasPermission('create_page') || 
+                    auth()->user()->hasPermission('update_page') || 
+                    auth()->user()->hasPermission('delete_page'))
+                    <li class="nav-item mb-1">
+                        <a class="nav-link {{ request()->routeIs('admin.pages*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.pages.index') }}">
+                            <i class="fas fa-file-alt me-3"></i>
+                            <span class="sidebar-text">Pages</span>
+                        </a>
+                    </li>
+                @endif
 
             </ul>
             

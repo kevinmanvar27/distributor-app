@@ -14,10 +14,12 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\UserGroupController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\ProformaInvoiceController;
+use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Frontend\LoginController as FrontendLoginController;
 use App\Http\Controllers\Frontend\RegisterController;
 use App\Http\Controllers\Frontend\ShoppingCartController;
+use App\Http\Controllers\Frontend\PageController as FrontendPageController;
 
 // Redirect root URL based on frontend access settings
 Route::get('/', function () {
@@ -50,6 +52,10 @@ Route::middleware('frontend.access')->group(function () {
     Route::get('/product/{product:slug}', [FrontendController::class, 'showProduct'])->name('frontend.product.show');
     // AJAX route for fetching subcategories
     Route::get('/frontend/category/{category}/subcategories', [FrontendController::class, 'getSubcategories'])->name('frontend.category.subcategories');
+    
+    // Frontend Pages Routes
+    Route::get('/pages', [FrontendPageController::class, 'index'])->name('frontend.pages.index');
+    Route::get('/page/{slug}', [FrontendPageController::class, 'show'])->name('frontend.page.show');
 });
 
 // Frontend Authenticated Routes
@@ -319,6 +325,19 @@ Route::middleware('auth')->group(function () {
         Route::put('/proforma-invoice/{id}/update-status', [ProformaInvoiceController::class, 'updateStatus'])->name('admin.proforma-invoice.update-status');
         Route::delete('/proforma-invoice/{id}/remove-item', [ProformaInvoiceController::class, 'removeItem'])->name('admin.proforma-invoice.remove-item');
         Route::delete('/proforma-invoice/{id}', [ProformaInvoiceController::class, 'destroy'])->name('admin.proforma-invoice.destroy');
+    });
+    
+    // Pages Routes
+    Route::prefix('admin')->group(function () {
+        Route::resource('pages', PageController::class)->names([
+            'index' => 'admin.pages.index',
+            'create' => 'admin.pages.create',
+            'store' => 'admin.pages.store',
+            'show' => 'admin.pages.show',
+            'edit' => 'admin.pages.edit',
+            'update' => 'admin.pages.update',
+            'destroy' => 'admin.pages.destroy',
+        ]);
     });
 
 });

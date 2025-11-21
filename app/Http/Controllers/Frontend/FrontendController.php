@@ -56,12 +56,38 @@ class FrontendController extends Controller
                     }
                 }
                 
-                // No subcategories with products found
+                // NEW: Check if the parent category itself has products (not in subcategories)
+                $directCategoryProducts = Product::whereIn('status', ['active', 'published'])
+                    ->get()
+                    ->filter(function ($product) use ($category) {
+                        if (!$product->product_categories) {
+                            return false;
+                        }
+                        
+                        // Check if product belongs directly to this category (without subcategories)
+                        foreach ($product->product_categories as $catData) {
+                            if (isset($catData['category_id']) && $catData['category_id'] == $category->id) {
+                                // Check if subcategory_ids is empty or not set (meaning product is directly in category)
+                                if (!isset($catData['subcategory_ids']) || empty($catData['subcategory_ids'])) {
+                                    return true;
+                                }
+                            }
+                        }
+                        
+                        return false;
+                    });
+                
+                // If we found direct products in this category, display it
+                if ($directCategoryProducts->count() > 0) {
+                    return true;
+                }
+                
+                // No subcategories with products or direct products found
                 return false;
             })
             ->values()
             ->map(function ($category) {
-                // Count products for this category
+                // Count products for this category (including both direct and subcategory products)
                 $productCount = Product::whereIn('status', ['active', 'published'])
                     ->get()
                     ->filter(function ($product) use ($category) {
@@ -69,7 +95,7 @@ class FrontendController extends Controller
                             return false;
                         }
                         
-                        // Check if product belongs to this category
+                        // Check if product belongs to this category (either directly or through subcategories)
                         foreach ($product->product_categories as $catData) {
                             if (isset($catData['category_id']) && $catData['category_id'] == $category->id) {
                                 return true;

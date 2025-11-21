@@ -393,13 +393,20 @@
     let currentCategoryId = null;
     
     $(document).ready(function() {
-        // Debug: Check what's available on jQuery
-        console.log('jQuery version:', $.fn.jquery);
-        console.log('DataTables available:', typeof $.fn.DataTable !== 'undefined');
         
         // Initialize DataTable with a more robust check and delay
         setTimeout(function() {
             if (typeof $.fn.DataTable !== 'undefined') {
+                // Destroy existing DataTable instance if it exists
+                if ($.fn.DataTable.isDataTable('#categoriesTable')) {
+                    $('#categoriesTable').DataTable().destroy();
+                }
+                
+                // Only clear the table if it has the placeholder row for empty data
+                if ($('#categoriesTable tbody tr td[colspan="5"]').length > 0) {
+                    $('#categoriesTable tbody').empty();
+                }
+                
                 $('#categoriesTable').DataTable({
                     "pageLength": 10,
                     "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
@@ -432,7 +439,7 @@
                     ],
                     "preDrawCallback": function(settings) {
                         // Ensure consistent column count
-                        if ($('#categoriesTable tbody tr').length === 0) {
+                        if ($('#categoriesTable tbody tr').length === 0 || ($('#categoriesTable tbody tr').length === 1 && $('#categoriesTable tbody tr td').attr('colspan') !== '5')) {
                             $('#categoriesTable tbody').html('<tr><td colspan="5" class="text-center py-5"><div class="text-muted"><i class="fas fa-tags fa-2x mb-3"></i><p class="mb-0">No categories found</p><p class="small">Try creating a new category</p></div></td></tr>');
                         }
                     },
