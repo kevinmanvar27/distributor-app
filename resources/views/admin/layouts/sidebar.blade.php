@@ -129,6 +129,14 @@
                     </li>
                 @endif
                 
+                <!-- Firebase Notifications Section -->
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('admin.firebase.notifications*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.firebase.notifications') }}">
+                        <i class="fas fa-bell me-3"></i>
+                        <span class="sidebar-text">Notifications</span>
+                    </a>
+                </li>
+                
                 <!-- Pages Section -->
                 @if(auth()->user()->hasPermission('viewAny_page') || 
                     auth()->user()->hasPermission('create_page') || 

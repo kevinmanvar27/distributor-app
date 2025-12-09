@@ -1,54 +1,20 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\API\ApiController;
 use App\Services\NotificationService;
 use App\Models\User;
 use App\Models\UserGroup;
 use Illuminate\Http\Request;
 
-class FirebaseController extends Controller
+class NotificationController extends ApiController
 {
     protected $notificationService;
 
     public function __construct(NotificationService $notificationService)
     {
         $this->notificationService = $notificationService;
-    }
-
-    /**
-     * Test Firebase configuration
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function testConfiguration()
-    {
-        $result = $this->notificationService->testConfiguration();
-        return response()->json($result);
-    }
-
-    /**
-     * Get Firebase notification statistics
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getStatistics()
-    {
-        $stats = $this->notificationService->getStatistics();
-        return response()->json($stats);
-    }
-
-    /**
-     * Show the notification sending form
-     *
-     * @return \Illuminate\View\View
-     */
-    public function showNotificationForm()
-    {
-        $users = User::all();
-        $userGroups = UserGroup::all();
-        return view('admin.notifications.send', compact('users', 'userGroups'));
     }
 
     /**
@@ -109,5 +75,39 @@ class FirebaseController extends Controller
         $result = $this->notificationService->sendToUserGroup($userGroup, $payload);
 
         return response()->json($result);
+    }
+
+    /**
+     * Register or update device token for a user
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function registerDeviceToken(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'device_token' => 'required|string'
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+        $user->device_token = $request->device_token;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Device token registered successfully'
+        ]);
+    }
+
+    /**
+     * Get Firebase notification statistics
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getStatistics()
+    {
+        $stats = $this->notificationService->getStatistics();
+        return response()->json($stats);
     }
 }

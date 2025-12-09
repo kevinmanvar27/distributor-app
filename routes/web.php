@@ -258,6 +258,11 @@ Route::middleware('auth')->group(function () {
     // Firebase Statistics Route
     Route::get('/admin/firebase/stats', [FirebaseController::class, 'getStatistics'])->name('admin.firebase.stats');
     
+    // Firebase Notification Routes
+    Route::get('/admin/firebase/notifications', [FirebaseController::class, 'showNotificationForm'])->name('admin.firebase.notifications');
+    Route::post('/admin/firebase/notifications/user', [FirebaseController::class, 'sendToUser'])->name('admin.firebase.notifications.user');
+    Route::post('/admin/firebase/notifications/group', [FirebaseController::class, 'sendToUserGroup'])->name('admin.firebase.notifications.group');
+    
     // Product Management Routes
     Route::prefix('admin')->group(function () {
         Route::resource('products', ProductController::class)->names([

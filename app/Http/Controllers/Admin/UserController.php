@@ -97,6 +97,12 @@ class UserController extends Controller
             'is_approved' => false
         ]);
 
+        // Assign role to user through the pivot table
+        $role = Role::where('name', $request->user_role)->first();
+        if ($role) {
+            $user->roles()->attach($role->id);
+        }
+
         $this->handleAvatarUpload($request, $user);
 
         // Redirect to appropriate page based on user role
@@ -170,6 +176,12 @@ class UserController extends Controller
         }
 
         $user->save();
+
+        // Update role assignment through the pivot table
+        $role = Role::where('name', $request->user_role)->first();
+        if ($role) {
+            $user->roles()->sync([$role->id]);
+        }
 
         $this->handleAvatarUpload($request, $user);
 

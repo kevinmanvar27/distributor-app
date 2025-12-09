@@ -4,6 +4,8 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
+use App\Models\UserGroup;
 
 class NotificationService
 {
@@ -52,6 +54,77 @@ class NotificationService
                 'message' => 'Failed to send notification: ' . $e->getMessage()
             ];
         }
+    }
+
+    /**
+     * Send notification to a single user
+     *
+     * @param User $user
+     * @param array $payload
+     * @return array
+     */
+    public function sendToUser($user, $payload)
+    {
+        // Check if user has a device token
+        if (empty($user->device_token)) {
+            return [
+                'success' => false,
+                'message' => 'User does not have a device token'
+            ];
+        }
+        
+        return $this->sendPushNotification($user->device_token, $payload);
+    }
+
+    /**
+     * Send notification to all users in a group
+     *
+     * @param UserGroup $userGroup
+     * @param array $payload
+     * @return array
+     */
+    public function sendToUserGroup($userGroup, $payload)
+    {
+        $results = [];
+        $successCount = 0;
+        $failCount = 0;
+        
+        // Get all users in the group
+        $users = $userGroup->users;
+        
+        foreach ($users as $user) {
+            // Skip users without device tokens
+            if (empty($user->device_token)) {
+                $results[] = [
+                    'user_id' => $user->id,
+                    'success' => false,
+                    'message' => 'User does not have a device token'
+                ];
+                $failCount++;
+                continue;
+            }
+            
+            $result = $this->sendPushNotification($user->device_token, $payload);
+            $result['user_id'] = $user->id;
+            $results[] = $result;
+            
+            if ($result['success']) {
+                $successCount++;
+            } else {
+                $failCount++;
+            }
+        }
+        
+        return [
+            'success' => $successCount > 0,
+            'message' => "Notifications sent: {$successCount} successful, {$failCount} failed",
+            'results' => $results,
+            'summary' => [
+                'total_users' => $users->count(),
+                'successful' => $successCount,
+                'failed' => $failCount
+            ]
+        ];
     }
 
     /**

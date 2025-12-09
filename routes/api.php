@@ -15,6 +15,7 @@ use App\Http\Controllers\API\ProformaInvoiceController;
 use App\Http\Controllers\API\PageController;
 use App\Http\Controllers\API\UserGroupController;
 use App\Http\Controllers\API\UserGroupMemberController;
+use App\Http\Controllers\API\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +45,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Auth routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    
+    // Notification routes
+    Route::post('/notifications/send-to-user', [NotificationController::class, 'sendToUser']);
+    Route::post('/notifications/send-to-group', [NotificationController::class, 'sendToUserGroup']);
+    Route::post('/notifications/device-token', [NotificationController::class, 'registerDeviceToken']);
+    Route::get('/notifications/stats', [NotificationController::class, 'getStatistics']);
     
     // Resource routes
     Route::apiResource('users', UserController::class);
