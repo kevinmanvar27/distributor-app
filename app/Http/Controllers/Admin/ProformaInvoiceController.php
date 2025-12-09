@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ProformaInvoice;
 use App\Models\Setting;
+use App\Models\Notification;
+use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ProformaInvoiceController extends Controller
@@ -44,6 +46,21 @@ class ProformaInvoiceController extends Controller
         
         // Generate invoice number (for display consistency)
         $invoiceNumber = $proformaInvoice->invoice_number;
+        
+        // Automatically remove all notifications for this invoice when viewing directly
+        if (Auth::check()) {
+            // Get all unread notifications for the current user that are related to this invoice
+            $notifications = Notification::where('user_id', Auth::id())
+                ->where('read', false)
+                ->where('type', 'proforma_invoice')
+                ->where('data', 'like', '%"invoice_id":' . $id . '%')
+                ->get();
+            
+            // Delete all matching notifications
+            foreach ($notifications as $notification) {
+                $notification->delete();
+            }
+        }
         
         return view('admin.proforma-invoice.show', compact('proformaInvoice', 'cartItems', 'total', 'invoiceNumber', 'invoiceDate', 'customer', 'invoiceData'));
     }

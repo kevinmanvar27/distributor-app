@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\UserGroupController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\ProformaInvoiceController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Frontend\LoginController as FrontendLoginController;
 use App\Http\Controllers\Frontend\RegisterController;
@@ -73,13 +74,18 @@ Route::middleware(['frontend.access', 'auth'])->group(function () {
     Route::delete('/cart/remove/{id}', [ShoppingCartController::class, 'removeFromCart'])->name('frontend.cart.remove');
     Route::get('/cart/count', [ShoppingCartController::class, 'getCartCount'])->name('frontend.cart.count');
     Route::post('/cart/migrate', [ShoppingCartController::class, 'migrateGuestCart'])->name('frontend.cart.migrate');
-    Route::get('/cart/proforma-invoice', [ShoppingCartController::class, 'generateProformaInvoice'])->name('frontend.cart.proforma.invoice');
     Route::get('/cart/proforma-invoices', [ShoppingCartController::class, 'listProformaInvoices'])->name('frontend.cart.proforma.invoices');
     Route::get('/cart/proforma-invoice/{id}', [ShoppingCartController::class, 'getProformaInvoiceDetails'])->name('frontend.cart.proforma.invoice.details');
     Route::get('/cart/proforma-invoice/{id}/download-pdf', [ShoppingCartController::class, 'downloadProformaInvoicePDF'])->name('frontend.cart.proforma.invoice.download-pdf');
     Route::post('/cart/proforma-invoice/{id}/add-to-cart', [ShoppingCartController::class, 'addInvoiceToCart'])->name('frontend.cart.proforma.invoice.add-to-cart');
     Route::delete('/cart/proforma-invoice/{id}', [ShoppingCartController::class, 'deleteProformaInvoice'])->name('frontend.cart.proforma.invoice.delete');
 
+});
+
+// Frontend Access Routes (available to guests as well)
+Route::middleware('frontend.access')->group(function () {
+    // Proforma Invoice Generation Route (available to guests)
+    Route::get('/cart/proforma-invoice', [ShoppingCartController::class, 'generateProformaInvoice'])->name('frontend.cart.proforma.invoice');
 });
 
 // Authentication Routes
@@ -343,6 +349,15 @@ Route::middleware('auth')->group(function () {
             'update' => 'admin.pages.update',
             'destroy' => 'admin.pages.destroy',
         ]);
+    });
+
+    // Notification Routes
+    Route::prefix('admin')->group(function () {
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
+        Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('admin.notifications.mark-as-read');
+        Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-as-read');
+        Route::post('/notifications/invoice/{invoiceId}/mark-as-read', [NotificationController::class, 'markInvoiceNotificationsAsRead'])->name('admin.notifications.invoice.mark-as-read');
+        Route::get('/notifications/data', [NotificationController::class, 'getUserNotifications'])->name('admin.notifications.data');
     });
 
 });

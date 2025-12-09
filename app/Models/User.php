@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -151,7 +149,7 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute()
     {
         if ($this->avatar) {
-            return Storage::disk('public')->url('avatars/' . $this->avatar);
+            return \Illuminate\Support\Facades\Storage::disk('public')->url('avatars/' . $this->avatar);
         }
         
         // Return a default avatar if none is set
@@ -222,5 +220,21 @@ class User extends Authenticatable
     public function cartItems()
     {
         return $this->hasMany(ShoppingCartItem::class);
+    }
+    
+    /**
+     * Get the notifications for the user.
+     */
+    public function notifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class)->orderBy('created_at', 'desc');
+    }
+    
+    /**
+     * Get unread notifications for the user.
+     */
+    public function unreadNotifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class)->where('read', false)->orderBy('created_at', 'desc');
     }
 }

@@ -7,12 +7,22 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ShoppingCartItem;
 use App\Models\ProformaInvoice;
+use App\Models\User;
+use App\Models\Notification;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ShoppingCartController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Display the shopping cart.
      *
@@ -343,7 +353,10 @@ class ShoppingCartController extends Controller
             $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) ? 
                           $product->selling_price : $product->mrp;
             
-            $discountedPrice = calculateDiscountedPrice($priceToUse, Auth::user());
+            // For guests (when userId is passed but user might not be authenticated),
+            // calculate price without discount
+            $user = \Illuminate\Support\Facades\Auth::find($userId);
+            $discountedPrice = $user ? calculateDiscountedPrice($priceToUse, $user) : $priceToUse;
             
             // Check if user already has this product in their cart
             $existingCartItem = ShoppingCartItem::where('user_id', $userId)
@@ -440,6 +453,48 @@ class ShoppingCartController extends Controller
             'status' => ProformaInvoice::STATUS_DRAFT, // Set status to 'Draft' when creating
         ]);
         
+        // Create database notifications for admin users
+        $adminUsers = User::where('user_role', 'admin')->orWhere('user_role', 'super_admin')->get();
+        foreach ($adminUsers as $adminUser) {
+            // Get user avatar URL
+            $avatarUrl = $adminUser->avatar ? asset('storage/avatars/' . $adminUser->avatar) : null;
+            
+            Notification::create([
+                'user_id' => $adminUser->id,
+                'title' => 'New Proforma Invoice Created',
+                'message' => 'A new proforma invoice #' . $invoiceNumber . ' has been created by ' . (Auth::check() ? Auth::user()->name : 'Guest'),
+                'type' => 'proforma_invoice',
+                'data' => json_encode([
+                    'invoice_id' => $proformaInvoice->id,
+                    'invoice_number' => $invoiceNumber,
+                    'customer_name' => Auth::check() ? Auth::user()->name : 'Guest',
+                    'customer_avatar' => Auth::check() ? (Auth::user()->avatar ? asset('storage/avatars/' . Auth::user()->avatar) : null) : null
+                ]),
+                'read' => false,
+            ]);
+        }
+        
+        // Send push notifications to admin users who have device tokens
+        if (Auth::check()) {
+            foreach ($adminUsers as $adminUser) {
+                if (!empty($adminUser->device_token)) {
+                    $payload = [
+                        'notification' => [
+                            'title' => 'New Proforma Invoice Created',
+                            'body' => 'A new proforma invoice #' . $invoiceNumber . ' has been created by ' . Auth::user()->name
+                        ],
+                        'data' => [
+                            'invoice_id' => $proformaInvoice->id,
+                            'invoice_number' => $invoiceNumber,
+                            'type' => 'proforma_invoice_created'
+                        ]
+                    ];
+                    
+                    $this->notificationService->sendPushNotification($adminUser->device_token, $payload);
+                }
+            }
+        }
+        
         // Clear the cart after generating the proforma invoice
         if (Auth::check()) {
             // For authenticated users, delete all cart items for the user
@@ -524,9 +579,31 @@ class ShoppingCartController extends Controller
         // Decode the invoice data
         $invoiceData = json_decode($proformaInvoice->invoice_data, true);
         
+        // Automatically remove all notifications for this invoice when viewing directly
+        $unreadCount = 0;
+        if (Auth::check()) {
+            // Get all unread notifications for the current user that are related to this invoice
+            $notifications = \App\Models\Notification::where('user_id', Auth::id())
+                ->where('read', false)
+                ->where('type', 'proforma_invoice')
+                ->where('data', 'like', '%"invoice_id":' . $id . '%')
+                ->get();
+            
+            // Delete all matching notifications
+            foreach ($notifications as $notification) {
+                $notification->delete();
+            }
+            
+            // Get updated unread count
+            $unreadCount = \App\Models\Notification::where('user_id', Auth::id())
+                ->where('read', false)
+                ->count();
+        }
+        
         return response()->json([
             'invoice' => $proformaInvoice,
-            'data' => $invoiceData
+            'data' => $invoiceData,
+            'unread_count' => $unreadCount
         ]);
     }
 

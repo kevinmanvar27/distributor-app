@@ -227,6 +227,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
+                // Update notification count if provided
+                if (data.unread_count !== undefined) {
+                    updateNotificationCount(data.unread_count);
+                }
+                
                 // Render invoice details
                 renderInvoiceDetails(data);
             })
@@ -238,6 +243,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
             });
+    }
+    
+    // Function to update notification count in header
+    function updateNotificationCount(count) {
+        const countElement = document.querySelector('#notificationsDropdown .notification-count');
+        if (count > 0) {
+            if (countElement) {
+                countElement.textContent = count;
+            } else {
+                // Create count element if it doesn't exist
+                const badge = document.createElement('span');
+                badge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count';
+                badge.textContent = count;
+                document.querySelector('#notificationsDropdown').appendChild(badge);
+            }
+        } else {
+            if (countElement) {
+                countElement.remove();
+            }
+        }
     }
     
     // Get status badge HTML based on status

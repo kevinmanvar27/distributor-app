@@ -28,57 +28,63 @@
             </div>
             
             <div class="d-flex align-items-center">
-                <!-- Search Bar -->
-                <div class="input-group me-3 d-none d-lg-flex" style="max-width: 250px;">
-                    <span class="input-group-text bg-surface border-default rounded-start-pill">
-                        <i class="fas fa-search text-secondary"></i>
-                    </span>
-                    <input type="text" class="form-control border-default rounded-end-pill ps-2" placeholder="Search..." style="font-size: 0.9rem;">
-                </div>
-                
                 <!-- Notifications -->
                 <div class="dropdown me-2">
                     <button class="btn btn-outline-secondary position-relative rounded-circle" type="button" id="notificationsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-bell"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">3</span>
+                        @if(auth()->check() && auth()->user()->unreadNotifications->count() > 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count">
+                                {{ auth()->user()->unreadNotifications->count() }}
+                            </span>
+                        @endif
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2" aria-labelledby="notificationsDropdown">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2 notification-dropdown" aria-labelledby="notificationsDropdown">
                         <li><h6 class="dropdown-header fw-semibold">Notifications</h6></li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-start py-2" href="#">
-                                <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
-                                    <i class="fas fa-user-plus text-primary"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-medium">New user registered</div>
-                                    <small class="text-secondary">2 hours ago</small>
-                                </div>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-start py-2" href="#">
-                                <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3">
-                                    <i class="fas fa-cog text-success"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-medium">Settings updated</div>
-                                    <small class="text-secondary">5 hours ago</small>
-                                </div>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-start py-2" href="#">
-                                <div class="bg-info bg-opacity-10 p-2 rounded-circle me-3">
-                                    <i class="fas fa-user-edit text-info"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-medium">Profile updated</div>
-                                    <small class="text-secondary">1 day ago</small>
-                                </div>
-                            </a>
-                        </li>
+                        
+                        @forelse(auth()->user()->notifications->take(5) as $notification)
+                            <li>
+                                <a class="dropdown-item d-flex align-items-start py-2 notification-item" href="#" data-notification-id="{{ $notification->id }}" data-notification-type="{{ $notification->type }}" data-notification-data="{{ $notification->data }}">
+                                    <div class="rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                        @php
+                                            $notificationData = json_decode($notification->data, true);
+                                            $hasAvatar = isset($notificationData['customer_avatar']) && !empty($notificationData['customer_avatar']);
+                                        @endphp
+                                        
+                                        @if($hasAvatar)
+                                            <img src="{{ $notificationData['customer_avatar'] }}" alt="User Avatar" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                                        @else
+                                            @if($notification->type === 'proforma_invoice')
+                                                <i class="fas fa-file-invoice text-primary"></i>
+                                            @elseif($notification->type === 'user_registered')
+                                                <i class="fas fa-user-plus text-primary"></i>
+                                            @elseif($notification->type === 'settings_updated')
+                                                <i class="fas fa-cog text-success"></i>
+                                            @else
+                                                <i class="fas fa-bell text-info"></i>
+                                            @endif
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium">{{ $notification->title }}</div>
+                                        <small class="text-secondary">{{ $notification->message }}</small>
+                                        <br>
+                                        <small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
+                                    </div>
+                                </a>
+                            </li>
+                        @empty
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center py-2" href="#">
+                                    <div class="text-center w-100">
+                                        <div class="fw-medium">No notifications</div>
+                                        <small class="text-secondary">You're all caught up</small>
+                                    </div>
+                                </a>
+                            </li>
+                        @endforelse
+                        
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-center fw-medium" href="#">View all notifications</a></li>
+                        <li><a class="dropdown-item text-center fw-medium" href="#" id="markAllAsRead">Mark all as read</a></li>
                     </ul>
                 </div>
                 
@@ -108,3 +114,148 @@
         </div>
     </div>
 </header>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const notificationDropdown = document.querySelector('.notification-dropdown');
+    const markAllAsReadBtn = document.getElementById('markAllAsRead');
+    const notificationItems = document.querySelectorAll('.notification-item');
+    
+    // Remove the automatic removal when dropdown is shown
+    // This addresses requirement #1: Don't automatically remove notifications when opening dropdown
+    
+    // Handle individual notification clicks (navigation + removal)
+    notificationItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            // Get notification data
+            const notificationType = this.getAttribute('data-notification-type');
+            const notificationData = this.getAttribute('data-notification-data');
+            const notificationId = this.getAttribute('data-notification-id');
+            const listItem = this.parentElement; // Get the parent li element
+            
+            // First navigate to the relevant page (requirement #2)
+            if (notificationType === 'proforma_invoice') {
+                try {
+                    const data = JSON.parse(notificationData);
+                    if (data.invoice_id) {
+                        // Navigate to the proforma invoice page
+                        window.location.href = `/admin/proforma-invoice/${data.invoice_id}`;
+                        // Remove the notification after navigation
+                        removeNotification(notificationId, listItem);
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Error parsing notification data:', e);
+                }
+            }
+            
+            // For other notification types, just remove the notification
+            e.preventDefault();
+            removeNotification(notificationId, listItem);
+        });
+    });
+    
+    // Mark all notifications as read (remove all)
+    markAllAsReadBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        fetch('/admin/notifications/mark-all-as-read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update notification count
+                updateNotificationCount(data.unread_count);
+                // Remove all notification items from the dropdown
+                notificationItems.forEach(item => {
+                    item.parentElement.remove();
+                });
+                // Show the "No notifications" message
+                showNoNotificationsMessage();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+    
+    // Function to remove a specific notification
+    function removeNotification(notificationId, listItem) {
+        fetch(`/admin/notifications/${notificationId}/mark-as-read`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update notification count
+                updateNotificationCount(data.unread_count);
+                // Remove the notification item from the dropdown
+                listItem.remove();
+                // Check if there are no more notifications and show the "No notifications" message
+                checkAndShowNoNotificationsMessage();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+    
+    // Function to update notification count
+    function updateNotificationCount(count) {
+        const countElement = document.querySelector('#notificationsDropdown .notification-count');
+        if (count > 0) {
+            if (countElement) {
+                countElement.textContent = count;
+            } else {
+                // Create count element if it doesn't exist
+                const badge = document.createElement('span');
+                badge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count';
+                badge.textContent = count;
+                document.querySelector('#notificationsDropdown').appendChild(badge);
+            }
+        } else {
+            if (countElement) {
+                countElement.remove();
+            }
+        }
+    }
+    
+    // Function to check if there are no notifications and show the "No notifications" message
+    function checkAndShowNoNotificationsMessage() {
+        const notificationList = document.querySelector('.notification-dropdown');
+        const notificationItems = notificationList.querySelectorAll('.notification-item');
+        
+        if (notificationItems.length === 0) {
+            showNoNotificationsMessage();
+        }
+    }
+    
+    // Function to show the "No notifications" message
+    function showNoNotificationsMessage() {
+        const notificationList = document.querySelector('.notification-dropdown');
+        const noNotificationsItem = document.createElement('li');
+        noNotificationsItem.innerHTML = `
+            <a class="dropdown-item d-flex align-items-center py-2" href="#">
+                <div class="text-center w-100">
+                    <div class="fw-medium">No notifications</div>
+                    <small class="text-secondary">You're all caught up</small>
+                </div>
+            </a>
+        `;
+        // Insert after the dropdown header
+        const header = notificationList.querySelector('.dropdown-header');
+        if (header) {
+            header.nextElementSibling.insertAdjacentElement('afterend', noNotificationsItem);
+        }
+    }
+});
+</script>
