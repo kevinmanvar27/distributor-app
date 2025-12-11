@@ -20,6 +20,10 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <!-- Google Fonts for font styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -38,6 +42,15 @@
             --heading-text-color: {{ setting('heading_text_color', '#333333') }};
             --label-text-color: {{ setting('label_text_color', '#333333') }};
             --general-text-color: {{ setting('general_text_color', '#333333') }};
+            
+            /* Element-wise Font Families */
+            --h1-font-family: {{ setting('h1_font_family', 'Arial, sans-serif') }};
+            --h2-font-family: {{ setting('h2_font_family', 'Arial, sans-serif') }};
+            --h3-font-family: {{ setting('h3_font_family', 'Arial, sans-serif') }};
+            --h4-font-family: {{ setting('h4_font_family', 'Arial, sans-serif') }};
+            --h5-font-family: {{ setting('h5_font_family', 'Arial, sans-serif') }};
+            --h6-font-family: {{ setting('h6_font_family', 'Arial, sans-serif') }};
+            --body-font-family: {{ setting('body_font_family', 'Arial, sans-serif') }};
             
             /* Font size settings for desktop */
             --desktop-h1-size: {{ setting('desktop_h1_size', 36) }}px;
@@ -70,11 +83,54 @@
         body {
             background-color: var(--background-color) !important;
             color: var(--font-color) !important;
-            font-family: var(--font-style) !important;
+            font-family: var(--body-font-family) !important;
             font-size: var(--desktop-body-size) !important;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
+        }
+        
+        /* Typography with element-wise font families */
+        h1, .h1 {
+            font-family: var(--h1-font-family) !important;
+            font-size: var(--desktop-h1-size) !important;
+            color: var(--heading-text-color) !important;
+        }
+        
+        h2, .h2 {
+            font-family: var(--h2-font-family) !important;
+            font-size: var(--desktop-h2-size) !important;
+            color: var(--heading-text-color) !important;
+        }
+        
+        h3, .h3 {
+            font-family: var(--h3-font-family) !important;
+            font-size: var(--desktop-h3-size) !important;
+            color: var(--heading-text-color) !important;
+        }
+        
+        h4, .h4 {
+            font-family: var(--h4-font-family) !important;
+            font-size: var(--desktop-h4-size) !important;
+            color: var(--heading-text-color) !important;
+        }
+        
+        h5, .h5 {
+            font-family: var(--h5-font-family) !important;
+            font-size: var(--desktop-h5-size) !important;
+            color: var(--heading-text-color) !important;
+        }
+        
+        h6, .h6 {
+            font-family: var(--h6-font-family) !important;
+            font-size: var(--desktop-h6-size) !important;
+            color: var(--heading-text-color) !important;
+        }
+        
+        p, .lead, .general-text {
+            font-family: var(--body-font-family) !important;
+            font-size: var(--desktop-body-size) !important;
         }
         
         /* Text color styles */
@@ -103,11 +159,34 @@
             background-color: var(--theme-color) !important;
             border-color: var(--theme-color) !important;
             color: white !important;
+            position: relative;
+            overflow: hidden;
         }
         
         .btn-theme:hover {
             background-color: var(--link-hover-color) !important;
             border-color: var(--link-hover-color) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-theme:active {
+        }
+        
+        /* Ripple effect for buttons */
+        .btn-theme::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+        }
+        
+        .btn-theme:hover::after {
+            width: 300px;
+            height: 300px;
         }
         
         /* Link styles */
@@ -214,12 +293,156 @@
             flex: 1;
             display: flex;
             align-items: center;
+            padding: 2rem 0;
+        }
+        
+        /* Auth card animations */
+        .auth-card {
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        /* Form input styles */
+        .form-control {
+            border: 2px solid #e0e0e0;
+        }
+        
+        .form-control:hover {
+            border-color: var(--theme-color);
+        }
+        
+        .form-control:focus {
+            border-color: var(--theme-color);
+            box-shadow: 0 0 0 4px rgba(var(--theme-color-rgb, 0, 123, 255), 0.1);
+        }
+        
+        /* Form group styles */
+        .form-group-animated {
+        }
+        
+        /* Alert styles */
+        .alert {
+        }
+        
+        /* Password toggle */
+        .toggle-password {
+        }
+        
+        .toggle-password:hover {
+            background-color: var(--theme-color);
+            border-color: var(--theme-color);
+            color: white;
+        }
+        
+        .toggle-password i {
+        }
+        
+        .toggle-password:hover i {
+        }
+        
+        /* Logo */
+        .auth-logo {
+        }
+        
+        /* Title */
+        .auth-title {
+        }
+        
+        .auth-subtitle {
+        }
+        
+        /* Checkbox */
+        .form-check-input {
+        }
+        
+        .form-check-input:checked {
+            background-color: var(--theme-color);
+            border-color: var(--theme-color);
+        }
+        
+        /* Footer text */
+        .auth-footer {
+        }
+        
+        /* Loading spinner for form submission */
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+        }
+        
+        .btn-loading::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+        }
+        
+        .btn-loading span {
+            visibility: hidden;
+        }
+        
+        /* Input group */
+        .input-group {
+        }
+        
+        .input-group:focus-within {
+        }
+        
+        .input-group:focus-within .form-control {
+            border-color: var(--theme-color);
+        }
+        
+        .input-group:focus-within .toggle-password {
+            border-color: var(--theme-color);
+        }
+        
+        /* Background decoration */
+        .auth-bg-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+        
+        .auth-bg-decoration::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, var(--theme-color) 0%, transparent 70%);
+            opacity: 0.05;
+        }
+        
+        .auth-bg-decoration::after {
+            content: '';
+            position: absolute;
+            bottom: -50%;
+            left: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, var(--theme-color) 0%, transparent 70%);
+            opacity: 0.05;
         }
     </style>
     
     @yield('styles')
 </head>
 <body>
+    <!-- Background decoration -->
+    <div class="auth-bg-decoration"></div>
+    
     <div class="auth-wrapper">
         @yield('content')
     </div>

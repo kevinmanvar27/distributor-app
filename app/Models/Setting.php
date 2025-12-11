@@ -48,6 +48,14 @@ class Setting extends Model
         'firebase_project_id',
         'firebase_client_email',
         'firebase_private_key',
+        // Font family settings (element-wise)
+        'h1_font_family',
+        'h2_font_family',
+        'h3_font_family',
+        'h4_font_family',
+        'h5_font_family',
+        'h6_font_family',
+        'body_font_family',
         // Font size settings
         'desktop_h1_size',
         'desktop_h2_size',

@@ -377,11 +377,28 @@
                                             <hr class="my-4">
                                             <h4 class="mb-4">Responsive Font Size Matrix</h4>
                                             
+                                            @php
+                                                $fontOptions = [
+                                                    'Arial, sans-serif' => 'Arial',
+                                                    'Times New Roman, serif' => 'Times New Roman',
+                                                    'Courier New, monospace' => 'Courier New',
+                                                    'Georgia, serif' => 'Georgia',
+                                                    'Verdana, sans-serif' => 'Verdana',
+                                                    'Roboto, sans-serif' => 'Roboto',
+                                                    'Open Sans, sans-serif' => 'Open Sans',
+                                                    'Lato, sans-serif' => 'Lato',
+                                                    'Poppins, sans-serif' => 'Poppins',
+                                                    'Montserrat, sans-serif' => 'Montserrat',
+                                                ];
+                                                $defaultFont = 'Arial, sans-serif';
+                                            @endphp
+                                            
                                             <div class="table-responsive">
                                                 <table class="table table-bordered">
                                                     <thead>
                                                         <tr>
                                                             <th>Element</th>
+                                                            <th>Font Type</th>
                                                             <th>Desktop (px)</th>
                                                             <th>Tablet (px)</th>
                                                             <th>Mobile (px)</th>
@@ -390,45 +407,94 @@
                                                     <tbody>
                                                         <tr>
                                                             <td>H1</td>
-                                                            <td><input type="number" name="desktop_h1_size" value="{{ old('desktop_h1_size', $setting->desktop_h1_size ?? 36) }}" class="form-control" min="1" placeholder="36"></td>
-                                                            <td><input type="number" name="tablet_h1_size" value="{{ old('tablet_h1_size', $setting->tablet_h1_size ?? 32) }}" class="form-control" min="1" placeholder="32"></td>
-                                                            <td><input type="number" name="mobile_h1_size" value="{{ old('mobile_h1_size', $setting->mobile_h1_size ?? 28) }}" class="form-control" min="1" placeholder="28"></td>
+                                                            <td>
+                                                                <select name="h1_font_family" class="form-select form-select-sm">
+                                                                    @foreach($fontOptions as $value => $label)
+                                                                        <option value="{{ $value }}" {{ old('h1_font_family', $setting->h1_font_family ?? $defaultFont) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </td>
+                                                            <td><input type="number" name="desktop_h1_size" value="{{ old('desktop_h1_size', $setting->desktop_h1_size ?? 36) }}" class="form-control form-control-sm" min="1" placeholder="36"></td>
+                                                            <td><input type="number" name="tablet_h1_size" value="{{ old('tablet_h1_size', $setting->tablet_h1_size ?? 32) }}" class="form-control form-control-sm" min="1" placeholder="32"></td>
+                                                            <td><input type="number" name="mobile_h1_size" value="{{ old('mobile_h1_size', $setting->mobile_h1_size ?? 28) }}" class="form-control form-control-sm" min="1" placeholder="28"></td>
                                                         </tr>
                                                         <tr>
                                                             <td>H2</td>
-                                                            <td><input type="number" name="desktop_h2_size" value="{{ old('desktop_h2_size', $setting->desktop_h2_size ?? 30) }}" class="form-control" min="1" placeholder="30"></td>
-                                                            <td><input type="number" name="tablet_h2_size" value="{{ old('tablet_h2_size', $setting->tablet_h2_size ?? 28) }}" class="form-control" min="1" placeholder="28"></td>
-                                                            <td><input type="number" name="mobile_h2_size" value="{{ old('mobile_h2_size', $setting->mobile_h2_size ?? 24) }}" class="form-control" min="1" placeholder="24"></td>
+                                                            <td>
+                                                                <select name="h2_font_family" class="form-select form-select-sm">
+                                                                    @foreach($fontOptions as $value => $label)
+                                                                        <option value="{{ $value }}" {{ old('h2_font_family', $setting->h2_font_family ?? $defaultFont) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </td>
+                                                            <td><input type="number" name="desktop_h2_size" value="{{ old('desktop_h2_size', $setting->desktop_h2_size ?? 30) }}" class="form-control form-control-sm" min="1" placeholder="30"></td>
+                                                            <td><input type="number" name="tablet_h2_size" value="{{ old('tablet_h2_size', $setting->tablet_h2_size ?? 28) }}" class="form-control form-control-sm" min="1" placeholder="28"></td>
+                                                            <td><input type="number" name="mobile_h2_size" value="{{ old('mobile_h2_size', $setting->mobile_h2_size ?? 24) }}" class="form-control form-control-sm" min="1" placeholder="24"></td>
                                                         </tr>
                                                         <tr>
                                                             <td>H3</td>
-                                                            <td><input type="number" name="desktop_h3_size" value="{{ old('desktop_h3_size', $setting->desktop_h3_size ?? 24) }}" class="form-control" min="1" placeholder="24"></td>
-                                                            <td><input type="number" name="tablet_h3_size" value="{{ old('tablet_h3_size', $setting->tablet_h3_size ?? 22) }}" class="form-control" min="1" placeholder="22"></td>
-                                                            <td><input type="number" name="mobile_h3_size" value="{{ old('mobile_h3_size', $setting->mobile_h3_size ?? 20) }}" class="form-control" min="1" placeholder="20"></td>
+                                                            <td>
+                                                                <select name="h3_font_family" class="form-select form-select-sm">
+                                                                    @foreach($fontOptions as $value => $label)
+                                                                        <option value="{{ $value }}" {{ old('h3_font_family', $setting->h3_font_family ?? $defaultFont) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </td>
+                                                            <td><input type="number" name="desktop_h3_size" value="{{ old('desktop_h3_size', $setting->desktop_h3_size ?? 24) }}" class="form-control form-control-sm" min="1" placeholder="24"></td>
+                                                            <td><input type="number" name="tablet_h3_size" value="{{ old('tablet_h3_size', $setting->tablet_h3_size ?? 22) }}" class="form-control form-control-sm" min="1" placeholder="22"></td>
+                                                            <td><input type="number" name="mobile_h3_size" value="{{ old('mobile_h3_size', $setting->mobile_h3_size ?? 20) }}" class="form-control form-control-sm" min="1" placeholder="20"></td>
                                                         </tr>
                                                         <tr>
                                                             <td>H4</td>
-                                                            <td><input type="number" name="desktop_h4_size" value="{{ old('desktop_h4_size', $setting->desktop_h4_size ?? 20) }}" class="form-control" min="1" placeholder="20"></td>
-                                                            <td><input type="number" name="tablet_h4_size" value="{{ old('tablet_h4_size', $setting->tablet_h4_size ?? 18) }}" class="form-control" min="1" placeholder="18"></td>
-                                                            <td><input type="number" name="mobile_h4_size" value="{{ old('mobile_h4_size', $setting->mobile_h4_size ?? 16) }}" class="form-control" min="1" placeholder="16"></td>
+                                                            <td>
+                                                                <select name="h4_font_family" class="form-select form-select-sm">
+                                                                    @foreach($fontOptions as $value => $label)
+                                                                        <option value="{{ $value }}" {{ old('h4_font_family', $setting->h4_font_family ?? $defaultFont) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </td>
+                                                            <td><input type="number" name="desktop_h4_size" value="{{ old('desktop_h4_size', $setting->desktop_h4_size ?? 20) }}" class="form-control form-control-sm" min="1" placeholder="20"></td>
+                                                            <td><input type="number" name="tablet_h4_size" value="{{ old('tablet_h4_size', $setting->tablet_h4_size ?? 18) }}" class="form-control form-control-sm" min="1" placeholder="18"></td>
+                                                            <td><input type="number" name="mobile_h4_size" value="{{ old('mobile_h4_size', $setting->mobile_h4_size ?? 16) }}" class="form-control form-control-sm" min="1" placeholder="16"></td>
                                                         </tr>
                                                         <tr>
                                                             <td>H5</td>
-                                                            <td><input type="number" name="desktop_h5_size" value="{{ old('desktop_h5_size', $setting->desktop_h5_size ?? 18) }}" class="form-control" min="1" placeholder="18"></td>
-                                                            <td><input type="number" name="tablet_h5_size" value="{{ old('tablet_h5_size', $setting->tablet_h5_size ?? 16) }}" class="form-control" min="1" placeholder="16"></td>
-                                                            <td><input type="number" name="mobile_h5_size" value="{{ old('mobile_h5_size', $setting->mobile_h5_size ?? 14) }}" class="form-control" min="1" placeholder="14"></td>
+                                                            <td>
+                                                                <select name="h5_font_family" class="form-select form-select-sm">
+                                                                    @foreach($fontOptions as $value => $label)
+                                                                        <option value="{{ $value }}" {{ old('h5_font_family', $setting->h5_font_family ?? $defaultFont) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </td>
+                                                            <td><input type="number" name="desktop_h5_size" value="{{ old('desktop_h5_size', $setting->desktop_h5_size ?? 18) }}" class="form-control form-control-sm" min="1" placeholder="18"></td>
+                                                            <td><input type="number" name="tablet_h5_size" value="{{ old('tablet_h5_size', $setting->tablet_h5_size ?? 16) }}" class="form-control form-control-sm" min="1" placeholder="16"></td>
+                                                            <td><input type="number" name="mobile_h5_size" value="{{ old('mobile_h5_size', $setting->mobile_h5_size ?? 14) }}" class="form-control form-control-sm" min="1" placeholder="14"></td>
                                                         </tr>
                                                         <tr>
                                                             <td>H6</td>
-                                                            <td><input type="number" name="desktop_h6_size" value="{{ old('desktop_h6_size', $setting->desktop_h6_size ?? 16) }}" class="form-control" min="1" placeholder="16"></td>
-                                                            <td><input type="number" name="tablet_h6_size" value="{{ old('tablet_h6_size', $setting->tablet_h6_size ?? 14) }}" class="form-control" min="1" placeholder="14"></td>
-                                                            <td><input type="number" name="mobile_h6_size" value="{{ old('mobile_h6_size', $setting->mobile_h6_size ?? 12) }}" class="form-control" min="1" placeholder="12"></td>
+                                                            <td>
+                                                                <select name="h6_font_family" class="form-select form-select-sm">
+                                                                    @foreach($fontOptions as $value => $label)
+                                                                        <option value="{{ $value }}" {{ old('h6_font_family', $setting->h6_font_family ?? $defaultFont) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </td>
+                                                            <td><input type="number" name="desktop_h6_size" value="{{ old('desktop_h6_size', $setting->desktop_h6_size ?? 16) }}" class="form-control form-control-sm" min="1" placeholder="16"></td>
+                                                            <td><input type="number" name="tablet_h6_size" value="{{ old('tablet_h6_size', $setting->tablet_h6_size ?? 14) }}" class="form-control form-control-sm" min="1" placeholder="14"></td>
+                                                            <td><input type="number" name="mobile_h6_size" value="{{ old('mobile_h6_size', $setting->mobile_h6_size ?? 12) }}" class="form-control form-control-sm" min="1" placeholder="12"></td>
                                                         </tr>
                                                         <tr>
                                                             <td>Body Text</td>
-                                                            <td><input type="number" name="desktop_body_size" value="{{ old('desktop_body_size', $setting->desktop_body_size ?? 16) }}" class="form-control" min="1" placeholder="16"></td>
-                                                            <td><input type="number" name="tablet_body_size" value="{{ old('tablet_body_size', $setting->tablet_body_size ?? 14) }}" class="form-control" min="1" placeholder="14"></td>
-                                                            <td><input type="number" name="mobile_body_size" value="{{ old('mobile_body_size', $setting->mobile_body_size ?? 12) }}" class="form-control" min="1" placeholder="12"></td>
+                                                            <td>
+                                                                <select name="body_font_family" class="form-select form-select-sm">
+                                                                    @foreach($fontOptions as $value => $label)
+                                                                        <option value="{{ $value }}" {{ old('body_font_family', $setting->body_font_family ?? $defaultFont) == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </td>
+                                                            <td><input type="number" name="desktop_body_size" value="{{ old('desktop_body_size', $setting->desktop_body_size ?? 16) }}" class="form-control form-control-sm" min="1" placeholder="16"></td>
+                                                            <td><input type="number" name="tablet_body_size" value="{{ old('tablet_body_size', $setting->tablet_body_size ?? 14) }}" class="form-control form-control-sm" min="1" placeholder="14"></td>
+                                                            <td><input type="number" name="mobile_body_size" value="{{ old('mobile_body_size', $setting->mobile_body_size ?? 12) }}" class="form-control form-control-sm" min="1" placeholder="12"></td>
                                                         </tr>
                                                     </tbody>
                                                 </table>

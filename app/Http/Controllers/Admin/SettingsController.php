@@ -34,6 +34,14 @@ class SettingsController extends Controller
             'background_color' => '#FFFFFF',
             'font_color' => '#333333',
             'font_style' => 'Arial, sans-serif',
+            // Default element-wise font family values
+            'h1_font_family' => 'Arial, sans-serif',
+            'h2_font_family' => 'Arial, sans-serif',
+            'h3_font_family' => 'Arial, sans-serif',
+            'h4_font_family' => 'Arial, sans-serif',
+            'h5_font_family' => 'Arial, sans-serif',
+            'h6_font_family' => 'Arial, sans-serif',
+            'body_font_family' => 'Arial, sans-serif',
             'sidebar_text_color' => '#333333',
             'heading_text_color' => '#333333',
             'label_text_color' => '#333333',
@@ -121,6 +129,14 @@ class SettingsController extends Controller
             'background_color' => 'nullable|string|max:7',
             'font_color' => 'nullable|string|max:7',
             'font_style' => 'nullable|string|max:255',
+            // Element-wise font family validation rules
+            'h1_font_family' => 'nullable|string|max:255',
+            'h2_font_family' => 'nullable|string|max:255',
+            'h3_font_family' => 'nullable|string|max:255',
+            'h4_font_family' => 'nullable|string|max:255',
+            'h5_font_family' => 'nullable|string|max:255',
+            'h6_font_family' => 'nullable|string|max:255',
+            'body_font_family' => 'nullable|string|max:255',
             'sidebar_text_color' => 'nullable|string|max:7',
             'heading_text_color' => 'nullable|string|max:7',
             'label_text_color' => 'nullable|string|max:7',
@@ -227,6 +243,16 @@ class SettingsController extends Controller
         $setting->background_color = $request->background_color;
         $setting->font_color = $request->font_color;
         $setting->font_style = $request->font_style;
+        
+        // Update element-wise font family fields
+        $setting->h1_font_family = $request->h1_font_family;
+        $setting->h2_font_family = $request->h2_font_family;
+        $setting->h3_font_family = $request->h3_font_family;
+        $setting->h4_font_family = $request->h4_font_family;
+        $setting->h5_font_family = $request->h5_font_family;
+        $setting->h6_font_family = $request->h6_font_family;
+        $setting->body_font_family = $request->body_font_family;
+        
         $setting->sidebar_text_color = $request->sidebar_text_color;
         $setting->heading_text_color = $request->heading_text_color;
         $setting->label_text_color = $request->label_text_color;
@@ -438,6 +464,14 @@ class SettingsController extends Controller
                 'background_color' => '#FFFFFF',
                 'font_color' => '#333333',
                 'font_style' => 'Arial, sans-serif',
+                // Default element-wise font family values
+                'h1_font_family' => 'Arial, sans-serif',
+                'h2_font_family' => 'Arial, sans-serif',
+                'h3_font_family' => 'Arial, sans-serif',
+                'h4_font_family' => 'Arial, sans-serif',
+                'h5_font_family' => 'Arial, sans-serif',
+                'h6_font_family' => 'Arial, sans-serif',
+                'body_font_family' => 'Arial, sans-serif',
                 'sidebar_text_color' => '#333333',
                 'heading_text_color' => '#333333',
                 'label_text_color' => '#333333',

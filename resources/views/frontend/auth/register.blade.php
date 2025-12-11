@@ -6,15 +6,23 @@
 <div class="container">
     <div class="row justify-content-center align-items-center">
         <div class="col-md-8 col-lg-6">
-            <div class="card shadow-sm border-0">
+            <div class="card shadow-lg border-0 auth-card">
                 <div class="card-body p-5">
+                    <!-- Logo Section -->
+                    @if(setting('logo'))
+                    <div class="text-center mb-4 auth-logo">
+                        <img src="{{ asset('storage/' . setting('logo')) }}" alt="{{ setting('site_title', 'Logo') }}" style="max-height: 60px;">
+                    </div>
+                    @endif
+                    
                     <div class="text-center mb-5">
-                        <h1 class="h2 fw-bold heading-text">Create Account</h1>
-                        <p class="general-text mb-0">Fill in the details below to create your account</p>
+                        <h1 class="h2 fw-bold heading-text auth-title">Create Account</h1>
+                        <p class="general-text mb-0 auth-subtitle">Fill in the details below to get started</p>
                     </div>
                     
                     @if ($errors->any())
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2 alert-icon"></i>
                             <strong>Whoops!</strong> Something went wrong.
                             <ul class="mb-0 mt-2">
                                 @foreach ($errors->all() as $error)
@@ -27,6 +35,7 @@
                     
                     @if (session('error'))
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2 alert-icon"></i>
                             {{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
@@ -34,16 +43,19 @@
                     
                     @if (session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2 alert-icon"></i>
                             {{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
                     
-                    <form method="POST" action="{{ route('frontend.register') }}">
+                    <form method="POST" action="{{ route('frontend.register') }}" id="register-form">
                         @csrf
                         
-                        <div class="mb-4">
-                            <label for="name" class="form-label fw-medium label-text">Full Name</label>
+                        <div class="mb-4 form-group-animated">
+                            <label for="name" class="form-label fw-medium label-text">
+                                <i class="fas fa-user me-2 label-icon"></i>Full Name
+                            </label>
                             <input 
                                 id="name" 
                                 type="text" 
@@ -59,8 +71,10 @@
                             @enderror
                         </div>
                         
-                        <div class="mb-4">
-                            <label for="email" class="form-label fw-medium label-text">Email Address</label>
+                        <div class="mb-4 form-group-animated">
+                            <label for="email" class="form-label fw-medium label-text">
+                                <i class="fas fa-envelope me-2 label-icon"></i>Email Address
+                            </label>
                             <input 
                                 id="email" 
                                 type="email" 
@@ -75,8 +89,10 @@
                             @enderror
                         </div>
                         
-                        <div class="mb-4">
-                            <label for="password" class="form-label fw-medium label-text">Password</label>
+                        <div class="mb-4 form-group-animated">
+                            <label for="password" class="form-label fw-medium label-text">
+                                <i class="fas fa-lock me-2 label-icon"></i>Password
+                            </label>
                             <div class="input-group">
                                 <input 
                                     id="password" 
@@ -93,10 +109,13 @@
                             @error('password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            <div class="password-strength mt-2" id="password-strength"></div>
                         </div>
                         
-                        <div class="mb-4">
-                            <label for="password-confirm" class="form-label fw-medium label-text">Confirm Password</label>
+                        <div class="mb-4 form-group-animated">
+                            <label for="password-confirm" class="form-label fw-medium label-text">
+                                <i class="fas fa-lock me-2 label-icon"></i>Confirm Password
+                            </label>
                             <div class="input-group">
                                 <input 
                                     id="password-confirm" 
@@ -110,24 +129,25 @@
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
+                            <div class="password-match mt-2" id="password-match"></div>
                         </div>
                         
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-theme rounded-pill px-4">
-                                Register
+                        <div class="d-grid form-group-animated">
+                            <button type="submit" class="btn btn-theme btn-lg rounded-pill px-4" id="register-btn">
+                                <span><i class="fas fa-user-plus me-2 btn-icon"></i>Create Account</span>
                             </button>
                         </div>
                     </form>
                     
-                    <div class="text-center mt-4">
+                    <div class="text-center mt-4 auth-footer">
                         <p class="general-text mb-0">
-                            Already have an account? <a href="{{ route('frontend.login') }}">Sign In</a>
+                            Already have an account? <a href="{{ route('frontend.login') }}" class="login-link">Sign In <i class="fas fa-arrow-right ms-1"></i></a>
                         </p>
                     </div>
                 </div>
             </div>
             
-            <div class="text-center mt-4">
+            <div class="text-center mt-4 auth-footer">
                 <p class="general-text mb-0">
                     &copy; {{ date('Y') }} {{ setting('site_title', 'Frontend App') }}. All rights reserved.
                 </p>
@@ -135,7 +155,97 @@
         </div>
     </div>
 </div>
+@endsection
 
+@section('styles')
+<style>
+    /* Alert icon */
+    .alert-icon {
+    }
+    
+    .alert-success .alert-icon {
+    }
+    
+    /* Label icon */
+    .label-icon {
+    }
+    
+    .form-control:focus ~ .label-icon,
+    .input-group:focus-within .label-icon {
+        color: var(--theme-color);
+    }
+    
+    /* Button icon */
+    .btn-icon {
+    }
+    
+    .btn-theme:hover .btn-icon {
+    }
+    
+    /* Login link */
+    .login-link {
+        position: relative;
+        font-weight: 600;
+    }
+    
+    .login-link i {
+    }
+    
+    .login-link:hover i {
+    }
+    
+    /* Form validation */
+    .is-invalid {
+    }
+    
+    /* Card hover effect */
+    .auth-card {
+    }
+    
+    .auth-card:hover {
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    /* Password strength indicator */
+    .password-strength {
+        height: 4px;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    
+    .password-strength .strength-bar {
+        height: 100%;
+        border-radius: 2px;
+    }
+    
+    .strength-weak { background: linear-gradient(90deg, #dc3545, #dc3545); width: 33%; }
+    .strength-medium { background: linear-gradient(90deg, #ffc107, #ffc107); width: 66%; }
+    .strength-strong { background: linear-gradient(90deg, #28a745, #28a745); width: 100%; }
+    
+    .strength-text {
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    
+    .strength-text.weak { color: #dc3545; }
+    .strength-text.medium { color: #ffc107; }
+    .strength-text.strong { color: #28a745; }
+    
+    /* Password match indicator */
+    .password-match {
+        font-size: 0.75rem;
+    }
+    
+    .password-match.match { color: #28a745; }
+    .password-match.no-match { color: #dc3545; }
+    
+    .password-match i {
+        margin-right: 4px;
+    }
+</style>
+@endsection
+
+@section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Password visibility toggle functionality
@@ -155,6 +265,87 @@
                     icon.classList.remove('fa-eye-slash');
                     icon.classList.add('fa-eye');
                 }
+            });
+        });
+        
+        // Password strength indicator
+        const passwordInput = document.getElementById('password');
+        const strengthContainer = document.getElementById('password-strength');
+        
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            let strengthClass = '';
+            let strengthText = '';
+            
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+            if (password.match(/[0-9]/)) strength++;
+            if (password.match(/[^a-zA-Z0-9]/)) strength++;
+            
+            if (password.length === 0) {
+                strengthContainer.innerHTML = '';
+            } else if (strength <= 1) {
+                strengthClass = 'weak';
+                strengthText = 'Weak password';
+            } else if (strength <= 2) {
+                strengthClass = 'medium';
+                strengthText = 'Medium password';
+            } else {
+                strengthClass = 'strong';
+                strengthText = 'Strong password';
+            }
+            
+            if (password.length > 0) {
+                strengthContainer.innerHTML = `
+                    <div class="strength-bar strength-${strengthClass}"></div>
+                    <div class="strength-text ${strengthClass}"><i class="fas fa-${strengthClass === 'strong' ? 'check-circle' : strengthClass === 'medium' ? 'exclamation-circle' : 'times-circle'}"></i>${strengthText}</div>
+                `;
+            }
+        });
+        
+        // Password match indicator
+        const confirmInput = document.getElementById('password-confirm');
+        const matchContainer = document.getElementById('password-match');
+        
+        function checkPasswordMatch() {
+            const password = passwordInput.value;
+            const confirm = confirmInput.value;
+            
+            if (confirm.length === 0) {
+                matchContainer.innerHTML = '';
+            } else if (password === confirm) {
+                matchContainer.innerHTML = '<span class="match"><i class="fas fa-check-circle"></i>Passwords match</span>';
+                matchContainer.className = 'password-match match';
+            } else {
+                matchContainer.innerHTML = '<span class="no-match"><i class="fas fa-times-circle"></i>Passwords do not match</span>';
+                matchContainer.className = 'password-match no-match';
+            }
+        }
+        
+        confirmInput.addEventListener('input', checkPasswordMatch);
+        passwordInput.addEventListener('input', checkPasswordMatch);
+        
+        // Form submission with loading state
+        const registerForm = document.getElementById('register-form');
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                // Add loading state to button
+                const submitBtn = document.getElementById('register-btn');
+                submitBtn.classList.add('btn-loading');
+            });
+        }
+        
+        // Input focus animation - add glow effect to parent
+        const inputs = document.querySelectorAll('.form-control');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                const parent = this.closest('.mb-4');
+                if (parent) parent.classList.add('input-focused');
+            });
+            input.addEventListener('blur', function() {
+                const parent = this.closest('.mb-4');
+                if (parent) parent.classList.remove('input-focused');
             });
         });
     });

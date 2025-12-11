@@ -22,10 +22,8 @@
     @if($cartItems->count() > 0)
     <div class="row">
         <div class="col-lg-8">
-            
-            
             <!-- Cart Items Section -->
-            <div class="card shadow-sm border-0 mb-4">
+            <div class="card shadow-sm border-0 mb-4 hover-lift">
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-borderless">
@@ -39,12 +37,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($cartItems as $item)
-                                <tr data-cart-item-id="{{ $item->id }}">
+                                @foreach($cartItems as $index => $item)
+                                <tr data-cart-item-id="{{ $item->id }}" class="cart-item-row">
                                     <td>
                                         <div class="d-flex align-items-center">
                                             @if($item->product->mainPhoto)
-                                                <img src="{{ $item->product->mainPhoto->url }}" class="img-fluid rounded me-3" alt="{{ $item->product->name }}" style="width: 80px; height: 80px; object-fit: cover;">
+                                                <img src="{{ $item->product->mainPhoto->url }}" class="img-fluid rounded me-3 product-thumbnail" alt="{{ $item->product->name }}" style="width: 80px; height: 80px; object-fit: cover;">
                                             @else
                                                 <div class="bg-light d-flex align-items-center justify-content-center rounded me-3" style="width: 80px; height: 80px;">
                                                     <i class="fas fa-image text-muted"></i>
@@ -61,26 +59,26 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <p class="fw-bold text-success mb-0">₹{{ number_format($item->price, 2) }}</p>
+                                        <p class="fw-bold text-success mb-0 price-tag">₹{{ number_format($item->price, 2) }}</p>
                                     </td>
                                     <td>
-                                        <div class="input-group" style="width: 120px;">
-                                            <button class="btn btn-outline-theme decrement-qty" type="button">-</button>
+                                        <div class="input-group quantity-control" style="width: 120px;">
+                                            <button class="btn btn-outline-theme decrement-qty btn-ripple" type="button">-</button>
                                             <input type="number" class="form-control text-center qty-input" value="{{ $item->quantity }}" min="1" data-max="{{ $item->product->stock_quantity }}">
-                                            <button class="btn btn-outline-theme increment-qty" type="button">+</button>
+                                            <button class="btn btn-outline-theme increment-qty btn-ripple" type="button">+</button>
                                         </div>
                                         @if($item->product->stock_quantity < 10)
-                                            <small class="text-warning">
+                                            <small class="text-warning stock-warning">
                                                 <i class="fas fa-exclamation-triangle me-1"></i>
                                                 Only {{ $item->product->stock_quantity }} left in stock
                                             </small>
                                         @endif
                                     </td>
                                     <td>
-                                        <p class="fw-bold mb-0 item-total">₹{{ number_format($item->price * $item->quantity, 2) }}</p>
+                                        <p class="fw-bold mb-0 item-total price-tag">₹{{ number_format($item->price * $item->quantity, 2) }}</p>
                                     </td>
                                     <td>
-                                        <button class="btn btn-danger remove-item" data-id="{{ $item->id }}">
+                                        <button class="btn btn-danger remove-item btn-ripple hover-scale" data-id="{{ $item->id }}">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </td>
@@ -93,7 +91,7 @@
             </div>
 
             <!-- Personal Details and Shipping Address Section -->
-            <div class="card shadow-sm border-0 mb-4">
+            <div class="card shadow-sm border-0 mb-4 hover-lift">
                 <div class="card-header bg-white border-0">
                     <h5 class="mb-0 fw-bold heading-text">Personal Details & Shipping Address</h5>
                 </div>
@@ -106,32 +104,32 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="name" class="form-label fw-medium label-text">Full Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="name" name="name" value="{{ old('name', Auth::user()->name) }}" required>
+                                <input type="text" class="form-control form-control-animated" id="name" name="name" value="{{ old('name', Auth::user()->name) }}" required>
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label for="email" class="form-label fw-medium label-text">Email Address <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control" id="email" name="email" value="{{ old('email', Auth::user()->email) }}" required>
+                                <input type="email" class="form-control form-control-animated" id="email" name="email" value="{{ old('email', Auth::user()->email) }}" required>
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label for="mobile_number" class="form-label fw-medium label-text">Mobile Number</label>
-                                <input type="text" class="form-control" id="mobile_number" name="mobile_number" value="{{ old('mobile_number', Auth::user()->mobile_number) }}">
+                                <input type="text" class="form-control form-control-animated" id="mobile_number" name="mobile_number" value="{{ old('mobile_number', Auth::user()->mobile_number) }}">
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label for="date_of_birth" class="form-label fw-medium label-text">Date of Birth</label>
-                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ old('date_of_birth', Auth::user()->date_of_birth ? Auth::user()->date_of_birth->format('Y-m-d') : '') }}">
+                                <input type="date" class="form-control form-control-animated" id="date_of_birth" name="date_of_birth" value="{{ old('date_of_birth', Auth::user()->date_of_birth ? Auth::user()->date_of_birth->format('Y-m-d') : '') }}">
                             </div>
                             
                             <div class="col-12 mb-3">
                                 <label for="address" class="form-label fw-medium label-text">Shipping Address</label>
-                                <textarea class="form-control" id="address" name="address" rows="3" placeholder="Enter your complete shipping address">{{ old('address', Auth::user()->address) }}</textarea>
+                                <textarea class="form-control form-control-animated" id="address" name="address" rows="3" placeholder="Enter your complete shipping address">{{ old('address', Auth::user()->address) }}</textarea>
                             </div>
                         </div>
                         
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-theme rounded-pill px-4">
+                            <button type="submit" class="btn btn-theme rounded-pill px-4 btn-ripple hover-lift">
                                 <i class="fas fa-save me-2"></i>Update Details
                             </button>
                         </div>
@@ -141,22 +139,22 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="guest_name" class="form-label fw-medium label-text">Full Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="guest_name" name="name" required>
+                                <input type="text" class="form-control form-control-animated" id="guest_name" name="name" required>
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label for="guest_email" class="form-label fw-medium label-text">Email Address <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control" id="guest_email" name="email" required>
+                                <input type="email" class="form-control form-control-animated" id="guest_email" name="email" required>
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label for="guest_mobile_number" class="form-label fw-medium label-text">Mobile Number</label>
-                                <input type="text" class="form-control" id="guest_mobile_number" name="mobile_number">
+                                <input type="text" class="form-control form-control-animated" id="guest_mobile_number" name="mobile_number">
                             </div>
                             
                             <div class="col-12 mb-3">
                                 <label for="guest_address" class="form-label fw-medium label-text">Shipping Address</label>
-                                <textarea class="form-control" id="guest_address" name="address" rows="3" placeholder="Enter your complete shipping address"></textarea>
+                                <textarea class="form-control form-control-animated" id="guest_address" name="address" rows="3" placeholder="Enter your complete shipping address"></textarea>
                             </div>
                         </div>
                     </form>
@@ -167,74 +165,63 @@
         
         <div class="col-lg-4">
             <!-- Order Summary Section -->
-            <div class="card shadow-sm border-0 mb-4">
+            <div class="card shadow-sm border-0 mb-4 hover-lift order-summary-card">
                 <div class="card-body">
-                    <h5 class="card-title mb-4">Order Summary</h5>
+                    <h5 class="card-title mb-4"><i class="fas fa-receipt me-2"></i>Order Summary</h5>
                     
                     <!-- Price Breakdown -->
                     <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-2">
+                        <div class="d-flex justify-content-between mb-2 summary-row">
                             <span>Subtotal:</span>
                             <span class="fw-bold cart-subtotal">₹{{ number_format($total, 2) }}</span>
                         </div>
-                        <div class="d-flex justify-content-between mb-2">
+                        <div class="d-flex justify-content-between mb-2 summary-row">
                             <span>Shipping:</span>
-                            <span class="fw-bold">Free</span>
+                            <span class="fw-bold text-success">Free</span>
                         </div>
-                        <div class="d-flex justify-content-between mb-2">
+                        <div class="d-flex justify-content-between mb-2 summary-row">
                             <span>Tax:</span>
                             <span class="fw-bold">₹0.00</span>
                         </div>
                     </div>
                     
-                    <hr>
+                    <hr class="animated-hr">
                     
                     <!-- Total -->
-                    <div class="d-flex justify-content-between mb-4">
+                    <div class="d-flex justify-content-between mb-4 total-row">
                         <h5>Total:</h5>
-                        <h5 class="fw-bold cart-total">₹{{ number_format($total, 2) }}</h5>
+                        <h5 class="fw-bold cart-total text-success">₹{{ number_format($total, 2) }}</h5>
                     </div>
-                    
-                    <!-- Checkout Button -->
-                    <!-- @auth
-                    <button class="btn btn-theme w-100 mb-3 d-flex align-items-center justify-content-center" id="checkout-btn">
-                        <i class="fas fa-shopping-cart me-2"></i>Proceed to Checkout
-                    </button>
-                    @else
-                    <button class="btn btn-theme w-100 mb-3 d-flex align-items-center justify-content-center" id="guest-checkout-btn">
-                        <i class="fas fa-shopping-cart me-2"></i>Proceed to Checkout
-                    </button>
-                    @endauth -->
                 </div>
             </div>
             
             <!-- Payment Options Section -->
-            <div class="card shadow-sm border-0">
+            <div class="card shadow-sm border-0 hover-lift">
                 <div class="card-body">
-                    <h5 class="card-title mb-4">Payment Options</h5>
+                    <h5 class="card-title mb-4"><i class="fas fa-credit-card me-2"></i>Payment Options</h5>
                     
                     <!-- Online Payment -->
                     @if(show_online_payment())
-                    <button class="btn btn-theme w-100 mb-3 d-flex align-items-center justify-content-center" id="online-payment">
+                    <button class="btn btn-theme w-100 mb-3 d-flex align-items-center justify-content-center btn-ripple hover-lift payment-btn" id="online-payment">
                         <i class="fas fa-credit-card me-2"></i>Online Payment
                     </button>
                     @endif
                     
                     <!-- Cash on Delivery -->
                     @if(show_cod_payment())
-                    <button class="btn btn-outline-theme w-100 mb-3 d-flex align-items-center justify-content-center" id="cod-payment">
+                    <button class="btn btn-outline-theme w-100 mb-3 d-flex align-items-center justify-content-center btn-ripple hover-lift payment-btn" id="cod-payment">
                         <i class="fas fa-money-bill-wave me-2"></i>Cash on Delivery
                     </button>
                     @endif
                     
                     <!-- Send Proforma Invoice -->
                     @if(show_invoice_payment())
-                    <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mb-2" id="invoice-payment">
+                    <button class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center mb-2 btn-ripple hover-lift payment-btn" id="invoice-payment">
                         <i class="fas fa-file-invoice me-2"></i>Send Proforma Invoice
                     </button>
                     @endif
                     
-                    <a href="{{ route('frontend.home') }}" class="btn btn-link w-100 mt-3">
+                    <a href="{{ route('frontend.home') }}" class="btn btn-link w-100 mt-3 continue-shopping">
                         <i class="fas fa-arrow-left me-2"></i>Continue Shopping
                     </a>
                 </div>
@@ -244,12 +231,12 @@
     @else
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm border-0">
+            <div class="card shadow-sm border-0 empty-cart-card">
                 <div class="card-body text-center py-5">
-                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3 empty-cart-icon"></i>
                     <h3 class="mb-3">Your cart is empty</h3>
                     <p class="mb-4">Looks like you haven't added any items to your cart yet.</p>
-                    <a href="{{ route('frontend.home') }}" class="btn btn-theme">
+                    <a href="{{ route('frontend.home') }}" class="btn btn-theme btn-ripple hover-lift">
                         <i class="fas fa-shopping-bag me-2"></i>Start Shopping
                     </a>
                 </div>
@@ -260,42 +247,127 @@
 </div>
 
 <style>
-    .btn-theme {
-        background-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
-        border-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
-        color: white !important;
+    /* Cart item styles */
+    .cart-item-row {
+        opacity: 1;
     }
     
-    .btn-theme:hover {
-        background-color: <?php echo e(setting('link_hover_color', '#0056b3')); ?> !important;
-        border-color: <?php echo e(setting('link_hover_color', '#0056b3')); ?> !important;
+    /* Product thumbnail hover */
+    .product-thumbnail {
     }
     
-    .btn-outline-theme {
-        border-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
-        color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
+    .product-thumbnail:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
     
-    .btn-outline-theme:hover {
-        background-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
-        border-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
-        color: white !important;
+    /* Quantity control */
+    .quantity-control .btn {
     }
     
+    .qty-input {
+        /* Hide number input arrows/spinners */
+        -moz-appearance: textfield;
+    }
+    
+    .qty-input::-webkit-outer-spin-button,
+    .qty-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    .qty-input:focus {
+        border-color: var(--theme-color);
+        box-shadow: 0 0 0 0.2rem rgba(var(--theme-color-rgb), 0.25);
+    }
+    
+    /* Price tag */
+    .price-tag {
+    }
+    
+    /* Stock warning */
+    .stock-warning {
+    }
+    
+    /* Form control */
+    .form-control-animated {
+    }
+    
+    .form-control-animated:focus {
+        border-color: var(--theme-color);
+        box-shadow: 0 0 0 0.2rem rgba(var(--theme-color-rgb), 0.15);
+    }
+    
+    /* Order summary */
+    .order-summary-card {
+        position: sticky;
+        top: 100px;
+    }
+    
+    .summary-row {
+        padding: 5px;
+        border-radius: 5px;
+    }
+    
+    .summary-row:hover {
+        background-color: rgba(var(--theme-color-rgb), 0.05);
+    }
+    
+    .total-row {
+    }
+    
+    .animated-hr {
+        border: none;
+        height: 2px;
+        background: var(--theme-color);
+    }
+    
+    /* Payment button */
+    .payment-btn {
+    }
+    
+    .payment-btn:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    }
+    
+    .payment-btn i {
+    }
+    
+    /* Continue shopping link */
+    .continue-shopping {
+    }
+    
+    /* Empty cart */
+    .empty-cart-card {
+    }
+    
+    .empty-cart-icon {
+    }
+    
+    /* Remove button */
+    .remove-item {
+    }
+    
+    /* Table styling */
     .table td, .table th {
         vertical-align: middle;
     }
     
     /* Product link styles */
     .product-link {
-        color: <?php echo e(setting('theme_color', '#007bff')); ?>;
+        color: var(--theme-color);
         font-weight: 600;
-        transition: all 0.2s ease;
     }
     
     .product-link:hover {
-        color: <?php echo e(setting('link_hover_color', '#0056b3')); ?>;
+        color: var(--link-hover-color);
         text-decoration: underline !important;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .order-summary-card {
+            position: static;
+        }
     }
 </style>
 
@@ -338,7 +410,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 value = 1;
             } else if (value > maxValue) {
                 value = maxValue;
-                alert(`Only ${maxValue} items available in stock.`);
+                showToast(`Only ${maxValue} items available in stock.`, 'warning');
             }
             
             this.value = value;
@@ -350,53 +422,49 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.remove-item').forEach(button => {
         button.addEventListener('click', function() {
             const itemId = this.dataset.id;
+            const row = document.querySelector(`tr[data-cart-item-id="${itemId}"]`);
+            
+            if (!confirm('Are you sure you want to remove this item from your cart?')) {
+                return;
+            }
+            
             removeCartItem(itemId);
         });
     });
     
     // Payment option handlers
-    document.getElementById('online-payment').addEventListener('click', function() {
-        alert('Online payment functionality would be implemented here. Redirecting to payment gateway...');
-        // In a real implementation, this would redirect to a payment gateway
-    });
+    const onlinePaymentBtn = document.getElementById('online-payment');
+    if (onlinePaymentBtn) {
+        onlinePaymentBtn.addEventListener('click', function() {
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+            setTimeout(() => {
+                alert('Online payment functionality would be implemented here. Redirecting to payment gateway...');
+                this.innerHTML = '<i class="fas fa-credit-card me-2"></i>Online Payment';
+            }, 1000);
+        });
+    }
     
-    document.getElementById('cod-payment').addEventListener('click', function() {
-        alert('Cash on Delivery selected. Your order will be processed for delivery.');
-        // In a real implementation, this would process the COD order
-    });
+    const codPaymentBtn = document.getElementById('cod-payment');
+    if (codPaymentBtn) {
+        codPaymentBtn.addEventListener('click', function() {
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+            setTimeout(() => {
+                alert('Cash on Delivery selected. Your order will be processed for delivery.');
+                this.innerHTML = '<i class="fas fa-money-bill-wave me-2"></i>Cash on Delivery';
+            }, 1000);
+        });
+    }
     
-    document.getElementById('invoice-payment').addEventListener('click', function() {
-        // Redirect to the proforma invoice page
-        window.location.href = '{{ route("frontend.cart.proforma.invoice") }}';
-    });
-    
-    // Handle checkout button for authenticated users
-    document.getElementById('checkout-btn')?.addEventListener('click', function() {
-        alert('Proceeding to checkout...');
-        // In a real implementation, this would redirect to the checkout page
-    });
-    
-    // Handle checkout button for guests
-    document.getElementById('guest-checkout-btn')?.addEventListener('click', function() {
-        // Validate guest form
-        const name = document.getElementById('guest_name').value;
-        const email = document.getElementById('guest_email').value;
-        
-        if (!name || !email) {
-            alert('Please fill in your name and email address.');
-            return;
-        }
-        
-        // In a real implementation, this would redirect to the checkout page
-        // For now, we'll redirect to the login page
-        if (confirm('To complete your purchase, please login or register. Your cart items will be preserved.')) {
-            window.location.href = '/login';
-        }
-    });
+    const invoicePaymentBtn = document.getElementById('invoice-payment');
+    if (invoicePaymentBtn) {
+        invoicePaymentBtn.addEventListener('click', function() {
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating...';
+            window.location.href = '{{ route("frontend.cart.proforma.invoice") }}';
+        });
+    }
     
     // Function to update cart item
     function updateCartItem(itemId, quantity) {
-        // Check if user is authenticated
         if (document.querySelector('meta[name="csrf-token"]')) {
             fetch(`/cart/update/${itemId}`, {
                 method: 'PUT',
@@ -404,23 +472,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: JSON.stringify({
-                    quantity: quantity
-                })
+                body: JSON.stringify({ quantity: quantity })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update item total
                     const row = document.querySelector(`tr[data-cart-item-id="${itemId}"]`);
-                    row.querySelector('.item-total').textContent = '₹' + data.item_total;
+                    
+                    // Update the total
+                    const itemTotal = row.querySelector('.item-total');
+                    itemTotal.textContent = '₹' + data.item_total;
                     
                     // Update cart totals
                     document.querySelectorAll('.cart-subtotal, .cart-total').forEach(el => {
                         el.textContent = '₹' + data.cart_total;
                     });
                     
-                    // Show success message
                     showToast(data.message, 'success');
                 } else {
                     showToast(data.message, 'error');
@@ -429,20 +496,11 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 showToast('An error occurred while updating the cart.', 'error');
             });
-        } else {
-            // For guests, we would update localStorage
-            // This would require more complex implementation
-            showToast('Please login to update cart items.', 'error');
         }
     }
     
     // Function to remove cart item
     function removeCartItem(itemId) {
-        if (!confirm('Are you sure you want to remove this item from your cart?')) {
-            return;
-        }
-        
-        // Check if user is authenticated
         if (document.querySelector('meta[name="csrf-token"]')) {
             fetch(`/cart/remove/${itemId}`, {
                 method: 'DELETE',
@@ -454,25 +512,17 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Remove the row from the table
                     document.querySelector(`tr[data-cart-item-id="${itemId}"]`).remove();
                     
-                    // Update cart totals
                     document.querySelectorAll('.cart-subtotal, .cart-total').forEach(el => {
                         el.textContent = '₹' + data.cart_total;
                     });
                     
-                    // Update cart count in header
                     updateCartCount(data.cart_count);
-                    
-                    // Show success message
                     showToast(data.message, 'success');
                     
-                    // If cart is empty, show empty message
                     if (data.cart_count === 0) {
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1000);
+                        setTimeout(() => location.reload(), 1000);
                     }
                 } else {
                     showToast(data.message, 'error');
@@ -481,49 +531,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 showToast('An error occurred while removing the item.', 'error');
             });
-        } else {
-            // For guests, we would remove from localStorage
-            // This would require more complex implementation
-            showToast('Please login to remove cart items.', 'error');
         }
     }
     
-    // Function to show toast message
-    function showToast(message, type) {
-        // Create toast element
-        const toast = document.createElement('div');
-        toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0 position-fixed`;
-        toast.style = 'top: 20px; right: 20px; z-index: 9999;';
-        toast.setAttribute('role', 'alert');
-        toast.setAttribute('aria-live', 'assertive');
-        toast.setAttribute('aria-atomic', 'true');
-        
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        `;
-        
-        document.body.appendChild(toast);
-        
-        // Show toast
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
-        
-        // Remove toast after it's hidden
-        toast.addEventListener('hidden.bs.toast', function() {
-            document.body.removeChild(toast);
-        });
-    }
-    
-    // Function to update cart count in header
+    // Function to update cart count
     function updateCartCount(count) {
         const cartCountElement = document.querySelector('.cart-count');
         if (cartCountElement) {
             cartCountElement.textContent = count;
+            cartCountElement.classList.add('pulse');
+            setTimeout(() => cartCountElement.classList.remove('pulse'), 500);
             if (count > 0) {
                 cartCountElement.classList.remove('d-none');
             } else {
@@ -533,4 +550,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<style>
+    .bounce {
+    }
+</style>
 @endsection

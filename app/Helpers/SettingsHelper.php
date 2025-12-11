@@ -75,8 +75,10 @@ if (!function_exists('setting')) {
             $settings = \App\Models\Setting::first();
         }
         
-        if ($settings && isset($settings->$key)) {
-            return $settings->$key;
+        if ($settings && array_key_exists($key, $settings->getAttributes())) {
+            $value = $settings->$key;
+            // Return default if value is null or empty string
+            return ($value !== null && $value !== '') ? $value : $default;
         }
         
         return $default;

@@ -2,67 +2,387 @@
 
 @section('title', 'My Proforma Invoices - ' . setting('site_title', 'Frontend App'))
 
-@section('content')
-<div class="container">
-    <nav aria-label="breadcrumb" class="my-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('frontend.home') }}">Home</a></li>
-            <li class="breadcrumb-item active" aria-current="page">My Proforma Invoices</li>
-        </ol>
-    </nav>
+@push('styles')
+<style>
+    /* Page Header Styles */
+    .invoice-page-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        padding: 3rem 0;
+        margin-bottom: 0;
+        position: relative;
+        overflow: hidden;
+    }
     
-    <div class="row justify-content-center">
-        <div class="col-lg-12">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white border-0">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h1 class="mb-0 heading-text">My Proforma Invoices</h1>
+    .invoice-page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .invoice-page-header h1 {
+        color: white;
+        font-weight: 700;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .invoice-page-header .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .invoice-page-header .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+    }
+    
+    .invoice-page-header .breadcrumb-item a:hover {
+        color: white;
+    }
+    
+    .invoice-page-header .breadcrumb-item.active {
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .invoice-page-header .breadcrumb-item + .breadcrumb-item::before {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    /* Invoice Content Wrapper */
+    .invoice-content-wrapper {
+        background: #f8f9fa;
+        padding: 2rem 0 4rem;
+        min-height: 50vh;
+    }
+    
+    /* Invoice Card */
+    .invoice-main-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+    
+    .invoice-main-card .card-header {
+        background: white;
+        border-bottom: 1px solid rgba(var(--primary-rgb), 0.1);
+        padding: 1.5rem 2rem;
+    }
+    
+    .invoice-main-card .card-body {
+        padding: 1.5rem 2rem;
+    }
+    
+    /* Table Styles */
+    .invoice-table {
+        margin-bottom: 0;
+    }
+    
+    .invoice-table thead {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+    
+    .invoice-table thead th {
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 1rem;
+        white-space: nowrap;
+    }
+    
+    .invoice-table tbody tr {
+    }
+    
+    .invoice-table tbody tr:hover {
+        background: rgba(var(--primary-rgb), 0.05);
+    }
+    
+    .invoice-table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Invoice Number Cell */
+    .invoice-number {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    
+    /* Amount Cell */
+    .invoice-amount {
+        font-weight: 700;
+        color: var(--text-color);
+    }
+    
+    /* Status Badge Styles */
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .status-badge:hover {
+    }
+    
+    .status-badge i {
+        font-size: 0.75rem;
+    }
+    
+    .status-draft {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+    }
+    
+    .status-approved {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    .status-dispatch {
+        background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+    }
+    
+    .status-delivery {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+    }
+    
+    .status-delivered {
+        background: linear-gradient(135deg, #155724 0%, #28a745 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    .status-return {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+    }
+    
+    .status-default {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+    }
+    
+    /* Modal Styles */
+    .modal.fade .modal-dialog {
+    }
+    
+    .modal.show .modal-dialog {
+    }
+    
+    .modal-content {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+    
+    .modal-header .btn-close:hover {
+        opacity: 1;
+    }
+    
+    .modal-body {
+        padding: 2rem;
+    }
+    
+    .modal-footer {
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1rem 1.5rem;
+    }
+    
+    /* Loading Spinner */
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(var(--primary-rgb), 0.1);
+        border-top-color: var(--primary-color);
+        border-radius: 50%;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-state-icon {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+    
+    .empty-state-icon i {
+        font-size: 2.5rem;
+        color: white;
+    }
+    
+    .empty-state h5 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-color);
+        margin-bottom: 0.75rem;
+    }
+    
+    .empty-state p {
+        color: var(--text-muted-color);
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .invoice-page-header {
+            padding: 2rem 0;
+        }
+        
+        .invoice-page-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .invoice-main-card .card-header,
+        .invoice-main-card .card-body {
+            padding: 1rem;
+        }
+        
+        .invoice-table tbody tr:hover {
+        }
+    }
+</style>
+@endpush
+
+@section('content')
+<!-- Page Header -->
+<div class="invoice-page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ route('frontend.home') }}">
+                        <i class="fas fa-home me-1"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">My Proforma Invoices</li>
+            </ol>
+        </nav>
+        <h1>
+            <i class="fas fa-file-invoice me-2"></i> My Proforma Invoices
+        </h1>
+    </div>
+</div>
+
+<!-- Invoice Content -->
+<div class="invoice-content-wrapper">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="invoice-main-card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0" style="color: var(--text-color);">
+                                <i class="fas fa-list me-2" style="color: var(--primary-color);"></i>
+                                Invoice List
+                            </h5>
+                            @if($proformaInvoices->count() > 0)
+                            <span class="badge" style="background: var(--primary-color); padding: 0.5rem 1rem; border-radius: 50px;">
+                                {{ $proformaInvoices->count() }} {{ Str::plural('Invoice', $proformaInvoices->count()) }}
+                            </span>
+                            @endif
+                        </div>
                     </div>
-                </div>
-                
-                <div class="card-body">
-                    @if($proformaInvoices->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Invoice #</th>
-                                        <th>Date</th>
-                                        <th>Amount</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($proformaInvoices as $invoice)
-                                    <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $invoice->invoice_number }}</td>
-                                        <td>{{ $invoice->created_at->format('Y-m-d') }}</td>
-                                        <td>₹{{ number_format($invoice->total_amount, 2) }}</td>
-                                        <td>
-                                            @switch($invoice->status)
-                                                @case('Draft')
-                                                    <span class="badge bg-secondary">Draft</span>
-                                                    @break
-                                                @case('Approved')
-                                                    <span class="badge bg-success">Approved</span>
+                    
+                    <div class="card-body">
+                        @if($proformaInvoices->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table invoice-table">
+                                    <thead>
+                                        <tr>
+                                            <th><i class="fas fa-hashtag me-1"></i> #</th>
+                                            <th><i class="fas fa-file-invoice me-1"></i> Invoice #</th>
+                                            <th><i class="fas fa-calendar me-1"></i> Date</th>
+                                            <th><i class="fas fa-rupee-sign me-1"></i> Amount</th>
+                                            <th><i class="fas fa-info-circle me-1"></i> Status</th>
+                                            <th><i class="fas fa-cog me-1"></i> Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($proformaInvoices as $invoice)
+                                        <tr>
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td class="invoice-number">{{ $invoice->invoice_number }}</td>
+                                            <td>{{ $invoice->created_at->format('Y-m-d') }}</td>
+                                            <td class="invoice-amount">₹{{ number_format($invoice->total_amount, 2) }}</td>
+                                            <td>
+                                                @switch($invoice->status)
+                                                    @case('Draft')
+                                                        <span class="status-badge status-draft">
+                                                            <i class="fas fa-pencil-alt"></i> Draft
+                                                        </span>
+                                                        @break
+                                                    @case('Approved')
+                                                        <span class="status-badge status-approved">
+                                                            <i class="fas fa-check-circle"></i> Approved
+                                                        </span>
                                                     @break
                                                 @case('Dispatch')
-                                                    <span class="badge bg-info">Dispatch</span>
+                                                        <span class="status-badge status-dispatch">
+                                                            <i class="fas fa-truck-loading"></i> Dispatch
+                                                        </span>
                                                     @break
                                                 @case('Out for Delivery')
-                                                    <span class="badge bg-primary">Out for Delivery</span>
+                                                        <span class="status-badge status-delivery">
+                                                            <i class="fas fa-shipping-fast"></i> Out for Delivery
+                                                        </span>
                                                     @break
                                                 @case('Delivered')
-                                                    <span class="badge bg-success">Delivered</span>
+                                                        <span class="status-badge status-delivered">
+                                                            <i class="fas fa-check-double"></i> Delivered
+                                                        </span>
                                                     @break
                                                 @case('Return')
-                                                    <span class="badge bg-danger">Return</span>
+                                                        <span class="status-badge status-return">
+                                                            <i class="fas fa-undo-alt"></i> Return
+                                                        </span>
                                                     @break
                                                 @default
-                                                    <span class="badge bg-secondary">{{ $invoice->status }}</span>
+                                                        <span class="status-badge status-default">
+                                                            <i class="fas fa-question-circle"></i> {{ $invoice->status }}
+                                                        </span>
                                             @endswitch
                                         </td>
                                         <td class="action-buttons">
@@ -100,12 +420,15 @@
                             </table>
                         </div>
                     @else
-                        <div class="text-center py-5">
-                            <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                        <div class="empty-state text-center py-5">
+                            <div class="empty-icon mb-3">
+                                <i class="fas fa-file-invoice fa-3x"></i>
+                            </div>
                             <h5 class="mb-2">No proforma invoices found</h5>
                             <p class="mb-0 text-muted">You haven't generated any proforma invoices yet.</p>
                             <a href="{{ route('frontend.cart.index') }}" class="btn btn-theme mt-3">
                                 <i class="fas fa-shopping-cart me-2"></i>Go to Cart
+                                <i class="fas fa-arrow-right ms-2 btn-arrow"></i>
                             </a>
                         </div>
                     @endif
@@ -116,24 +439,33 @@
 </div>
 
 <!-- Invoice Details Modal -->
-<div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+<div class="modal fade invoice-modal" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="invoiceModalLabel">Proforma Invoice Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="invoiceModalLabel">
+                    <i class="fas fa-file-invoice me-2"></i>Proforma Invoice Details
+                </h5>
+                <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body" id="invoiceModalBody">
                 <!-- Invoice details will be loaded here -->
                 <div class="text-center py-5">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                    <div class="loading-spinner">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Loading invoice details...</p>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-theme" id="downloadPdfBtn">
+                <button type="button" class="btn btn-secondary btn-modal-close" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Close
+                </button>
+                <button type="button" class="btn btn-theme btn-modal-download" id="downloadPdfBtn">
                     <i class="fas fa-file-pdf me-2"></i>Download PDF
                 </button>
             </div>
@@ -142,106 +474,277 @@
 </div>
 
 <style>
+    /* ===== Base Button Styles ===== */
     .btn-theme {
-        background-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
-        border-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border: none;
         color: white !important;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-theme::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
     }
     
     .btn-theme:hover {
-        background-color: <?php echo e(setting('link_hover_color', '#0056b3')); ?> !important;
-        border-color: <?php echo e(setting('link_hover_color', '#0056b3')); ?> !important;
+        box-shadow: 0 8px 25px rgba(var(--primary-rgb), 0.35);
+    }
+    
+    .btn-theme:hover::before {
+        left: 100%;
+    }
+    
+    .btn-theme .btn-arrow {
+    }
+    
+    .btn-theme:hover .btn-arrow {
     }
     
     .btn-outline-theme {
-        border-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
-        color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        background: transparent;
     }
     
     .btn-outline-theme:hover {
-        background-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
-        border-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
-        color: white !important;
+        background: var(--primary-color);
+        color: white;
+        box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.3);
     }
     
-    /* View Button - Theme Primary Color */
+    /* ===== Status Badge Styles ===== */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .status-badge:hover {
+    }
+    
+    .status-badge i {
+        font-size: 0.75rem;
+    }
+    
+    .status-draft {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+    }
+    
+    .status-approved {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+    
+    .status-dispatch {
+        background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+        color: white;
+    }
+    
+    .status-delivery {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+    }
+    
+    .status-delivered {
+        background: linear-gradient(135deg, #155724 0%, #28a745 100%);
+        color: white;
+    }
+    
+    .status-return {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+    }
+    
+    .status-default {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+    }
+    
+    /* ===== Action Button Styles ===== */
     .btn-view-theme {
-        background-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
-        border-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
+        background: var(--theme-color);
+        border: none;
         color: white !important;
-        transition: all 0.3s ease;
+        border-radius: 6px;
+        padding: 0.4rem 0.75rem;
+        font-weight: 500;
     }
     
     .btn-view-theme:hover {
-        background-color: <?php echo e(setting('link_hover_color', '#0056b3')); ?> !important;
-        border-color: <?php echo e(setting('link_hover_color', '#0056b3')); ?> !important;
+        background: var(--theme-color);
+        opacity: 0.9;
         color: white !important;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     
-    /* Add to Cart Button - Green Success */
     .btn-cart-theme {
-        background-color: #28a745 !important;
-        border-color: #28a745 !important;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
         color: white !important;
-        transition: all 0.3s ease;
     }
     
     .btn-cart-theme:hover {
-        background-color: #218838 !important;
-        border-color: #1e7e34 !important;
+        box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
         color: white !important;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 5px rgba(40, 167, 69, 0.3);
     }
     
-    /* Delete Button - Red Danger */
     .btn-delete-theme {
-        background-color: #dc3545 !important;
-        border-color: #dc3545 !important;
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border: none;
         color: white !important;
-        transition: all 0.3s ease;
     }
     
     .btn-delete-theme:hover {
-        background-color: #c82333 !important;
-        border-color: #bd2130 !important;
+        box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
         color: white !important;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 5px rgba(220, 53, 69, 0.3);
     }
     
-    /* PDF Button - Dark Red */
     .btn-pdf-theme {
-        background-color: #b71c1c !important;
-        border-color: #b71c1c !important;
+        background: linear-gradient(135deg, #b71c1c 0%, #8b0000 100%);
+        border: none;
         color: white !important;
-        transition: all 0.3s ease;
     }
     
     .btn-pdf-theme:hover {
-        background-color: #8b0000 !important;
-        border-color: #8b0000 !important;
+        box-shadow: 0 8px 20px rgba(183, 28, 28, 0.4);
         color: white !important;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 5px rgba(183, 28, 28, 0.3);
     }
     
-    /* Action buttons container */
+    /* ===== Action Buttons Container ===== */
     .action-buttons {
         white-space: nowrap;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
     }
     
     .action-buttons .btn {
-        margin-right: 5px;
-        margin-bottom: 3px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        padding: 6px 12px;
     }
     
-    .action-buttons .btn:last-child {
-        margin-right: 0;
+    .action-buttons .btn i {
     }
     
+    .action-buttons .btn:hover i {
+    }
+    
+    /* ===== Empty State ===== */
+    .empty-state {
+    }
+    
+    .empty-icon {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto;
+        background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(var(--secondary-rgb), 0.1) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .empty-icon i {
+        color: var(--primary-color);
+        opacity: 0.7;
+    }
+    
+    /* ===== Modal Styles ===== */
+    .invoice-modal .modal-content {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    }
+    
+    .invoice-modal .modal-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        border: none;
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .invoice-modal .modal-title {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+    
+    .invoice-modal .modal-title i {
+    }
+    
+    .btn-close-custom {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        cursor: pointer;
+    }
+    
+    .btn-close-custom:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .invoice-modal .modal-body {
+        padding: 1.5rem;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    .invoice-modal .modal-footer {
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        padding: 1rem 1.5rem;
+        background: #f8f9fa;
+    }
+    
+    .btn-modal-close {
+        background: #6c757d;
+        border: none;
+    }
+    
+    .btn-modal-close:hover {
+        background: #5a6268;
+    }
+    
+    .btn-modal-download {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-modal-download i {
+    }
+    
+    .btn-modal-download:hover i {
+    }
+    
+    /* Loading Spinner */
+    .loading-spinner {
+    }
+    
+    .loading-spinner .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        color: var(--primary-color);
+    }
+    
+    /* ===== Print Styles ===== */
     @media print {
         .modal-content {
             box-shadow: none !important;
@@ -257,29 +760,64 @@
         }
     }
     
-    /* Responsive adjustments for action buttons */
+    /* ===== Responsive Adjustments ===== */
     @media (max-width: 768px) {
         .action-buttons {
             white-space: normal;
+            justify-content: flex-start;
         }
         
         .action-buttons .btn {
-            margin-bottom: 5px;
-            display: inline-block;
+            font-size: 0.75rem;
+            padding: 5px 10px;
+        }
+        
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+        }
+        
+        .invoice-modal .modal-content {
+            border-radius: 12px;
+        }
+        
+        .invoice-modal .modal-header {
+            padding: 1rem;
+        }
+        
+        .btn-view-theme:hover,
+        .btn-cart-theme:hover,
+        .btn-delete-theme:hover,
+        .btn-pdf-theme:hover {
         }
     }
     
-    /* Product link styles in invoice modal */
+    /* ===== Product Link Styles ===== */
     .product-link {
-        color: <?php echo e(setting('theme_color', '#007bff')); ?>;
+        color: var(--primary-color);
         font-weight: 600;
-        transition: all 0.2s ease;
+        position: relative;
+    }
+    
+    .product-link::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--primary-color);
     }
     
     .product-link:hover {
-        color: <?php echo e(setting('link_hover_color', '#0056b3')); ?>;
-        text-decoration: underline !important;
+        color: var(--secondary-color);
     }
+    
+    .product-link:hover::after {
+        width: 100%;
+    }
+    
+
 </style>
 
 <script>
