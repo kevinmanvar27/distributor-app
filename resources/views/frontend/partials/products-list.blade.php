@@ -16,7 +16,11 @@
                 </div>
             </div>
             <div class="card-body d-flex flex-column">
-                <h5 class="card-title">{{ $product->name }}</h5>
+                <h5 class="card-title">
+                    <a href="{{ route('frontend.product.show', $product->slug) }}" class="product-link text-decoration-none">
+                        {{ $product->name }}
+                    </a>
+                </h5>
                 <p class="card-text flex-grow-1">{{ Str::limit($product->description ?? 'No description available', 100) }}</p>
                 <div class="mt-auto">
                     <div class="d-flex justify-content-between align-items-center mb-2">

@@ -51,7 +51,11 @@
                                                 </div>
                                             @endif
                                             <div>
-                                                <h6 class="mb-1">{{ $item->product->name }}</h6>
+                                                <h6 class="mb-1">
+                                                    <a href="{{ route('frontend.product.show', $item->product->slug) }}" class="product-link text-decoration-none">
+                                                        {{ $item->product->name }}
+                                                    </a>
+                                                </h6>
                                                 <small class="text-muted">{{ Str::limit($item->product->description ?? 'No description', 50) }}</small>
                                             </div>
                                         </div>
@@ -280,6 +284,18 @@
     
     .table td, .table th {
         vertical-align: middle;
+    }
+    
+    /* Product link styles */
+    .product-link {
+        color: <?php echo e(setting('theme_color', '#007bff')); ?>;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    
+    .product-link:hover {
+        color: <?php echo e(setting('link_hover_color', '#0056b3')); ?>;
+        text-decoration: underline !important;
     }
 </style>
 

@@ -65,31 +65,34 @@
                                                     <span class="badge bg-secondary">{{ $invoice->status }}</span>
                                             @endswitch
                                         </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary view-invoice" data-invoice-id="{{ $invoice->id }}">
+                                        <td class="action-buttons">
+                                            <!-- View Button - Theme colored -->
+                                            <button class="btn btn-sm btn-view-theme view-invoice" data-invoice-id="{{ $invoice->id }}">
                                                 <i class="fas fa-eye me-1"></i>View
                                             </button>
                                             
                                             @if($invoice->status === 'Draft')
+                                                <!-- Add to Cart Button -->
                                                 <form action="{{ route('frontend.cart.proforma.invoice.add-to-cart', $invoice->id) }}" method="POST" class="d-inline">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('Are you sure you want to add all products from this invoice to your cart and remove this invoice?')">
+                                                    <button type="submit" class="btn btn-sm btn-cart-theme" onclick="return confirm('Are you sure you want to add all products from this invoice to your cart and remove this invoice?')">
                                                         <i class="fas fa-cart-plus me-1"></i>Add to Cart
                                                     </button>
                                                 </form>
+                                                <!-- Delete Button -->
                                                 <form action="{{ route('frontend.cart.proforma.invoice.delete', $invoice->id) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this proforma invoice?')">
+                                                    <button type="submit" class="btn btn-sm btn-delete-theme" onclick="return confirm('Are you sure you want to delete this proforma invoice?')">
                                                         <i class="fas fa-trash me-1"></i>Delete
                                                     </button>
                                                 </form>
                                             @else
-                                                <a href="{{ route('frontend.cart.proforma.invoice.download-pdf', $invoice->id) }}" class="btn btn-sm btn-outline-danger">
+                                                <!-- PDF Download Button -->
+                                                <a href="{{ route('frontend.cart.proforma.invoice.download-pdf', $invoice->id) }}" class="btn btn-sm btn-pdf-theme">
                                                     <i class="fas fa-file-pdf me-1"></i>PDF
                                                 </a>
                                             @endif
-                                            
                                         </td>
                                     </tr>
                                     @endforeach
@@ -161,6 +164,84 @@
         color: white !important;
     }
     
+    /* View Button - Theme Primary Color */
+    .btn-view-theme {
+        background-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
+        border-color: <?php echo e(setting('theme_color', '#007bff')); ?> !important;
+        color: white !important;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-view-theme:hover {
+        background-color: <?php echo e(setting('link_hover_color', '#0056b3')); ?> !important;
+        border-color: <?php echo e(setting('link_hover_color', '#0056b3')); ?> !important;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    /* Add to Cart Button - Green Success */
+    .btn-cart-theme {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+        color: white !important;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cart-theme:hover {
+        background-color: #218838 !important;
+        border-color: #1e7e34 !important;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(40, 167, 69, 0.3);
+    }
+    
+    /* Delete Button - Red Danger */
+    .btn-delete-theme {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: white !important;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-delete-theme:hover {
+        background-color: #c82333 !important;
+        border-color: #bd2130 !important;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(220, 53, 69, 0.3);
+    }
+    
+    /* PDF Button - Dark Red */
+    .btn-pdf-theme {
+        background-color: #b71c1c !important;
+        border-color: #b71c1c !important;
+        color: white !important;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-pdf-theme:hover {
+        background-color: #8b0000 !important;
+        border-color: #8b0000 !important;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(183, 28, 28, 0.3);
+    }
+    
+    /* Action buttons container */
+    .action-buttons {
+        white-space: nowrap;
+    }
+    
+    .action-buttons .btn {
+        margin-right: 5px;
+        margin-bottom: 3px;
+    }
+    
+    .action-buttons .btn:last-child {
+        margin-right: 0;
+    }
+    
     @media print {
         .modal-content {
             box-shadow: none !important;
@@ -174,6 +255,30 @@
         .breadcrumb {
             display: none !important;
         }
+    }
+    
+    /* Responsive adjustments for action buttons */
+    @media (max-width: 768px) {
+        .action-buttons {
+            white-space: normal;
+        }
+        
+        .action-buttons .btn {
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+    }
+    
+    /* Product link styles in invoice modal */
+    .product-link {
+        color: <?php echo e(setting('theme_color', '#007bff')); ?>;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    
+    .product-link:hover {
+        color: <?php echo e(setting('link_hover_color', '#0056b3')); ?>;
+        text-decoration: underline !important;
     }
 </style>
 
@@ -210,18 +315,52 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load invoice details via AJAX
     function loadInvoiceDetails(invoiceId) {
-        // Show the modal
+        // Show the modal with loading spinner
         const modal = new bootstrap.Modal(document.getElementById('invoiceModal'));
+        
+        // Reset modal body to show loading spinner
+        document.getElementById('invoiceModalBody').innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading invoice details...</p>
+            </div>
+        `;
+        
         modal.show();
         
         // Fetch invoice details
-        fetch(`/cart/proforma-invoice/${invoiceId}`)
-            .then(response => response.json())
+        fetch(`/cart/proforma-invoice/${invoiceId}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Invoice data received:', data); // Debug log
+                
                 if (data.error) {
                     document.getElementById('invoiceModalBody').innerHTML = `
                         <div class="alert alert-danger">
-                            ${data.error}
+                            <i class="fas fa-exclamation-circle me-2"></i>${data.error}
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Validate data structure
+                if (!data.invoice || !data.data) {
+                    document.getElementById('invoiceModalBody').innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Invalid invoice data received.
                         </div>
                     `;
                     return;
@@ -236,10 +375,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 renderInvoiceDetails(data);
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error loading invoice:', error);
                 document.getElementById('invoiceModalBody').innerHTML = `
                     <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
                         Failed to load invoice details. Please try again.
+                        <br><small class="text-muted">Error: ${error.message}</small>
                     </div>
                 `;
             });
@@ -247,7 +388,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to update notification count in header
     function updateNotificationCount(count) {
-        const countElement = document.querySelector('#notificationsDropdown .notification-count');
+        const notificationsDropdown = document.querySelector('#notificationsDropdown');
+        
+        // Exit early if notifications dropdown doesn't exist on this page
+        if (!notificationsDropdown) {
+            return;
+        }
+        
+        const countElement = notificationsDropdown.querySelector('.notification-count');
         if (count > 0) {
             if (countElement) {
                 countElement.textContent = count;
@@ -256,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const badge = document.createElement('span');
                 badge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count';
                 badge.textContent = count;
-                document.querySelector('#notificationsDropdown').appendChild(badge);
+                notificationsDropdown.appendChild(badge);
             }
         } else {
             if (countElement) {
@@ -288,13 +436,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Render invoice details in the modal
     function renderInvoiceDetails(data) {
         const invoice = data.invoice;
-        const invoiceData = data.data;
+        const invoiceData = data.data || {};
+        
+        console.log('Rendering invoice:', invoice); // Debug log
+        console.log('Invoice data:', invoiceData); // Debug log
         
         // Get site settings from meta tags or use defaults
-        const siteTitle = document.querySelector('meta[name="site-title"]')?.getAttribute('content') || 'Frontend App';
-        const companyAddress = document.querySelector('meta[name="company-address"]')?.getAttribute('content') || 'Company Address';
-        const companyEmail = document.querySelector('meta[name="company-email"]')?.getAttribute('content') || 'company@example.com';
-        const companyPhone = document.querySelector('meta[name="company-phone"]')?.getAttribute('content') || '+1 (555) 123-4567';
+        const siteTitle = document.querySelector('meta[name="site-title"]')?.getAttribute('content') || '{{ setting("site_title", "Frontend App") }}';
+        const companyAddress = document.querySelector('meta[name="company-address"]')?.getAttribute('content') || '{{ setting("company_address", "Company Address") }}';
+        const companyEmail = document.querySelector('meta[name="company-email"]')?.getAttribute('content') || '{{ setting("company_email", "company@example.com") }}';
+        const companyPhone = document.querySelector('meta[name="company-phone"]')?.getAttribute('content') || '{{ setting("company_phone", "+1 (555) 123-4567") }}';
         
         let customerHtml = '';
         if (invoiceData.customer) {
@@ -312,21 +463,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         let cartItemsHtml = '';
-        if (invoiceData.cart_items && invoiceData.cart_items.length > 0) {
+        // Handle different possible data structures for cart items
+        const cartItems = invoiceData.cart_items || invoiceData.items || invoiceData.products || [];
+        
+        console.log('Cart items:', cartItems); // Debug log
+        
+        if (cartItems && cartItems.length > 0) {
             let index = 1;
-            invoiceData.cart_items.forEach(item => {
+            cartItems.forEach(item => {
                 // Ensure price and total are valid numbers
-                const price = parseFloat(item.price) || 0;
-                const total = parseFloat(item.total) || 0;
-                const quantity = parseInt(item.quantity) || 0;
+                const price = parseFloat(item.price) || parseFloat(item.unit_price) || 0;
+                const total = parseFloat(item.total) || parseFloat(item.line_total) || (price * (parseInt(item.quantity) || 0));
+                const quantity = parseInt(item.quantity) || parseInt(item.qty) || 0;
+                const productName = item.product_name || item.name || item.title || 'Product';
+                const productSlug = item.product_slug || item.slug || '';
+                const productDesc = item.product_description || item.description || '';
+                
+                // Create product link if slug is available
+                const productLink = productSlug ? `/product/${productSlug}` : '#';
+                const productNameHtml = productSlug 
+                    ? `<a href="${productLink}" class="product-link text-decoration-none">${productName}</a>`
+                    : productName;
                 
                 cartItemsHtml += `
                     <tr>
                         <td>${index++}</td>
                         <td>
                             <div>
-                                <h6 class="mb-0">${item.product_name || 'Product'}</h6>
-                                ${item.product_description ? `<small class="text-muted">${item.product_description.substring(0, 50)}${item.product_description.length > 50 ? '...' : ''}</small>` : ''}
+                                <h6 class="mb-0">${productNameHtml}</h6>
+                                ${productDesc ? `<small class="text-muted">${productDesc.substring(0, 50)}${productDesc.length > 50 ? '...' : ''}</small>` : ''}
                             </div>
                         </td>
                         <td>₹${price.toFixed(2)}</td>
@@ -335,6 +500,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     </tr>
                 `;
             });
+        } else {
+            cartItemsHtml = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-3">
+                        <i class="fas fa-inbox me-2"></i>No items found in this invoice
+                    </td>
+                </tr>
+            `;
         }
         
         // Ensure all financial values are valid numbers

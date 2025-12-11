@@ -137,7 +137,11 @@
                         </div>
                     </div>
                     <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ $product->name }}</h5>
+                        <h5 class="card-title">
+                            <a href="{{ route('frontend.product.show', $product->slug) }}" class="product-link text-decoration-none">
+                                {{ $product->name }}
+                            </a>
+                        </h5>
                         <p class="card-text flex-grow-1">{{ Str::limit($product->description ?? 'No description available', 100) }}</p>
                         <div class="mt-auto">
                             <div class="d-flex justify-content-between align-items-center">
@@ -265,6 +269,18 @@
     .subcategories-container {
         border-top: 1px solid #eee;
         padding-top: 15px;
+    }
+    
+    /* Product link styles */
+    .product-link {
+        color: <?php echo e(setting('theme_color', '#007bff')); ?>;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    
+    .product-link:hover {
+        color: <?php echo e(setting('link_hover_color', '#0056b3')); ?>;
+        text-decoration: underline !important;
     }
 </style>
 @endsection

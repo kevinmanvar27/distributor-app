@@ -275,6 +275,18 @@
             justify-content: flex-start !important;
         }
     }
+    
+    /* Product link styles */
+    .product-link {
+        color: var(--theme-color);
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    
+    .product-link:hover {
+        color: var(--hover-color);
+        text-decoration: underline !important;
+    }
 </style>
 
 <!-- AJAX Script for Filtering -->

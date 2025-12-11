@@ -425,6 +425,7 @@ class ShoppingCartController extends Controller
                     'id' => $item->id,
                     'product_id' => $item->product_id,
                     'product_name' => $item->product->name,
+                    'product_slug' => $item->product->slug,
                     'product_description' => $item->product->description,
                     'quantity' => $item->quantity,
                     'price' => $item->price,
