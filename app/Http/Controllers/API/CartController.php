@@ -27,6 +27,29 @@ class CartController extends ApiController
     }
 
     /**
+     * Add product to cart (alias for addToCart)
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function add(Request $request)
+    {
+        return $this->addToCart($request);
+    }
+
+    /**
+     * Remove item from cart (alias for destroy)
+     * 
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function remove(Request $request, $id)
+    {
+        return $this->destroy($request, $id);
+    }
+
+    /**
      * Get authenticated user's cart items
      * 
      * @OA\Get(
