@@ -14,7 +14,7 @@
     },
     "servers": [
         {
-            "url": "${APP_URL}",
+            "url": "https://hardware.rektech.work",
             "description": "Distributor App API Server"
         }
     ],
