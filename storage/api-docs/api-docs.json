@@ -14,11 +14,199 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8000",
+            "url": "${APP_URL}",
             "description": "Distributor App API Server"
         }
     ],
     "paths": {
+        "/api/v1/app-settings": {
+            "get": {
+                "tags": [
+                    "App Configuration"
+                ],
+                "summary": "Get app settings",
+                "description": "Get app theme settings including colors and fonts",
+                "operationId": "getAppSettings",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/app-config": {
+            "get": {
+                "tags": [
+                    "App Configuration"
+                ],
+                "summary": "Get app configuration",
+                "description": "Get app configuration including access permissions and general settings",
+                "operationId": "getAppConfig",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/company-info": {
+            "get": {
+                "tags": [
+                    "App Configuration"
+                ],
+                "summary": "Get company information",
+                "description": "Get company details including address, contact info, and social links",
+                "operationId": "getCompanyInfo",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/app-version": {
+            "get": {
+                "tags": [
+                    "App Configuration"
+                ],
+                "summary": "Check app version",
+                "description": "Check if app update is required or available. This is a public endpoint that does not require authentication.",
+                "operationId": "checkAppVersion",
+                "parameters": [
+                    {
+                        "name": "platform",
+                        "in": "query",
+                        "description": "Mobile platform (ios or android)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ios",
+                                "android"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "current_version",
+                        "in": "query",
+                        "description": "Current app version installed on device (e.g., 1.0.0)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "1.0.0"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "App version check completed."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "platform": {
+                                                    "type": "string",
+                                                    "example": "android"
+                                                },
+                                                "current_version": {
+                                                    "type": "string",
+                                                    "example": "1.0.0"
+                                                },
+                                                "latest_version": {
+                                                    "type": "string",
+                                                    "example": "1.2.0"
+                                                },
+                                                "minimum_version": {
+                                                    "type": "string",
+                                                    "example": "1.0.0"
+                                                },
+                                                "update_required": {
+                                                    "description": "True if current version is below minimum required version",
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "update_available": {
+                                                    "description": "True if a newer version is available",
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "update_url": {
+                                                    "description": "URL to app store for update",
+                                                    "type": "string",
+                                                    "example": "https://play.google.com/store/apps/details?id=com.example.app"
+                                                },
+                                                "release_notes": {
+                                                    "description": "Release notes for latest version",
+                                                    "type": "string",
+                                                    "example": "Bug fixes and performance improvements",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The platform field is required."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/login": {
             "post": {
                 "tags": [
@@ -153,6 +341,241 @@
                 "summary": "Get authenticated user",
                 "description": "Get details of the authenticated user",
                 "operationId": "getAuthenticatedUser",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cart": {
+            "get": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Get user's cart",
+                "description": "Returns the authenticated user's shopping cart items",
+                "operationId": "getCart",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cart/add": {
+            "post": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Add product to cart",
+                "description": "Add a product to the authenticated user's cart",
+                "operationId": "addToCart",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "product_id"
+                                ],
+                                "properties": {
+                                    "product_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "quantity": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cart/{id}": {
+            "put": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Update cart item",
+                "description": "Update the quantity of a cart item",
+                "operationId": "updateCartItem",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Cart item id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "quantity"
+                                ],
+                                "properties": {
+                                    "quantity": {
+                                        "type": "integer",
+                                        "example": 2
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Remove from cart",
+                "description": "Remove an item from the cart",
+                "operationId": "removeFromCart",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Cart item id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cart/count": {
+            "get": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Get cart count",
+                "description": "Get the number of items in the cart",
+                "operationId": "getCartCount",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cart/generate-invoice": {
+            "post": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Generate proforma invoice",
+                "description": "Generate a proforma invoice from the cart items",
+                "operationId": "generateInvoice",
+                "responses": {
+                    "201": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Cart is empty"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/cart/clear": {
+            "delete": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Clear cart",
+                "description": "Remove all items from the cart",
+                "operationId": "clearCart",
                 "responses": {
                     "200": {
                         "description": "Successful operation"
@@ -393,6 +816,83 @@
                     },
                     "404": {
                         "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/home": {
+            "get": {
+                "tags": [
+                    "Home"
+                ],
+                "summary": "Get home screen data",
+                "description": "Returns all data needed for the home screen including categories, featured products, and user-specific data",
+                "operationId": "getHomeData",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "categories": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "featured_products": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "latest_products": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "cart_count": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "unread_notifications_count": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "announcements": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Home data retrieved successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
                     }
                 },
                 "security": [
@@ -649,6 +1149,557 @@
                     },
                     "404": {
                         "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/my-invoices": {
+            "get": {
+                "tags": [
+                    "My Invoices"
+                ],
+                "summary": "Get user's invoices",
+                "description": "Returns the authenticated user's proforma invoices",
+                "operationId": "getMyInvoices",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status (draft, sent, paid, cancelled)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/my-invoices/{id}": {
+            "get": {
+                "tags": [
+                    "My Invoices"
+                ],
+                "summary": "Get invoice details",
+                "description": "Returns the details of a specific proforma invoice",
+                "operationId": "getMyInvoiceById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Invoice id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "My Invoices"
+                ],
+                "summary": "Delete invoice",
+                "description": "Delete a proforma invoice",
+                "operationId": "deleteMyInvoice",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Invoice id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/my-invoices/{id}/download-pdf": {
+            "get": {
+                "tags": [
+                    "My Invoices"
+                ],
+                "summary": "Download invoice PDF",
+                "description": "Download the proforma invoice as PDF",
+                "operationId": "downloadMyInvoicePdf",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Invoice id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF file",
+                        "content": {
+                            "application/pdf": {}
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/my-invoices/{id}/add-to-cart": {
+            "post": {
+                "tags": [
+                    "My Invoices"
+                ],
+                "summary": "Add invoice to cart",
+                "description": "Add all items from a proforma invoice back to the cart",
+                "operationId": "addInvoiceToCart",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Invoice id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/notifications": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get user notifications",
+                "description": "Get list of notifications for the authenticated user",
+                "operationId": "getUserNotifications",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page (default: 15, max: 50)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "unread_only",
+                        "in": "query",
+                        "description": "Filter to show only unread notifications",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/notifications/{id}/mark-read": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark notification as read",
+                "description": "Mark a specific notification as read",
+                "operationId": "markNotificationAsRead",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Notification id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification marked as read"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Notification not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/notifications/mark-all-read": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark all notifications as read",
+                "description": "Mark all notifications for the authenticated user as read",
+                "operationId": "markAllNotificationsAsRead",
+                "responses": {
+                    "200": {
+                        "description": "All notifications marked as read"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/notifications/unread-count": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get unread notifications count",
+                "description": "Get the count of unread notifications for the authenticated user",
+                "operationId": "getUnreadNotificationsCount",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/notifications/{id}": {
+            "delete": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Delete a notification",
+                "description": "Delete a specific notification",
+                "operationId": "deleteNotification",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Notification id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification deleted"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Notification not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/notifications/send-to-user": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Send notification to user",
+                "description": "Send a push notification to a specific user (Admin only)",
+                "operationId": "sendNotificationToUser",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "title",
+                                    "body"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "New Offer!"
+                                    },
+                                    "body": {
+                                        "type": "string",
+                                        "example": "Check out our latest deals"
+                                    },
+                                    "data": {
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Notification sent"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/notifications/send-to-group": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Send notification to user group",
+                "description": "Send a push notification to all users in a group (Admin only)",
+                "operationId": "sendNotificationToUserGroup",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_group_id",
+                                    "title",
+                                    "body"
+                                ],
+                                "properties": {
+                                    "user_group_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Group Announcement"
+                                    },
+                                    "body": {
+                                        "type": "string",
+                                        "example": "Important update for your group"
+                                    },
+                                    "data": {
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Notification sent"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/notifications/register-device": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Register device token",
+                "description": "Register or update FCM device token for push notifications",
+                "operationId": "registerDeviceToken",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "device_token"
+                                ],
+                                "properties": {
+                                    "device_token": {
+                                        "type": "string",
+                                        "example": "fcm_token_here"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Device token registered"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/notifications/statistics": {
+            "get": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get notification statistics",
+                "description": "Get Firebase notification statistics (Admin only)",
+                "operationId": "getNotificationStatistics",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
                     }
                 },
                 "security": [
@@ -918,6 +1969,154 @@
                         "sanctum": []
                     }
                 ]
+            }
+        },
+        "/api/v1/forgot-password": {
+            "post": {
+                "tags": [
+                    "Password Reset"
+                ],
+                "summary": "Request password reset",
+                "description": "Send password reset link to user's email",
+                "operationId": "forgotPassword",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password reset link sent"
+                    },
+                    "404": {
+                        "description": "User not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "429": {
+                        "description": "Too many requests"
+                    }
+                }
+            }
+        },
+        "/api/v1/reset-password": {
+            "post": {
+                "tags": [
+                    "Password Reset"
+                ],
+                "summary": "Reset password",
+                "description": "Reset password using token received via email",
+                "operationId": "resetPassword",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "token",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "token": {
+                                        "type": "string",
+                                        "example": "abc123..."
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password reset successful"
+                    },
+                    "400": {
+                        "description": "Invalid or expired token"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/v1/verify-reset-token": {
+            "post": {
+                "tags": [
+                    "Password Reset"
+                ],
+                "summary": "Verify reset token",
+                "description": "Verify if a password reset token is valid",
+                "operationId": "verifyResetToken",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "token"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "token": {
+                                        "type": "string",
+                                        "example": "abc123..."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Token is valid"
+                    },
+                    "400": {
+                        "description": "Invalid or expired token"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
             }
         },
         "/api/v1/permissions": {
@@ -1297,7 +2496,7 @@
                     "Products"
                 ],
                 "summary": "Get product information",
-                "description": "Returns product data",
+                "description": "Returns detailed product data including main photo, gallery, related products, wishlist status, and user-specific pricing",
                 "operationId": "getProductById",
                 "parameters": [
                     {
@@ -1312,15 +2511,217 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product retrieved successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Sample Product"
+                                                },
+                                                "slug": {
+                                                    "type": "string",
+                                                    "example": "sample-product"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Product description"
+                                                },
+                                                "mrp": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 100
+                                                },
+                                                "selling_price": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 90
+                                                },
+                                                "discounted_price": {
+                                                    "description": "User-specific discounted price",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 85
+                                                },
+                                                "in_stock": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "stock_quantity": {
+                                                    "type": "integer",
+                                                    "example": 50
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "published"
+                                                },
+                                                "product_categories": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "integer"
+                                                    },
+                                                    "example": [
+                                                        1,
+                                                        2
+                                                    ]
+                                                },
+                                                "main_photo": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "url": {
+                                                            "type": "string",
+                                                            "example": "https://example.com/photo.jpg"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "gallery_photos": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "url": {
+                                                                "type": "string",
+                                                                "example": "https://example.com/gallery1.jpg"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "is_in_wishlist": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "stock_status": {
+                                                    "properties": {
+                                                        "available": {
+                                                            "type": "boolean",
+                                                            "example": true
+                                                        },
+                                                        "quantity": {
+                                                            "type": "integer",
+                                                            "example": 50
+                                                        },
+                                                        "label": {
+                                                            "type": "string",
+                                                            "example": "In Stock"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "related_products": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Related Product"
+                                                            },
+                                                            "slug": {
+                                                                "type": "string",
+                                                                "example": "related-product"
+                                                            },
+                                                            "mrp": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 80
+                                                            },
+                                                            "selling_price": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 75
+                                                            },
+                                                            "discounted_price": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 70
+                                                            },
+                                                            "in_stock": {
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            },
+                                                            "main_photo": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 3
+                                                                    },
+                                                                    "url": {
+                                                                        "type": "string",
+                                                                        "example": "https://example.com/related.jpg"
+                                                                    }
+                                                                },
+                                                                "type": "object",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "400": {
                         "description": "Bad Request"
                     },
                     "404": {
-                        "description": "Not Found"
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "put": {
                 "tags": [
@@ -1469,6 +2870,580 @@
                     },
                     "404": {
                         "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/search": {
+            "get": {
+                "tags": [
+                    "Product Search"
+                ],
+                "summary": "Search products",
+                "description": "Search products by name or description",
+                "operationId": "searchProducts",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Search query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page (default: 15, max: 50)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "description": "Sort field (name, mrp, created_at)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort_order",
+                        "in": "query",
+                        "description": "Sort order (asc, desc)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/by-category/{categoryId}": {
+            "get": {
+                "tags": [
+                    "Product Search"
+                ],
+                "summary": "Get products by category",
+                "description": "Get all products in a specific category",
+                "operationId": "getProductsByCategory",
+                "parameters": [
+                    {
+                        "name": "categoryId",
+                        "in": "path",
+                        "description": "Category id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page (default: 15, max: 50)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "description": "Sort field (name, mrp, created_at)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort_order",
+                        "in": "query",
+                        "description": "Sort order (asc, desc)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/by-subcategory/{subcategoryId}": {
+            "get": {
+                "tags": [
+                    "Product Search"
+                ],
+                "summary": "Get products by subcategory",
+                "description": "Get all products in a specific subcategory",
+                "operationId": "getProductsBySubcategory",
+                "parameters": [
+                    {
+                        "name": "subcategoryId",
+                        "in": "path",
+                        "description": "Subcategory id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page (default: 15, max: 50)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "description": "Sort field (name, mrp, created_at)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort_order",
+                        "in": "query",
+                        "description": "Sort order (asc, desc)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Subcategory not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/categories/{id}/subcategories": {
+            "get": {
+                "tags": [
+                    "Product Search"
+                ],
+                "summary": "Get subcategories by category",
+                "description": "Get all subcategories in a specific category",
+                "operationId": "getSubcategoriesByCategory",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Category id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/profile": {
+            "get": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get user profile",
+                "description": "Returns the authenticated user's profile data",
+                "operationId": "getProfile",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update user profile",
+                "description": "Update the authenticated user's profile data",
+                "operationId": "updateProfile",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "johndoe@example.com"
+                                    },
+                                    "date_of_birth": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1990-01-01"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "123 Main St"
+                                    },
+                                    "mobile_number": {
+                                        "type": "string",
+                                        "example": "1234567890"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/profile/avatar": {
+            "post": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Upload user avatar",
+                "description": "Upload or update the authenticated user's avatar",
+                "operationId": "updateAvatar",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "avatar": {
+                                        "description": "Avatar image file",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Remove user avatar",
+                "description": "Remove the authenticated user's avatar",
+                "operationId": "removeAvatar",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/profile/password": {
+            "put": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Change user password",
+                "description": "Change the authenticated user's password",
+                "operationId": "changePassword",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "current_password",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "current_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "OldPassword123"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "NewPassword123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "NewPassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/profile/delete-account": {
+            "delete": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Delete user account",
+                "description": "Permanently delete the authenticated user's account. This action cannot be undone. All user data including cart items, wishlist, and notifications will be deleted.",
+                "operationId": "deleteAccount",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "password"
+                                ],
+                                "properties": {
+                                    "password": {
+                                        "description": "Current password for verification",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "CurrentPassword123"
+                                    },
+                                    "reason": {
+                                        "description": "Optional reason for account deletion",
+                                        "type": "string",
+                                        "example": "No longer using the app"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Account deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Account deleted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error - incorrect password",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation Error"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "password": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The password is incorrect."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -3443,6 +5418,397 @@
                     }
                 ]
             }
+        },
+        "/api/v1/wishlist": {
+            "get": {
+                "tags": [
+                    "Wishlist"
+                ],
+                "summary": "Get user's wishlist",
+                "description": "Returns the authenticated user's wishlist with product details",
+                "operationId": "getWishlist",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page (default: 15, max: 50)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Wishlist retrieved successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/wishlist/{productId}": {
+            "post": {
+                "tags": [
+                    "Wishlist"
+                ],
+                "summary": "Add product to wishlist",
+                "description": "Add a product to the authenticated user's wishlist",
+                "operationId": "addToWishlist",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "description": "Product ID to add",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Product added to wishlist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product added to wishlist."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Product already in wishlist"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Product not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Wishlist"
+                ],
+                "summary": "Remove product from wishlist",
+                "description": "Remove a product from the authenticated user's wishlist",
+                "operationId": "removeFromWishlist",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "description": "Product ID to remove",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product removed from wishlist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product removed from wishlist."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Product not found in wishlist"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/wishlist/check/{productId}": {
+            "get": {
+                "tags": [
+                    "Wishlist"
+                ],
+                "summary": "Check if product is in wishlist",
+                "description": "Check if a specific product is in the authenticated user's wishlist",
+                "operationId": "checkWishlist",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "description": "Product ID to check",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "is_in_wishlist": {
+                                                    "type": "boolean",
+                                                    "example": true
+                                                },
+                                                "added_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Wishlist status retrieved."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/wishlist/{productId}/add-to-cart": {
+            "post": {
+                "tags": [
+                    "Wishlist"
+                ],
+                "summary": "Move wishlist item to cart",
+                "description": "Add a product from wishlist to cart and optionally remove from wishlist",
+                "operationId": "wishlistToCart",
+                "parameters": [
+                    {
+                        "name": "productId",
+                        "in": "path",
+                        "description": "Product ID to move to cart",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "quantity": {
+                                        "description": "Quantity to add (default: 1)",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "remove_from_wishlist": {
+                                        "description": "Remove from wishlist after adding to cart (default: true)",
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Product added to cart",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "cart_item": {
+                                                    "type": "object"
+                                                },
+                                                "removed_from_wishlist": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product added to cart."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Product out of stock or insufficient quantity"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Product not found in wishlist"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/wishlist/clear": {
+            "delete": {
+                "tags": [
+                    "Wishlist"
+                ],
+                "summary": "Clear entire wishlist",
+                "description": "Remove all items from the authenticated user's wishlist",
+                "operationId": "clearWishlist",
+                "responses": {
+                    "200": {
+                        "description": "Wishlist cleared",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "items_removed": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Wishlist cleared successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -3457,20 +5823,44 @@
     },
     "tags": [
         {
+            "name": "App Configuration",
+            "description": "API Endpoints for App Configuration and Settings"
+        },
+        {
             "name": "Authentication",
             "description": "API Endpoints for Authentication"
+        },
+        {
+            "name": "Cart",
+            "description": "API Endpoints for User Shopping Cart"
         },
         {
             "name": "Categories",
             "description": "API Endpoints for Category Management"
         },
         {
+            "name": "Home",
+            "description": "API Endpoints for Home/Dashboard Screen"
+        },
+        {
             "name": "Media",
             "description": "API Endpoints for Media Management"
         },
         {
+            "name": "My Invoices",
+            "description": "API Endpoints for User's Proforma Invoices"
+        },
+        {
+            "name": "Notifications",
+            "description": "API Endpoints for Notifications"
+        },
+        {
             "name": "Pages",
             "description": "API Endpoints for Page Management"
+        },
+        {
+            "name": "Password Reset",
+            "description": "API Endpoints for Password Reset"
         },
         {
             "name": "Permissions",
@@ -3479,6 +5869,14 @@
         {
             "name": "Products",
             "description": "API Endpoints for Product Management"
+        },
+        {
+            "name": "Product Search",
+            "description": "API Endpoints for Product Search and Filtering"
+        },
+        {
+            "name": "Profile",
+            "description": "API Endpoints for User Profile Management"
         },
         {
             "name": "Proforma Invoices",
@@ -3511,6 +5909,10 @@
         {
             "name": "User Group Members",
             "description": "API Endpoints for User Group Member Management"
+        },
+        {
+            "name": "Wishlist",
+            "description": "API Endpoints for User Wishlist Management"
         }
     ]
 }

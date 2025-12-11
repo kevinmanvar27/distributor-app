@@ -237,4 +237,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\Notification::class)->where('read', false)->orderBy('created_at', 'desc');
     }
+    
+    /**
+     * Get the wishlist items for the user.
+     */
+    public function wishlistItems()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+    
+    /**
+     * Get the proforma invoices for the user.
+     */
+    public function proformaInvoices()
+    {
+        return $this->hasMany(ProformaInvoice::class);
+    }
 }
