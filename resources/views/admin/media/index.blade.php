@@ -212,6 +212,39 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.appendChild(fileInput);
             fileInput.click();
         });
+        
+        // Add drag and drop functionality to empty state upload area
+        emptyStateUpload.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        
+        emptyStateUpload.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.add('drag-over');
+        });
+        
+        emptyStateUpload.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.target === this || !this.contains(e.relatedTarget)) {
+                this.classList.remove('drag-over');
+            }
+        });
+        
+        emptyStateUpload.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    handleFileUpload(files[i]);
+                }
+            }
+        });
     }
     
     // Drag and drop functionality for media library

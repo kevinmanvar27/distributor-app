@@ -370,20 +370,28 @@
             let currentSearch = '';
             let currentFilter = 'all';
 
+            // Store drag drop initializer reference for later use
+            var initializeMainPhotoDragDropRef = null;
+            
             // Initialize main photo remove button if it exists
             function initializeMainPhotoRemove() {
                 $('#remove-main-photo').off('click').on('click', function() {
                     $('#main_photo_id').val(null); // Set to null instead of empty string
                     $('#main-photo-preview').html(`
-                        <div class="bg-light d-flex align-items-center justify-content-center mb-2" style="height: 150px;">
-                            <i class="fas fa-image fa-2x text-muted mb-2"></i>
+                        <div class="upload-area" id="main-photo-upload-area" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <div>
+                                <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                <p class="text-muted mb-2">Drag & drop an image here or click to select</p>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#mediaLibraryModal" data-target="main_photo">
+                                    <i class="fas fa-folder-open me-1"></i> Select from Media Library
+                                </button>
+                            </div>
                         </div>
-                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#mediaLibraryModal" data-target="main_photo">
-                            <i class="fas fa-folder-open me-1"></i> Select from Media Library
-                        </button>
                     `);
-                    // Reattach event handler for the new button
-                    initializeMainPhotoRemove();
+                    // Reinitialize drag and drop for the new upload area
+                    if (initializeMainPhotoDragDropRef) {
+                        initializeMainPhotoDragDropRef();
+                    }
                 });
             }
             
@@ -447,40 +455,8 @@
                 fileInput.click();
             });
             
-            // Drag and drop functionality for media library
-            $('#media-library-items').on('dragover', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            });
-            
-            $('#media-library-items').on('dragenter', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                $(this).addClass('drag-over');
-            });
-            
-            $('#media-library-items').on('dragleave', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                // Only remove drag-over class if we're actually leaving the element
-                if (e.target === this || $(e.target).closest('#media-library-items').length === 0) {
-                    $(this).removeClass('drag-over');
-                }
-            });
-            
-            $('#media-library-items').on('drop', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                $(this).removeClass('drag-over');
-                
-                const files = e.originalEvent.dataTransfer.files;
-                if (files.length > 0) {
-                    // Handle multiple file uploads
-                    for (let i = 0; i < files.length; i++) {
-                        handleFileUpload(files[i]);
-                    }
-                }
-            });
+            // NOTE: Drag and drop functionality for media library is handled in media/index.blade.php
+            // to avoid duplicate event handlers causing double uploads
             
             // Handle file upload
             function handleFileUpload(file) {
@@ -1141,6 +1117,263 @@
             if ($('#gallery-preview .gallery-item').length > 0) {
                 initializeGallerySorting();
             }
+            
+            // ========================================
+            // DRAG AND DROP FILE UPLOAD FUNCTIONALITY
+            // ========================================
+            
+            // Helper function to handle file upload for product images
+            function handleProductImageUpload(file, targetType) {
+                // Validate file type - only images for product photos
+                const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!validImageTypes.includes(file.type)) {
+                    alert('Please upload a valid image file (JPEG, PNG, GIF, WEBP).');
+                    return;
+                }
+                
+                // Validate file size - 25MB max
+                const maxSize = 25 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    alert('File size must be less than 25MB.');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('name', file.name);
+                
+                // Show upload indicator
+                let $uploadIndicator;
+                if (targetType === 'main_photo') {
+                    $uploadIndicator = $(`
+                        <div class="upload-progress-indicator">
+                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                            <span>Uploading...</span>
+                        </div>
+                    `);
+                    $('#main-photo-preview').append($uploadIndicator);
+                } else {
+                    $uploadIndicator = $(`
+                        <div class="position-relative gallery-item uploading-item" style="opacity: 0.6;">
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 80px; width: 80px;">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            </div>
+                        </div>
+                    `);
+                    $('#gallery-preview').append($uploadIndicator);
+                }
+                
+                // Send AJAX request to upload media
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                
+                $.ajax({
+                    url: '/admin/media',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                        $uploadIndicator.remove();
+                        
+                        if (data.success && data.media) {
+                            if (targetType === 'main_photo') {
+                                // Set main photo
+                                $('#main_photo_id').val(data.media.id);
+                                $('#main-photo-preview').html(`
+                                    <div class="position-relative">
+                                        <img src="${data.media.url}" class="img-fluid mb-2" alt="${data.media.name}" style="max-height: 200px; object-fit: contain;">
+                                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#mediaLibraryModal" data-target="main_photo">
+                                            <i class="fas fa-folder-open me-1"></i> Change Image
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill ms-2" id="remove-main-photo">
+                                            <i class="fas fa-trash me-1"></i> Remove
+                                        </button>
+                                    </div>
+                                `);
+                                initializeMainPhotoRemove();
+                            } else {
+                                // Add to gallery
+                                const $galleryPreview = $('#gallery-preview');
+                                let galleryItems = JSON.parse($('#product_gallery').val() || '[]');
+                                
+                                // Add new media ID to array
+                                galleryItems.push(data.media.id);
+                                $('#product_gallery').val(JSON.stringify(galleryItems));
+                                
+                                // Create gallery item element
+                                const $imgContainer = $(`
+                                    <div class="position-relative gallery-item" data-id="${data.media.id}" draggable="true">
+                                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 80px; width: 80px;">
+                                            <img src="${data.media.url}" class="img-fluid" alt="Gallery image" style="max-height: 100%; max-width: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-image text-muted\\'></i>'">
+                                        </div>
+                                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 rounded-circle p-1 remove-gallery-item" data-id="${data.media.id}">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <input type="hidden" name="product_gallery[]" value="${data.media.id}">
+                                    </div>
+                                `);
+                                
+                                $galleryPreview.append($imgContainer);
+                                
+                                // Reinitialize gallery sorting
+                                initializeGallerySorting();
+                            }
+                        } else {
+                            alert('Error uploading file. Please try again.');
+                        }
+                    },
+                    error: function(xhr) {
+                        $uploadIndicator.remove();
+                        let errorMsg = 'Error uploading file. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        alert(errorMsg);
+                    }
+                });
+            }
+            
+            // Prevent default drag behaviors on the whole document
+            $(document).on('dragover dragenter', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            
+            // Main Photo Upload Area - Drag and Drop
+            function initializeMainPhotoDragDrop() {
+                // Store reference for use in initializeMainPhotoRemove
+                initializeMainPhotoDragDropRef = initializeMainPhotoDragDrop;
+                const $mainPhotoArea = $('#main-photo-upload-area, #main-photo-preview');
+                
+                $mainPhotoArea.off('dragover dragenter dragleave drop');
+                
+                $mainPhotoArea.on('dragover dragenter', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $(this).addClass('drag-highlight');
+                });
+                
+                $mainPhotoArea.on('dragleave', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $(this).removeClass('drag-highlight');
+                });
+                
+                $mainPhotoArea.on('drop', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $(this).removeClass('drag-highlight');
+                    
+                    const files = e.originalEvent.dataTransfer.files;
+                    if (files.length > 0) {
+                        // Only upload the first file for main photo
+                        handleProductImageUpload(files[0], 'main_photo');
+                    }
+                });
+                
+                // Click to upload for main photo area (only on upload area, not on existing image)
+                $('#main-photo-upload-area').off('click').on('click', function(e) {
+                    // Don't trigger if clicking on buttons inside
+                    if ($(e.target).is('button') || $(e.target).closest('button').length) {
+                        return;
+                    }
+                    
+                    const fileInput = $('<input type="file" accept="image/*" style="display: none;">');
+                    $('body').append(fileInput);
+                    
+                    fileInput.on('change', function() {
+                        if (this.files.length > 0) {
+                            handleProductImageUpload(this.files[0], 'main_photo');
+                        }
+                        fileInput.remove();
+                    });
+                    
+                    fileInput.click();
+                });
+            }
+            
+            // Gallery Upload Area - Drag and Drop
+            function initializeGalleryDragDrop() {
+                const $galleryArea = $('#gallery-upload-area');
+                
+                $galleryArea.off('dragover dragenter dragleave drop click');
+                
+                $galleryArea.on('dragover dragenter', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $(this).addClass('drag-highlight');
+                });
+                
+                $galleryArea.on('dragleave', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $(this).removeClass('drag-highlight');
+                });
+                
+                $galleryArea.on('drop', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $(this).removeClass('drag-highlight');
+                    
+                    const files = e.originalEvent.dataTransfer.files;
+                    if (files.length > 0) {
+                        // Upload all dropped files to gallery
+                        for (let i = 0; i < files.length; i++) {
+                            handleProductImageUpload(files[i], 'gallery');
+                        }
+                    }
+                });
+                
+                // Click to upload for gallery area
+                $galleryArea.on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const fileInput = $('<input type="file" accept="image/*" multiple style="display: none;">');
+                    $('body').append(fileInput);
+                    
+                    fileInput.on('change', function() {
+                        if (this.files.length > 0) {
+                            for (let i = 0; i < this.files.length; i++) {
+                                handleProductImageUpload(this.files[i], 'gallery');
+                            }
+                        }
+                        fileInput.remove();
+                    });
+                    
+                    fileInput.click();
+                });
+            }
+            
+            // Initialize drag and drop on page load
+            initializeMainPhotoDragDrop();
+            initializeGalleryDragDrop();
+            
+            // Re-initialize when DOM changes (e.g., after removing main photo)
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList') {
+                        // Check if main photo area needs re-initialization
+                        if ($('#main-photo-upload-area').length) {
+                            initializeMainPhotoDragDrop();
+                        }
+                    }
+                });
+            });
+            
+            // Observe main photo preview for changes
+            const mainPhotoPreview = document.getElementById('main-photo-preview');
+            if (mainPhotoPreview) {
+                observer.observe(mainPhotoPreview, { childList: true, subtree: true });
+            }
+            
+            // ========================================
+            // END DRAG AND DROP FILE UPLOAD
+            // ========================================
             
             // Add event handler for existing gallery item remove buttons
             // This fixes the issue where remove buttons for existing gallery items don't work

@@ -866,11 +866,8 @@ a:hover {
 #media-library-items.drag-over {
     border: 2px dashed var(--theme-color, var(--primary));
     border-radius: 0.5rem;
-    background-color: rgba(255, 107, 0, 0.05);
+    background-color: rgba(255, 107, 0, 0.08);
     min-height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     position: relative;
 }
 
@@ -884,6 +881,15 @@ a:hover {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 10;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#media-library-items.drag-over > * {
+    opacity: 0.3;
+    pointer-events: none;
 }
 
 /* Empty state improvements */
@@ -905,6 +911,12 @@ a:hover {
 #no-media-message .upload-area:hover {
     border-color: var(--theme-color, var(--primary));
     background-color: rgba(255, 107, 0, 0.03);
+}
+
+#no-media-message .upload-area.drag-over {
+    border-color: var(--theme-color, var(--primary));
+    background-color: rgba(255, 107, 0, 0.1);
+    transform: scale(1.02);
 }
 
 #no-media-message .upload-area i {
@@ -994,4 +1006,94 @@ a:hover {
 
 #mediaLibraryModal .modal-backdrop {
     z-index: 1055;
+}
+
+/* ========================================
+   DRAG AND DROP UPLOAD STYLES
+   ======================================== */
+
+/* Drag highlight effect for upload areas */
+.drag-highlight {
+    border-color: var(--theme-color, #ff6b00) !important;
+    background-color: rgba(255, 107, 0, 0.05) !important;
+    transition: all 0.2s ease;
+}
+
+/* Upload area hover effect */
+#main-photo-upload-area:hover,
+#gallery-upload-area:hover {
+    border-color: var(--theme-color, #ff6b00);
+    background-color: rgba(255, 107, 0, 0.02);
+}
+
+/* Main photo preview area - make it droppable */
+#main-photo-preview {
+    transition: all 0.2s ease;
+    min-height: 200px;
+}
+
+#main-photo-preview.drag-highlight {
+    border: 2px dashed var(--theme-color, #ff6b00) !important;
+    background-color: rgba(255, 107, 0, 0.05) !important;
+}
+
+/* Gallery upload area styling */
+#gallery-upload-area {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* Upload progress indicator */
+.upload-progress-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+/* Gallery item during upload */
+.gallery-item.uploading-item {
+    pointer-events: none;
+}
+
+/* Gallery item drag styles (for reordering) */
+.gallery-item {
+    cursor: grab;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gallery-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.gallery-item.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.gallery-item.drag-over {
+    border: 2px dashed var(--theme-color, #ff6b00);
+    border-radius: 8px;
+}
+
+/* Drag and drop visual feedback text */
+.upload-area {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.upload-area:hover i,
+.upload-area.drag-highlight i {
+    color: var(--theme-color, #ff6b00) !important;
+    transform: scale(1.1);
+    transition: all 0.2s ease;
+}
+
+.upload-area:hover p,
+.upload-area.drag-highlight p {
+    color: var(--theme-color, #ff6b00) !important;
 }

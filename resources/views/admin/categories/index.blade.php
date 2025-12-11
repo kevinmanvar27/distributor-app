@@ -162,7 +162,7 @@
                     
                     <div class="mb-3">
                         <label class="form-label">Category Image</label>
-                        <div class="border rounded-3 p-3 text-center" id="category-image-preview">
+                        <div class="border rounded-3 p-3 text-center position-relative" id="category-image-preview">
                             <div class="upload-area" id="category-image-upload-area" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
                                 <div>
                                     <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
@@ -214,20 +214,13 @@
                                 <div class="mb-3">
                                     <label for="mediaFile" class="form-label">Select File</label>
                                     <div class="upload-area" id="media-upload-area" style="min-height: 100px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                        <div>
-                                            <i class="fas fa-cloud-upload-alt text-muted mb-2"></i>
-                                            <p class="text-muted mb-0 small">Drag & drop file here or click</p>
+                                        <div class="text-center" id="media-upload-content">
+                                            <i class="fas fa-cloud-upload-alt text-muted mb-2" style="font-size: 24px;"></i>
+                                            <p class="text-muted mb-0 small">Drag & drop file here or click to upload</p>
                                         </div>
                                     </div>
                                     <input type="file" class="form-control d-none" id="mediaFile" name="file" accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/csv">
                                 </div>
-                                <div class="mb-3">
-                                    <label for="mediaName" class="form-label">Name (Optional)</label>
-                                    <input type="text" class="form-control rounded-pill" id="mediaName" name="name">
-                                </div>
-                                <button type="submit" class="btn btn-theme rounded-pill w-100">
-                                    <i class="fas fa-upload me-2"></i>Upload
-                                </button>
                             </form>
                         </div>
                     </div>
@@ -332,7 +325,7 @@
                     
                     <div class="mb-3">
                         <label class="form-label">Subcategory Image</label>
-                        <div class="border rounded-3 p-3 text-center" id="subcategory-image-preview">
+                        <div class="border rounded-3 p-3 text-center position-relative" id="subcategory-image-preview">
                             <div class="upload-area" id="subcategory-image-upload-area" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
                                 <div>
                                     <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
@@ -370,19 +363,41 @@
 
 @section('styles')
 <style>
-    #media-upload-area.drag-over {
+    /* Drag and drop styles for all upload areas */
+    #media-upload-area.drag-over,
+    #category-image-upload-area.drag-over,
+    #subcategory-image-upload-area.drag-over {
         border-color: var(--theme-color, #FF6B00) !important;
         background-color: rgba(255, 107, 0, 0.05);
     }
     
     /* Add more specific styles for better visual feedback */
-    #media-upload-area {
+    #media-upload-area,
+    #category-image-upload-area,
+    #subcategory-image-upload-area {
         transition: all 0.2s ease;
     }
     
-    #media-upload-area:hover {
+    #media-upload-area:hover,
+    #category-image-upload-area:hover,
+    #subcategory-image-upload-area:hover {
         border-color: var(--theme-color, #FF6B00);
         background-color: rgba(255, 107, 0, 0.03);
+    }
+    
+    /* Upload progress indicator */
+    .upload-progress-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        z-index: 10;
     }
 </style>
 @endsection
@@ -457,12 +472,6 @@
         // Adjust select width after DataTable initializes
         $('.dataTables_length select').css('width', '80px');
         
-        // Media upload form submission
-        $('#mediaUploadForm').on('submit', function(e) {
-            e.preventDefault();
-            uploadMedia();
-        });
-        
         // Media search with debounce
         let mediaSearchTimeout;
         $('#mediaSearch').on('input', function() {
@@ -479,11 +488,29 @@
             $('#mediaFile').click();
         });
         
-        // Add change handler for file input to display file information
+        // Click handler for category image upload area (opens media library)
+        $(document).on('click', '#category-image-upload-area', function(e) {
+            // Prevent triggering if clicking on the button inside
+            if (!$(e.target).closest('button').length) {
+                openMediaLibrary('category');
+            }
+        });
+        
+        // Click handler for subcategory image upload area (opens media library)
+        $(document).on('click', '#subcategory-image-upload-area', function(e) {
+            // Prevent triggering if clicking on the button inside
+            if (!$(e.target).closest('button').length) {
+                openMediaLibrary('subcategory');
+            }
+        });
+        
+        // Add change handler for file input to auto-upload
         $('#mediaFile').on('change', function() {
             if (this.files && this.files[0]) {
                 const file = this.files[0];
                 displayFileInfo(file);
+                // Auto-upload the file immediately
+                uploadMedia();
             } else {
                 // Hide file info when no file is selected
                 $('.file-info-container').remove();
@@ -525,9 +552,92 @@
                 // Display file information
                 const file = files[0];
                 displayFileInfo(file);
+                
+                // Auto-upload the file
+                uploadMedia();
             } else {
                 // Hide file info when no file is dropped
                 $('.file-info-container').remove();
+            }
+        });
+        
+        // ============================================
+        // Drag and drop for Category Image Upload Area
+        // ============================================
+        $(document).on('dragover', '#category-image-upload-area', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).addClass('drag-over');
+        });
+        
+        $(document).on('dragenter', '#category-image-upload-area', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).addClass('drag-over');
+        });
+        
+        $(document).on('dragleave', '#category-image-upload-area', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.target === this || $(e.target).closest('#category-image-upload-area').length === 0) {
+                $(this).removeClass('drag-over');
+            }
+        });
+        
+        $(document).on('drop', '#category-image-upload-area', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).removeClass('drag-over');
+            
+            const files = e.originalEvent.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                // Validate it's an image
+                if (file.type.startsWith('image/')) {
+                    uploadAndSelectImage(file, 'category');
+                } else {
+                    alert('Please drop an image file (JPEG, PNG, GIF, or WEBP).');
+                }
+            }
+        });
+        
+        // ================================================
+        // Drag and drop for Subcategory Image Upload Area
+        // ================================================
+        $(document).on('dragover', '#subcategory-image-upload-area', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).addClass('drag-over');
+        });
+        
+        $(document).on('dragenter', '#subcategory-image-upload-area', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).addClass('drag-over');
+        });
+        
+        $(document).on('dragleave', '#subcategory-image-upload-area', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.target === this || $(e.target).closest('#subcategory-image-upload-area').length === 0) {
+                $(this).removeClass('drag-over');
+            }
+        });
+        
+        $(document).on('drop', '#subcategory-image-upload-area', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).removeClass('drag-over');
+            
+            const files = e.originalEvent.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                // Validate it's an image
+                if (file.type.startsWith('image/')) {
+                    uploadAndSelectImage(file, 'subcategory');
+                } else {
+                    alert('Please drop an image file (JPEG, PNG, GIF, or WEBP).');
+                }
             }
         });
         
@@ -1110,11 +1220,15 @@
         
         const formData = new FormData($('#mediaUploadForm')[0]);
         
-        // Show loading indicator
-        const uploadButton = $('#mediaUploadForm button[type="submit"]');
-        const originalText = uploadButton.html();
-        uploadButton.html('<i class="fas fa-spinner fa-spin me-2"></i>Uploading...');
-        uploadButton.prop('disabled', true);
+        // Show loading indicator in upload area
+        const uploadArea = $('#media-upload-area');
+        const uploadContent = $('#media-upload-content');
+        const originalContent = uploadContent.html();
+        uploadContent.html('<i class="fas fa-spinner fa-spin text-theme mb-2" style="font-size: 24px;"></i><p class="text-muted mb-0 small">Uploading...</p>');
+        uploadArea.css('pointer-events', 'none');
+        
+        // Remove file info display during upload
+        $('.file-info-container').remove();
         
         $.ajax({
             url: '/admin/media',
@@ -1133,8 +1247,6 @@
                     // Reload media library
                     loadMedia();
                     
-                    // Show success message
-                    alert('File uploaded successfully!');
                 } else {
                     alert('Error uploading file: ' + (response.error || 'Unknown error'));
                 }
@@ -1154,11 +1266,99 @@
                 }
             },
             complete: function() {
-                // Restore button state
-                uploadButton.html(originalText);
-                uploadButton.prop('disabled', false);
+                // Restore upload area state
+                uploadContent.html(originalContent);
+                uploadArea.css('pointer-events', 'auto');
             }
         });
+    }
+    
+    // Upload image via drag and drop and select it for category/subcategory
+    function uploadAndSelectImage(file, target) {
+        // Validate file type
+        const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validImageTypes.includes(file.type)) {
+            alert('Please upload a valid image file (JPEG, PNG, GIF, or WEBP).');
+            return;
+        }
+        
+        // Validate file size - 25MB limit
+        const maxSize = 25 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('Image size must be less than 25MB.');
+            return;
+        }
+        
+        // Get the preview container based on target
+        const previewContainer = target === 'category' ? '#category-image-preview' : '#subcategory-image-preview';
+        
+        // Show loading indicator in the preview area
+        $(previewContainer).html(`
+            <div class="upload-progress-overlay">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin fa-2x text-theme mb-2"></i>
+                    <p class="mb-0 text-muted">Uploading image...</p>
+                </div>
+            </div>
+        `);
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+        
+        $.ajax({
+            url: '/admin/media',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success && response.media) {
+                    // Use the existing selectMedia function to set the image
+                    selectMedia(response.media.id, response.media.url, target);
+                } else {
+                    // Restore the upload area on error
+                    restoreUploadArea(target);
+                    alert('Error uploading image: ' + (response.error || 'Unknown error'));
+                }
+            },
+            error: function(xhr) {
+                // Restore the upload area on error
+                restoreUploadArea(target);
+                
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    let errors = xhr.responseJSON.errors;
+                    let errorMessages = '';
+                    for (let field in errors) {
+                        errorMessages += errors[field].join(', ') + '\n';
+                    }
+                    alert('Validation errors:\n' + errorMessages);
+                } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                    alert('Error uploading image: ' + xhr.responseJSON.error);
+                } else {
+                    alert('Error uploading image. Please try again.');
+                }
+            }
+        });
+    }
+    
+    // Restore the upload area after failed upload
+    function restoreUploadArea(target) {
+        const previewContainer = target === 'category' ? '#category-image-preview' : '#subcategory-image-preview';
+        const uploadAreaId = target === 'category' ? 'category-image-upload-area' : 'subcategory-image-upload-area';
+        
+        $(previewContainer).html(`
+            <div class="upload-area" id="${uploadAreaId}" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                <div>
+                    <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-2">Drag & drop an image here or click to select</p>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="openMediaLibrary('${target}')">
+                        <i class="fas fa-folder-open me-1"></i> Select from Media Library
+                    </button>
+                </div>
+            </div>
+        `);
     }
 </script>
 @endsection
