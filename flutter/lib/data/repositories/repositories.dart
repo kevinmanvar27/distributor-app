@@ -1,6 +1,7 @@
 /// Repositories Barrel Export
 /// All repositories for the Distributor App
 
+export 'address_repository.dart';
 export 'auth_repository.dart';
 export 'product_repository.dart';
 export 'category_repository.dart';
