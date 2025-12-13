@@ -25,8 +25,7 @@ class HomeController extends ApiController
      *      operationId="getHomeData",
      *      tags={"Home"},
      *      summary="Get home screen data",
-     *      description="Returns all data needed for the home screen including categories, featured products, and user-specific data",
-     *      security={{"sanctum": {}}},
+     *      description="Returns all data needed for the home screen including categories, featured products, and user-specific data. Authentication is optional - if authenticated, returns user-specific data like cart count and wishlist count.",
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
@@ -43,10 +42,6 @@ class HomeController extends ApiController
      *              @OA\Property(property="message", type="string", example="Home data retrieved successfully.")
      *          )
      *       ),
-     *      @OA\Response(
-     *          response=401,
-     *          description="Unauthenticated"
-     *      )
      * )
      * 
      * @param Request $request

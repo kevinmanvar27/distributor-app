@@ -54,6 +54,9 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
     Route::apiResource('products', ProductController::class)->only(['index', 'show']);
     Route::apiResource('pages', PageController::class)->only(['index', 'show']);
+    
+    // Home/Dashboard route (public - works with or without auth)
+    Route::get('/home', [HomeController::class, 'index']);
 });
 
 // Protected API routes
@@ -65,9 +68,6 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // =============================================
     // MOBILE APP API ROUTES (New Flutter App APIs)
     // =============================================
-    
-    // Home/Dashboard route
-    Route::get('/home', [HomeController::class, 'index']);
     
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'show']);

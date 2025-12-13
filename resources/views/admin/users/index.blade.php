@@ -104,11 +104,7 @@
                                                     <td>{{ $user->address ?? 'N/A' }}</td>
                                                     <td>{{ $user->mobile_number ?? 'N/A' }}</td>
                                                     <td>
-                                                        @if($user->date_of_birth)
-                                                            <span class="text-muted">{{ $user->date_of_birth->format('M d, Y') }}</span>
-                                                        @else
-                                                            <span class="text-muted">N/A</span>
-                                                        @endif
+                                                        <span class="text-muted">{{ $user->date_of_birth?->format('M d, Y') ?? 'N/A' }}</span>
                                                     </td>
                                                     <td>
                                                         <div class="btn-group btn-group-sm" role="group">
