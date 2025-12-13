@@ -96,7 +96,7 @@ class ProductSearchController extends ApiController
                   ->orWhere('description', 'like', "%{$query}%")
                   ->orWhere('sku', 'like', "%{$query}%");
             })
-            ->where('is_active', true)
+            ->whereIn('status', ['active', 'published'])
             ->with(['mainPhoto', 'category', 'subCategory'])
             ->orderBy($sortBy, $sortOrder)
             ->paginate($perPage);
@@ -195,7 +195,7 @@ class ProductSearchController extends ApiController
         $sortOrder = $request->sort_order ?? 'asc';
 
         $products = Product::where('category_id', $categoryId)
-            ->where('is_active', true)
+            ->whereIn('status', ['active', 'published'])
             ->with(['mainPhoto', 'category', 'subCategory'])
             ->orderBy($sortBy, $sortOrder)
             ->paginate($perPage);
@@ -297,7 +297,7 @@ class ProductSearchController extends ApiController
         $sortOrder = $request->sort_order ?? 'asc';
 
         $products = Product::where('sub_category_id', $subcategoryId)
-            ->where('is_active', true)
+            ->whereIn('status', ['active', 'published'])
             ->with(['mainPhoto', 'category', 'subCategory'])
             ->orderBy($sortBy, $sortOrder)
             ->paginate($perPage);
@@ -367,7 +367,7 @@ class ProductSearchController extends ApiController
         $subcategories = SubCategory::where('category_id', $id)
             ->where('is_active', true)
             ->withCount(['products' => function ($query) {
-                $query->where('is_active', true);
+                $query->whereIn('status', ['active', 'published']);
             }])
             ->orderBy('name')
             ->get();

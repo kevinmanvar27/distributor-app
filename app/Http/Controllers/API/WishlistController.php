@@ -83,8 +83,7 @@ class WishlistController extends ApiController
                     ? calculateDiscountedPrice($priceToUse, $user) 
                     : $priceToUse;
                 
-                $item->product->is_available = $item->product->is_active && 
-                    $item->product->in_stock && 
+                $item->product->is_available = $item->product->in_stock && 
                     in_array($item->product->status, ['active', 'published']);
             }
             
@@ -155,7 +154,6 @@ class WishlistController extends ApiController
         // Check if product exists and is active
         $product = Product::where('id', $productId)
             ->whereIn('status', ['active', 'published'])
-            ->where('is_active', true)
             ->first();
         
         if (!$product) {
@@ -365,7 +363,6 @@ class WishlistController extends ApiController
         // Get the product
         $product = Product::where('id', $productId)
             ->whereIn('status', ['active', 'published'])
-            ->where('is_active', true)
             ->first();
         
         if (!$product) {

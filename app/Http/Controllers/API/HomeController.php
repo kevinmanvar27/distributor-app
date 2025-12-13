@@ -111,7 +111,6 @@ class HomeController extends ApiController
             ->map(function ($category) {
                 // Count products in this category
                 $productCount = Product::whereIn('status', ['active', 'published'])
-                    ->where('is_active', true)
                     ->get()
                     ->filter(function ($product) use ($category) {
                         if (!$product->product_categories) {
@@ -133,7 +132,6 @@ class HomeController extends ApiController
                 // Add product count to subcategories
                 $category->subCategories->transform(function ($subCategory) use ($category) {
                     $subProductCount = Product::whereIn('status', ['active', 'published'])
-                        ->where('is_active', true)
                         ->get()
                         ->filter(function ($product) use ($category, $subCategory) {
                             if (!$product->product_categories) {
@@ -178,7 +176,6 @@ class HomeController extends ApiController
         // For now, featured products are the most recently updated active products
         // This can be enhanced with a 'is_featured' flag in the future
         $products = Product::whereIn('status', ['active', 'published'])
-            ->where('is_active', true)
             ->where('in_stock', true)
             ->with('mainPhoto')
             ->orderBy('updated_at', 'desc')
@@ -198,7 +195,6 @@ class HomeController extends ApiController
     private function getLatestProducts($user, $limit = 10)
     {
         $products = Product::whereIn('status', ['active', 'published'])
-            ->where('is_active', true)
             ->with('mainPhoto')
             ->orderBy('created_at', 'desc')
             ->limit($limit)
