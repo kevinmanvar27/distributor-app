@@ -70,6 +70,12 @@ class ApiEndpoints {
   static const String profilePassword = '/profile/password';
   static const String profileDeleteAccount = '/profile/delete-account';
 
+  // ==================== Addresses ====================
+  static const String addresses = '/addresses';
+  static String addressById(int id) => '/addresses/$id';
+  static String addressSetDefault(int id) => '/addresses/$id/set-default';
+  static const String addressDefault = '/addresses/default';
+
   // ==================== Notifications ====================
   static const String notifications = '/notifications';
   static String notificationMarkRead(int id) => '/notifications/$id/mark-read';

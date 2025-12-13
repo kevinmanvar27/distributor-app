@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../data/data.dart';
 
@@ -54,6 +55,10 @@ class ProfileController extends GetxController {
   final RxBool promotionalEmails = false.obs;
   final RxString language = 'en'.obs;
   final RxString currency = 'USD'.obs;
+  
+  // Settings toggles (used by profile_screen.dart)
+  final RxBool notificationsEnabled = true.obs;
+  final RxBool darkModeEnabled = false.obs;
 
   // Loading states
   final RxBool isLoading = false.obs;
@@ -78,6 +83,7 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _loadLocalSettings();
     loadProfile();
   }
 
@@ -163,6 +169,49 @@ class ProfileController extends GetxController {
       _populateFormFields();
     }
     isEditingAddress.value = !isEditingAddress.value;
+  }
+
+  /// Load local settings from storage
+  void _loadLocalSettings() {
+    final storage = GetStorage();
+    notificationsEnabled.value = storage.read('notifications_enabled') ?? true;
+    darkModeEnabled.value = storage.read('dark_mode_enabled') ?? false;
+  }
+
+  /// Toggle notifications on/off
+  Future<void> toggleNotifications(bool value) async {
+    notificationsEnabled.value = value;
+    
+    // Save locally
+    final storage = GetStorage();
+    await storage.write('notifications_enabled', value);
+    
+    // Sync with server
+    try {
+      await _authRepository.updateProfile({
+        'settings': {
+          'push_notifications': value,
+          'email_notifications': value,
+        },
+      });
+    } catch (e) {
+      // Revert on failure
+      notificationsEnabled.value = !value;
+      await storage.write('notifications_enabled', !value);
+      _showError('Failed to update notification settings');
+    }
+  }
+
+  /// Toggle dark mode on/off
+  Future<void> toggleDarkMode(bool value) async {
+    darkModeEnabled.value = value;
+    
+    // Save locally
+    final storage = GetStorage();
+    await storage.write('dark_mode_enabled', value);
+    
+    // Update app theme
+    Get.changeThemeMode(value ? ThemeMode.dark : ThemeMode.light);
   }
 
   /// Update profile

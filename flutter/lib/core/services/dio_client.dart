@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide Response;
 
 import '../constants/api_endpoints.dart';
@@ -52,28 +53,28 @@ class DioClient extends GetxService {
   InterceptorsWrapper _loggingInterceptor() {
     return InterceptorsWrapper(
       onRequest: (options, handler) {
-        print('┌─────────────────────────────────────────────────────────────');
-        print('│ REQUEST: ${options.method} ${options.uri}');
-        print('│ Headers: ${options.headers}');
+        debugPrint('┌─────────────────────────────────────────────────────────────');
+        debugPrint('│ REQUEST: ${options.method} ${options.uri}');
+        debugPrint('│ Headers: ${options.headers}');
         if (options.data != null) {
-          print('│ Body: ${options.data}');
+          debugPrint('│ Body: ${options.data}');
         }
-        print('└─────────────────────────────────────────────────────────────');
+        debugPrint('└─────────────────────────────────────────────────────────────');
         return handler.next(options);
       },
       onResponse: (response, handler) {
-        print('┌─────────────────────────────────────────────────────────────');
-        print('│ RESPONSE: ${response.statusCode} ${response.requestOptions.uri}');
-        print('│ Data: ${response.data}');
-        print('└─────────────────────────────────────────────────────────────');
+        debugPrint('┌─────────────────────────────────────────────────────────────');
+        debugPrint('│ RESPONSE: ${response.statusCode} ${response.requestOptions.uri}');
+        debugPrint('│ Data: ${response.data}');
+        debugPrint('└─────────────────────────────────────────────────────────────');
         return handler.next(response);
       },
       onError: (error, handler) {
-        print('┌─────────────────────────────────────────────────────────────');
-        print('│ ERROR: ${error.response?.statusCode} ${error.requestOptions.uri}');
-        print('│ Message: ${error.message}');
-        print('│ Response: ${error.response?.data}');
-        print('└─────────────────────────────────────────────────────────────');
+        debugPrint('┌─────────────────────────────────────────────────────────────');
+        debugPrint('│ ERROR: ${error.response?.statusCode} ${error.requestOptions.uri}');
+        debugPrint('│ Message: ${error.message}');
+        debugPrint('│ Response: ${error.response?.data}');
+        debugPrint('└─────────────────────────────────────────────────────────────');
         return handler.next(error);
       },
     );

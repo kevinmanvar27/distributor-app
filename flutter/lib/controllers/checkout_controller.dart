@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../data/data.dart';
 import 'cart_controller.dart';
@@ -7,12 +9,15 @@ import 'cart_controller.dart';
 /// Manages checkout flow, address selection, payment, and order placement
 class CheckoutController extends GetxController {
   final InvoiceRepository _invoiceRepository;
+  final AddressRepository _addressRepository;
   final CartController _cartController;
 
   CheckoutController({
     InvoiceRepository? invoiceRepository,
+    AddressRepository? addressRepository,
     CartController? cartController,
   })  : _invoiceRepository = invoiceRepository ?? InvoiceRepository(Get.find()),
+        _addressRepository = addressRepository ?? AddressRepository(Get.find()),
         _cartController = cartController ?? Get.find<CartController>();
 
   // Checkout steps
@@ -161,39 +166,26 @@ class CheckoutController extends GetxController {
     total.value = subtotal.value - discount.value + tax.value + shipping.value;
   }
 
-  /// Load saved addresses
+  /// Load saved addresses from API
   Future<void> loadSavedAddresses() async {
     isLoadingAddresses.value = true;
     
     try {
-      // In a real app, this would fetch from API
-      // For now, using mock data
-      savedAddresses.value = [
-        {
-          'id': 1,
-          'name': 'Main Office',
-          'phone': '+1 234 567 8900',
-          'address_line_1': '123 Business Street',
-          'address_line_2': 'Suite 100',
-          'city': 'New York',
-          'state': 'NY',
-          'postal_code': '10001',
-          'country': 'United States',
-          'is_default': true,
-        },
-        {
-          'id': 2,
-          'name': 'Warehouse',
-          'phone': '+1 234 567 8901',
-          'address_line_1': '456 Industrial Ave',
-          'address_line_2': '',
-          'city': 'New Jersey',
-          'state': 'NJ',
-          'postal_code': '07001',
-          'country': 'United States',
-          'is_default': false,
-        },
-      ];
+      final addresses = await _addressRepository.getAddresses();
+      
+      // Convert AddressModel list to Map list for compatibility
+      savedAddresses.value = addresses.map((address) => {
+        'id': address.id,
+        'name': address.name,
+        'phone': address.phone,
+        'address_line_1': address.addressLine1,
+        'address_line_2': address.addressLine2 ?? '',
+        'city': address.city,
+        'state': address.state,
+        'postal_code': address.postalCode,
+        'country': address.country,
+        'is_default': address.isDefault,
+      }).toList();
 
       // Select default address
       final defaultAddress = savedAddresses.firstWhereOrNull(
@@ -202,8 +194,10 @@ class CheckoutController extends GetxController {
       if (defaultAddress != null) {
         selectedAddress.value = defaultAddress;
       }
+    } on ApiException catch (e) {
+      debugPrint('Error loading addresses: ${e.message}');
     } catch (e) {
-      // Silently fail
+      debugPrint('Error loading addresses: $e');
     } finally {
       isLoadingAddresses.value = false;
     }
@@ -215,28 +209,46 @@ class CheckoutController extends GetxController {
     _validateStep();
   }
 
-  /// Add new address
+  /// Add new address via API
   Future<void> addNewAddress() async {
     if (!addressFormKey.currentState!.validate()) return;
 
     isSavingAddress.value = true;
 
     try {
+      // Create address model for API
+      final addressData = AddressModel(
+        id: 0, // Will be assigned by server
+        name: nameController.text,
+        phone: phoneController.text,
+        addressLine1: addressLine1Controller.text,
+        addressLine2: addressLine2Controller.text.isEmpty ? null : addressLine2Controller.text,
+        city: cityController.text,
+        state: stateController.text,
+        postalCode: postalCodeController.text,
+        country: countryController.text,
+        isDefault: isDefaultAddress.value,
+      );
+
+      // Call API to create address
+      final createdAddress = await _addressRepository.createAddress(addressData);
+      
+      // Convert to Map for local state
       final newAddress = {
-        'id': DateTime.now().millisecondsSinceEpoch,
-        'name': nameController.text,
-        'phone': phoneController.text,
-        'address_line_1': addressLine1Controller.text,
-        'address_line_2': addressLine2Controller.text,
-        'city': cityController.text,
-        'state': stateController.text,
-        'postal_code': postalCodeController.text,
-        'country': countryController.text,
-        'is_default': isDefaultAddress.value,
+        'id': createdAddress.id,
+        'name': createdAddress.name,
+        'phone': createdAddress.phone,
+        'address_line_1': createdAddress.addressLine1,
+        'address_line_2': createdAddress.addressLine2 ?? '',
+        'city': createdAddress.city,
+        'state': createdAddress.state,
+        'postal_code': createdAddress.postalCode,
+        'country': createdAddress.country,
+        'is_default': createdAddress.isDefault,
       };
 
-      // If set as default, update other addresses
-      if (isDefaultAddress.value) {
+      // If set as default, update other addresses locally
+      if (createdAddress.isDefault) {
         for (var address in savedAddresses) {
           address['is_default'] = false;
         }
@@ -248,7 +260,10 @@ class CheckoutController extends GetxController {
       _clearAddressForm();
       Get.back();
       _showSuccess('Address added successfully');
+    } on ApiException catch (e) {
+      _showError(e.message);
     } catch (e) {
+      debugPrint('Error adding address: $e');
       _showError('Failed to add address');
     } finally {
       isSavingAddress.value = false;

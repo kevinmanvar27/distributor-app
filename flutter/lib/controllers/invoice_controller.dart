@@ -510,26 +510,30 @@ class InvoiceController extends GetxController {
 }
 
 /// Invoice Filter Extension for copyWith
+/// Uses wrapper objects to distinguish between "not provided" and "explicitly set to null"
 extension InvoiceFilterCopyWith on InvoiceFilter {
   InvoiceFilter copyWith({
-    InvoiceStatus? status,
-    String? search,
-    DateTime? startDate,
-    DateTime? endDate,
-    double? minAmount,
-    double? maxAmount,
-    String? sortBy,
-    String? sortOrder,
+    Object? status = _sentinel,
+    Object? search = _sentinel,
+    Object? startDate = _sentinel,
+    Object? endDate = _sentinel,
+    Object? minAmount = _sentinel,
+    Object? maxAmount = _sentinel,
+    Object? sortBy = _sentinel,
+    Object? sortOrder = _sentinel,
   }) {
     return InvoiceFilter(
-      status: status ?? this.status,
-      search: search ?? this.search,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      minAmount: minAmount ?? this.minAmount,
-      maxAmount: maxAmount ?? this.maxAmount,
-      sortBy: sortBy ?? this.sortBy,
-      sortOrder: sortOrder ?? this.sortOrder,
+      status: status == _sentinel ? this.status : status as InvoiceStatus?,
+      search: search == _sentinel ? this.search : search as String?,
+      startDate: startDate == _sentinel ? this.startDate : startDate as DateTime?,
+      endDate: endDate == _sentinel ? this.endDate : endDate as DateTime?,
+      minAmount: minAmount == _sentinel ? this.minAmount : minAmount as double?,
+      maxAmount: maxAmount == _sentinel ? this.maxAmount : maxAmount as double?,
+      sortBy: sortBy == _sentinel ? this.sortBy : sortBy as String?,
+      sortOrder: sortOrder == _sentinel ? this.sortOrder : sortOrder as String?,
     );
   }
 }
+
+/// Sentinel value to distinguish between "not provided" and "explicitly set to null"
+const _sentinel = Object();

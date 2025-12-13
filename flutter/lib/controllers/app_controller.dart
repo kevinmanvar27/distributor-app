@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
 import '../data/data.dart';
 
 /// Main App Controller
