@@ -135,6 +135,12 @@ class AppConfigController extends ApiController
                 'min_quantity' => (int) $this->getSetting('min_quantity', '1'),
                 'max_quantity' => (int) $this->getSetting('max_quantity', '999'),
             ],
+            
+            // Frontend access permissions
+            'frontend_access' => [
+                'permission' => $this->getSetting('frontend_access_permission', 'open_for_all'),
+                'pending_approval_message' => $this->getSetting('pending_approval_message', 'Your account is pending approval. Please wait for admin approval before accessing the site.'),
+            ],
         ];
 
         return $this->sendResponse($config, 'App configuration retrieved successfully.');
@@ -223,6 +229,12 @@ class AppConfigController extends ApiController
                 'max_order_amount' => (float) $this->getSetting('max_order_amount', '0'),
                 'min_quantity' => (int) $this->getSetting('min_quantity', '1'),
                 'max_quantity' => (int) $this->getSetting('max_quantity', '999'),
+            ],
+            
+            // Frontend access permissions
+            'frontend_access' => [
+                'permission' => $this->getSetting('frontend_access_permission', 'open_for_all'),
+                'pending_approval_message' => $this->getSetting('pending_approval_message', 'Your account is pending approval. Please wait for admin approval before accessing the site.'),
             ],
         ];
 

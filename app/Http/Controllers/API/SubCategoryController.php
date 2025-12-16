@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\SubCategory;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 /**
@@ -147,7 +148,29 @@ class SubCategoryController extends ApiController
             return $this->sendError('Sub category not found.');
         }
 
-        return $this->sendResponse($subCategory, 'Sub category retrieved successfully.');
+        // Fetch products that belong to this subcategory
+        $products = Product::with(['mainPhoto'])
+            ->where('status', 'published')
+            ->get()
+            ->filter(function ($product) use ($id) {
+                if (empty($product->product_categories)) {
+                    return false;
+                }
+                
+                foreach ($product->product_categories as $category) {
+                    if (isset($category['subcategory_ids']) && in_array((int)$id, array_map('intval', $category['subcategory_ids']))) {
+                        return true;
+                    }
+                }
+                return false;
+            })
+            ->values();
+
+        // Convert to array and add products
+        $subCategoryData = $subCategory->toArray();
+        $subCategoryData['products'] = $products;
+
+        return $this->sendResponse($subCategoryData, 'Sub category retrieved successfully.');
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 /**
@@ -137,13 +138,35 @@ class CategoryController extends ApiController
      */
     public function show($id)
     {
-        $category = Category::with('subCategories')->find($id);
+        $category = Category::with(['subCategories', 'image'])->find($id);
 
         if (is_null($category)) {
             return $this->sendError('Category not found.');
         }
 
-        return $this->sendResponse($category, 'Category retrieved successfully.');
+        // Fetch products that belong to this category
+        $products = Product::with(['mainPhoto'])
+            ->where('status', 'published')
+            ->get()
+            ->filter(function ($product) use ($id) {
+                if (empty($product->product_categories)) {
+                    return false;
+                }
+                
+                foreach ($product->product_categories as $category) {
+                    if (isset($category['category_id']) && (int)$category['category_id'] === (int)$id) {
+                        return true;
+                    }
+                }
+                return false;
+            })
+            ->values();
+
+        // Convert to array and add products
+        $categoryData = $category->toArray();
+        $categoryData['products'] = $products;
+
+        return $this->sendResponse($categoryData, 'Category retrieved successfully.');
     }
 
     /**
