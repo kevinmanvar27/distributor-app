@@ -22,7 +22,7 @@ class CategoryController extends ApiController
      *      operationId="getCategoriesList",
      *      tags={"Categories"},
      *      summary="Get list of categories",
-     *      description="Returns list of categories with pagination",
+     *      description="Returns list of active categories with product counts (same as web flow)",
      *      @OA\Parameter(
      *          name="page",
      *          description="Page number",
@@ -48,7 +48,120 @@ class CategoryController extends ApiController
      */
     public function index()
     {
-        $categories = Category::with('subCategories')->paginate(15);
+        // Get active categories with images and subcategories (same as web flow)
+        $categories = Category::where('is_active', true)
+            ->with(['image', 'subCategories' => function ($query) {
+                $query->where('is_active', true)->with('image');
+            }])
+            ->get()
+            ->filter(function ($category) {
+                // Check if category has any subcategories with products
+                foreach ($category->subCategories as $subCategory) {
+                    // Check if this subcategory has any products
+                    $products = Product::whereIn('status', ['active', 'published'])
+                        ->get()
+                        ->filter(function ($product) use ($category, $subCategory) {
+                            if (!$product->product_categories) {
+                                return false;
+                            }
+                            
+                            // Check if product belongs to both the main category and this specific subcategory
+                            foreach ($product->product_categories as $catData) {
+                                if (isset($catData['category_id']) && $catData['category_id'] == $category->id &&
+                                    isset($catData['subcategory_ids']) && in_array($subCategory->id, $catData['subcategory_ids'])) {
+                                    return true;
+                                }
+                            }
+                            
+                            return false;
+                        });
+                    
+                    // If we found products in this subcategory, the category should be displayed
+                    if ($products->count() > 0) {
+                        return true;
+                    }
+                }
+                
+                // Check if the parent category itself has products (not in subcategories)
+                $directCategoryProducts = Product::whereIn('status', ['active', 'published'])
+                    ->get()
+                    ->filter(function ($product) use ($category) {
+                        if (!$product->product_categories) {
+                            return false;
+                        }
+                        
+                        // Check if product belongs directly to this category (without subcategories)
+                        foreach ($product->product_categories as $catData) {
+                            if (isset($catData['category_id']) && $catData['category_id'] == $category->id) {
+                                // Check if subcategory_ids is empty or not set (meaning product is directly in category)
+                                if (!isset($catData['subcategory_ids']) || empty($catData['subcategory_ids'])) {
+                                    return true;
+                                }
+                            }
+                        }
+                        
+                        return false;
+                    });
+                
+                // If we found direct products in this category, display it
+                if ($directCategoryProducts->count() > 0) {
+                    return true;
+                }
+                
+                // No subcategories with products or direct products found
+                return false;
+            })
+            ->values()
+            ->map(function ($category) {
+                // Count products for this category (including both direct and subcategory products)
+                $productCount = Product::whereIn('status', ['active', 'published'])
+                    ->get()
+                    ->filter(function ($product) use ($category) {
+                        if (!$product->product_categories) {
+                            return false;
+                        }
+                        
+                        // Check if product belongs to this category (either directly or through subcategories)
+                        foreach ($product->product_categories as $catData) {
+                            if (isset($catData['category_id']) && $catData['category_id'] == $category->id) {
+                                return true;
+                            }
+                        }
+                        
+                        return false;
+                    })
+                    ->count();
+                
+                // Add product count to category
+                $category->product_count = $productCount;
+                
+                // Add product count to subcategories
+                $category->subCategories->transform(function ($subCategory) use ($category) {
+                    $subProductCount = Product::whereIn('status', ['active', 'published'])
+                        ->get()
+                        ->filter(function ($product) use ($category, $subCategory) {
+                            if (!$product->product_categories) {
+                                return false;
+                            }
+                            
+                            foreach ($product->product_categories as $catData) {
+                                if (isset($catData['category_id']) && $catData['category_id'] == $category->id &&
+                                    isset($catData['subcategory_ids']) && in_array($subCategory->id, $catData['subcategory_ids'])) {
+                                    return true;
+                                }
+                            }
+                            
+                            return false;
+                        })
+                        ->count();
+                    
+                    $subCategory->product_count = $subProductCount;
+                    return $subCategory;
+                });
+                
+                return $category;
+            });
+
         return $this->sendResponse($categories, 'Categories retrieved successfully.');
     }
 
@@ -112,7 +225,7 @@ class CategoryController extends ApiController
      *      operationId="getCategoryById",
      *      tags={"Categories"},
      *      summary="Get category information",
-     *      description="Returns category data",
+     *      description="Returns category data with products (same as web flow)",
      *      @OA\Parameter(
      *          name="id",
      *          description="Category id",
@@ -138,23 +251,30 @@ class CategoryController extends ApiController
      */
     public function show($id)
     {
-        $category = Category::with(['subCategories', 'image'])->find($id);
+        $category = Category::with(['subCategories' => function ($query) {
+            $query->where('is_active', true)->with('image');
+        }, 'image'])->find($id);
 
         if (is_null($category)) {
             return $this->sendError('Category not found.');
         }
 
-        // Fetch products that belong to this category
+        // Check if category is active (same as web flow)
+        if (!$category->is_active) {
+            return $this->sendError('Category is not active.');
+        }
+
+        // Fetch products that belong to this category (same as web flow)
         $products = Product::with(['mainPhoto'])
-            ->where('status', 'published')
+            ->whereIn('status', ['active', 'published'])
             ->get()
             ->filter(function ($product) use ($id) {
                 if (empty($product->product_categories)) {
                     return false;
                 }
                 
-                foreach ($product->product_categories as $category) {
-                    if (isset($category['category_id']) && (int)$category['category_id'] === (int)$id) {
+                foreach ($product->product_categories as $catData) {
+                    if (isset($catData['category_id']) && (int)$catData['category_id'] === (int)$id) {
                         return true;
                     }
                 }
@@ -162,9 +282,33 @@ class CategoryController extends ApiController
             })
             ->values();
 
+        // Filter subcategories to only show those with products (same as web flow)
+        $subCategories = $category->subCategories->filter(function ($subCategory) use ($category) {
+            $products = Product::whereIn('status', ['active', 'published'])
+                ->get()
+                ->filter(function ($product) use ($category, $subCategory) {
+                    if (!$product->product_categories) {
+                        return false;
+                    }
+                    
+                    foreach ($product->product_categories as $catData) {
+                        if (isset($catData['category_id']) && $catData['category_id'] == $category->id &&
+                            isset($catData['subcategory_ids']) && in_array($subCategory->id, $catData['subcategory_ids'])) {
+                            return true;
+                        }
+                    }
+                    
+                    return false;
+                });
+            
+            return $products->count() > 0;
+        })->values();
+
         // Convert to array and add products
         $categoryData = $category->toArray();
+        $categoryData['sub_categories'] = $subCategories;
         $categoryData['products'] = $products;
+        $categoryData['product_count'] = $products->count();
 
         return $this->sendResponse($categoryData, 'Category retrieved successfully.');
     }

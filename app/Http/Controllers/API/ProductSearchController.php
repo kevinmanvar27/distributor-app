@@ -97,7 +97,7 @@ class ProductSearchController extends ApiController
                   ->orWhere('sku', 'like', "%{$query}%");
             })
             ->whereIn('status', ['active', 'published'])
-            ->with(['mainPhoto', 'category', 'subCategory'])
+            ->with(['mainPhoto'])
             ->orderBy($sortBy, $sortOrder)
             ->paginate($perPage);
 
@@ -126,13 +126,20 @@ class ProductSearchController extends ApiController
      *      operationId="getProductsByCategory",
      *      tags={"Product Search"},
      *      summary="Get products by category",
-     *      description="Get all products in a specific category",
+     *      description="Get all products in a specific category (uses JSON product_categories field)",
      *      security={{"sanctum": {}}},
      *      @OA\Parameter(
      *          name="categoryId",
      *          description="Category id",
      *          required=true,
      *          in="path",
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\Parameter(
+     *          name="subcategory",
+     *          description="Subcategory id to filter by (optional)",
+     *          required=false,
+     *          in="query",
      *          @OA\Schema(type="integer")
      *      ),
      *      @OA\Parameter(
@@ -151,7 +158,7 @@ class ProductSearchController extends ApiController
      *      ),
      *      @OA\Parameter(
      *          name="sort_by",
-     *          description="Sort field (name, mrp, created_at)",
+     *          description="Sort field (name, selling_price, created_at)",
      *          required=false,
      *          in="query",
      *          @OA\Schema(type="string")
@@ -183,26 +190,76 @@ class ProductSearchController extends ApiController
      */
     public function byCategory(Request $request, $categoryId)
     {
-        $category = Category::find($categoryId);
+        $category = Category::with(['image', 'subCategories' => function ($query) {
+            $query->where('is_active', true)->with('image');
+        }])->find($categoryId);
 
         if (!$category) {
             return $this->sendError('Category not found.', [], 404);
+        }
+
+        // Check if category is active
+        if (!$category->is_active) {
+            return $this->sendError('Category is not active.', [], 404);
         }
 
         $perPage = $request->per_page ?? 15;
         $perPage = min($perPage, 50);
         $sortBy = $request->sort_by ?? 'name';
         $sortOrder = $request->sort_order ?? 'asc';
+        $selectedSubcategoryId = $request->query('subcategory');
 
-        $products = Product::where('category_id', $categoryId)
-            ->whereIn('status', ['active', 'published'])
-            ->with(['mainPhoto', 'category', 'subCategory'])
-            ->orderBy($sortBy, $sortOrder)
-            ->paginate($perPage);
+        // Get products using JSON filtering (same as web flow)
+        $products = Product::whereIn('status', ['active', 'published'])
+            ->with('mainPhoto')
+            ->get()
+            ->filter(function ($product) use ($categoryId, $selectedSubcategoryId) {
+                if (!$product->product_categories) {
+                    return false;
+                }
+                
+                // Check if product belongs to the main category
+                $belongsToCategory = false;
+                foreach ($product->product_categories as $catData) {
+                    if (isset($catData['category_id']) && $catData['category_id'] == $categoryId) {
+                        $belongsToCategory = true;
+                        break;
+                    }
+                }
+                
+                if (!$belongsToCategory) {
+                    return false;
+                }
+                
+                // If a subcategory filter is applied, check if product belongs to that subcategory
+                if ($selectedSubcategoryId) {
+                    foreach ($product->product_categories as $catData) {
+                        // Check if subcategory_ids array exists and contains the selected subcategory
+                        if (isset($catData['subcategory_ids']) && in_array($selectedSubcategoryId, $catData['subcategory_ids'])) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                
+                return true;
+            })
+            ->values();
+
+        // Sort products
+        if ($sortBy === 'name') {
+            $products = $sortOrder === 'desc' ? $products->sortByDesc('name') : $products->sortBy('name');
+        } elseif ($sortBy === 'selling_price' || $sortBy === 'price-low') {
+            $products = $products->sortBy('selling_price');
+        } elseif ($sortBy === 'price-high') {
+            $products = $products->sortByDesc('selling_price');
+        } elseif ($sortBy === 'created_at') {
+            $products = $sortOrder === 'desc' ? $products->sortByDesc('created_at') : $products->sortBy('created_at');
+        }
 
         // Add discounted price for each product
         $user = $request->user();
-        $products->getCollection()->transform(function ($product) use ($user) {
+        $products = $products->map(function ($product) use ($user) {
             $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
                 ? $product->selling_price 
                 : $product->mrp;
@@ -214,9 +271,43 @@ class ProductSearchController extends ApiController
             return $product;
         });
 
+        // Manual pagination
+        $page = $request->page ?? 1;
+        $total = $products->count();
+        $paginatedProducts = $products->forPage($page, $perPage)->values();
+
+        // Filter subcategories to only show those with products (same as web flow)
+        $subCategories = $category->subCategories->filter(function ($subCategory) use ($categoryId) {
+            $products = Product::whereIn('status', ['active', 'published'])
+                ->get()
+                ->filter(function ($product) use ($categoryId, $subCategory) {
+                    if (!$product->product_categories) {
+                        return false;
+                    }
+                    
+                    foreach ($product->product_categories as $catData) {
+                        if (isset($catData['category_id']) && $catData['category_id'] == $categoryId &&
+                            isset($catData['subcategory_ids']) && in_array($subCategory->id, $catData['subcategory_ids'])) {
+                            return true;
+                        }
+                    }
+                    
+                    return false;
+                });
+            
+            return $products->count() > 0;
+        })->values();
+
         return $this->sendResponse([
             'category' => $category,
-            'products' => $products,
+            'sub_categories' => $subCategories,
+            'products' => [
+                'data' => $paginatedProducts,
+                'current_page' => (int) $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'last_page' => ceil($total / $perPage),
+            ],
         ], 'Products retrieved successfully.');
     }
 
@@ -228,7 +319,7 @@ class ProductSearchController extends ApiController
      *      operationId="getProductsBySubcategory",
      *      tags={"Product Search"},
      *      summary="Get products by subcategory",
-     *      description="Get all products in a specific subcategory",
+     *      description="Get all products in a specific subcategory (uses JSON product_categories field)",
      *      security={{"sanctum": {}}},
      *      @OA\Parameter(
      *          name="subcategoryId",
@@ -253,7 +344,7 @@ class ProductSearchController extends ApiController
      *      ),
      *      @OA\Parameter(
      *          name="sort_by",
-     *          description="Sort field (name, mrp, created_at)",
+     *          description="Sort field (name, selling_price, created_at)",
      *          required=false,
      *          in="query",
      *          @OA\Schema(type="string")
@@ -285,10 +376,15 @@ class ProductSearchController extends ApiController
      */
     public function bySubcategory(Request $request, $subcategoryId)
     {
-        $subcategory = SubCategory::with('category')->find($subcategoryId);
+        $subcategory = SubCategory::with(['category', 'image'])->find($subcategoryId);
 
         if (!$subcategory) {
             return $this->sendError('Subcategory not found.', [], 404);
+        }
+
+        // Check if subcategory is active
+        if (!$subcategory->is_active) {
+            return $this->sendError('Subcategory is not active.', [], 404);
         }
 
         $perPage = $request->per_page ?? 15;
@@ -296,15 +392,43 @@ class ProductSearchController extends ApiController
         $sortBy = $request->sort_by ?? 'name';
         $sortOrder = $request->sort_order ?? 'asc';
 
-        $products = Product::where('sub_category_id', $subcategoryId)
-            ->whereIn('status', ['active', 'published'])
-            ->with(['mainPhoto', 'category', 'subCategory'])
-            ->orderBy($sortBy, $sortOrder)
-            ->paginate($perPage);
+        $categoryId = $subcategory->category_id;
+
+        // Get products using JSON filtering (same as web flow)
+        $products = Product::whereIn('status', ['active', 'published'])
+            ->with('mainPhoto')
+            ->get()
+            ->filter(function ($product) use ($categoryId, $subcategoryId) {
+                if (!$product->product_categories) {
+                    return false;
+                }
+                
+                // Check if product belongs to both the main category and this specific subcategory
+                foreach ($product->product_categories as $catData) {
+                    if (isset($catData['category_id']) && $catData['category_id'] == $categoryId &&
+                        isset($catData['subcategory_ids']) && in_array($subcategoryId, $catData['subcategory_ids'])) {
+                        return true;
+                    }
+                }
+                
+                return false;
+            })
+            ->values();
+
+        // Sort products
+        if ($sortBy === 'name') {
+            $products = $sortOrder === 'desc' ? $products->sortByDesc('name') : $products->sortBy('name');
+        } elseif ($sortBy === 'selling_price' || $sortBy === 'price-low') {
+            $products = $products->sortBy('selling_price');
+        } elseif ($sortBy === 'price-high') {
+            $products = $products->sortByDesc('selling_price');
+        } elseif ($sortBy === 'created_at') {
+            $products = $sortOrder === 'desc' ? $products->sortByDesc('created_at') : $products->sortBy('created_at');
+        }
 
         // Add discounted price for each product
         $user = $request->user();
-        $products->getCollection()->transform(function ($product) use ($user) {
+        $products = $products->map(function ($product) use ($user) {
             $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
                 ? $product->selling_price 
                 : $product->mrp;
@@ -316,9 +440,21 @@ class ProductSearchController extends ApiController
             return $product;
         });
 
+        // Manual pagination
+        $page = $request->page ?? 1;
+        $total = $products->count();
+        $paginatedProducts = $products->forPage($page, $perPage)->values();
+
         return $this->sendResponse([
             'subcategory' => $subcategory,
-            'products' => $products,
+            'category' => $subcategory->category,
+            'products' => [
+                'data' => $paginatedProducts,
+                'current_page' => (int) $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'last_page' => ceil($total / $perPage),
+            ],
         ], 'Products retrieved successfully.');
     }
 
@@ -330,7 +466,7 @@ class ProductSearchController extends ApiController
      *      operationId="getSubcategoriesByCategory",
      *      tags={"Product Search"},
      *      summary="Get subcategories by category",
-     *      description="Get all subcategories in a specific category",
+     *      description="Get all active subcategories in a specific category that have products",
      *      security={{"sanctum": {}}},
      *      @OA\Parameter(
      *          name="id",
@@ -364,13 +500,58 @@ class ProductSearchController extends ApiController
             return $this->sendError('Category not found.', [], 404);
         }
 
+        // Get active subcategories with images (same as web flow)
         $subcategories = SubCategory::where('category_id', $id)
             ->where('is_active', true)
-            ->withCount(['products' => function ($query) {
-                $query->whereIn('status', ['active', 'published']);
-            }])
+            ->with('image')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->filter(function ($subCategory) use ($id) {
+                // Check if this subcategory has any products in this category (same as web flow)
+                $products = Product::whereIn('status', ['active', 'published'])
+                    ->get()
+                    ->filter(function ($product) use ($id, $subCategory) {
+                        if (!$product->product_categories) {
+                            return false;
+                        }
+                        
+                        // Check if product belongs to both the main category and this specific subcategory
+                        foreach ($product->product_categories as $catData) {
+                            if (isset($catData['category_id']) && $catData['category_id'] == $id &&
+                                isset($catData['subcategory_ids']) && in_array($subCategory->id, $catData['subcategory_ids'])) {
+                                return true;
+                            }
+                        }
+                        
+                        return false;
+                    });
+                
+                return $products->count() > 0;
+            })
+            ->values()
+            ->map(function ($subCategory) use ($id) {
+                // Add product count to each subcategory
+                $productCount = Product::whereIn('status', ['active', 'published'])
+                    ->get()
+                    ->filter(function ($product) use ($id, $subCategory) {
+                        if (!$product->product_categories) {
+                            return false;
+                        }
+                        
+                        foreach ($product->product_categories as $catData) {
+                            if (isset($catData['category_id']) && $catData['category_id'] == $id &&
+                                isset($catData['subcategory_ids']) && in_array($subCategory->id, $catData['subcategory_ids'])) {
+                                return true;
+                            }
+                        }
+                        
+                        return false;
+                    })
+                    ->count();
+                
+                $subCategory->product_count = $productCount;
+                return $subCategory;
+            });
 
         return $this->sendResponse([
             'category' => $category,

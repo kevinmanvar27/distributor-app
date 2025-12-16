@@ -46,9 +46,27 @@ class ProductController extends ApiController
      *      )
      *     )
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('mainPhoto')->paginate(15);
+        // Filter by active/published status (same as web flow)
+        $products = Product::whereIn('status', ['active', 'published'])
+            ->with('mainPhoto')
+            ->paginate(15);
+
+        // Add discounted price for each product
+        $user = $request->user();
+        $products->getCollection()->transform(function ($product) use ($user) {
+            $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
+                ? $product->selling_price 
+                : $product->mrp;
+            
+            $product->discounted_price = function_exists('calculateDiscountedPrice') 
+                ? calculateDiscountedPrice($priceToUse, $user) 
+                : $priceToUse;
+            
+            return $product;
+        });
+
         return $this->sendResponse($products, 'Products retrieved successfully.');
     }
 
