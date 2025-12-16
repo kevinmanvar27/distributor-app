@@ -430,8 +430,19 @@ class AppConfigController extends ApiController
      */
     private function getSetting($key, $default = null)
     {
-        $setting = Setting::where('key', $key)->first();
-        return $setting ? $setting->value : $default;
+        // Get the first (and only) settings row, cache it for the request
+        static $settings = null;
+        
+        if ($settings === null) {
+            $settings = Setting::first();
+        }
+        
+        // If no settings row exists or the column doesn't exist, return default
+        if (!$settings || !isset($settings->$key)) {
+            return $default;
+        }
+        
+        return $settings->$key ?? $default;
     }
 
     /**
