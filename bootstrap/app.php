@@ -8,6 +8,7 @@ use App\Http\Middleware\SiteManagement;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\FrontendRedirectIfAuthenticated;
 use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\ForceJsonResponse;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,6 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             SetTheme::class,
             SiteManagement::class,
+        ]);
+        
+        // Force JSON responses for all API routes
+        $middleware->api(prepend: [
+            ForceJsonResponse::class,
         ]);
         
         // Register middleware aliases

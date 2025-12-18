@@ -27,8 +27,8 @@ class ProductSearchController extends ApiController
      *      security={{"sanctum": {}}},
      *      @OA\Parameter(
      *          name="q",
-     *          description="Search query",
-     *          required=true,
+     *          description="Search query (optional - returns all products if not provided)",
+     *          required=false,
      *          in="query",
      *          @OA\Schema(type="string")
      *      ),
@@ -80,7 +80,7 @@ class ProductSearchController extends ApiController
     public function search(Request $request)
     {
         $request->validate([
-            'q' => 'required|string|min:1|max:255',
+            'q' => 'nullable|string|max:255',
             'per_page' => 'nullable|integer|min:1|max:50',
             'sort_by' => 'nullable|string|in:name,mrp,created_at',
             'sort_order' => 'nullable|string|in:asc,desc',
@@ -91,14 +91,19 @@ class ProductSearchController extends ApiController
         $sortBy = $request->sort_by ?? 'name';
         $sortOrder = $request->sort_order ?? 'asc';
 
-        $products = Product::where(function ($q) use ($query) {
+        $productsQuery = Product::whereIn('status', ['active', 'published'])
+            ->with(['mainPhoto']);
+
+        // Only apply search filter if query is provided
+        if ($query && strlen(trim($query)) > 0) {
+            $productsQuery->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                   ->orWhere('description', 'like', "%{$query}%")
                   ->orWhere('sku', 'like', "%{$query}%");
-            })
-            ->whereIn('status', ['active', 'published'])
-            ->with(['mainPhoto'])
-            ->orderBy($sortBy, $sortOrder)
+            });
+        }
+
+        $products = $productsQuery->orderBy($sortBy, $sortOrder)
             ->paginate($perPage);
 
         // Add discounted price for each product
