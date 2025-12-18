@@ -57,6 +57,12 @@ Route::prefix('v1')->group(function () {
     Route::get('/app-config', [AppConfigController::class, 'appConfigPublic']);
     Route::get('/company-info', [AppConfigController::class, 'companyInfo']);
     
+    // Product Search routes (public - no auth required) - MUST be before apiResource routes
+    Route::get('/products/search', [ProductSearchController::class, 'search']);
+    Route::get('/products/by-category/{categoryId}', [ProductSearchController::class, 'byCategory']);
+    Route::get('/products/by-subcategory/{subcategoryId}', [ProductSearchController::class, 'bySubcategory']);
+    Route::get('/categories/{id}/subcategories', [ProductSearchController::class, 'subcategoriesByCategory']);
+    
     // Public resources
     Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
     Route::apiResource('subcategories', SubCategoryController::class)->only(['index', 'show']);
@@ -80,7 +86,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
-    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar']);
     Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar']);
     Route::put('/profile/password', [ProfileController::class, 'changePassword']);
     Route::delete('/profile/delete-account', [ProfileController::class, 'deleteAccount']);
@@ -108,12 +114,6 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/my-invoices/{id}/download-pdf', [MyInvoiceController::class, 'downloadPdf']);
     Route::post('/my-invoices/{id}/add-to-cart', [MyInvoiceController::class, 'addToCart']);
     Route::delete('/my-invoices/{id}', [MyInvoiceController::class, 'destroy']);
-    
-    // Product Search routes
-    Route::get('/products/search', [ProductSearchController::class, 'search']);
-    Route::get('/products/by-category/{categoryId}', [ProductSearchController::class, 'byCategory']);
-    Route::get('/products/by-subcategory/{subcategoryId}', [ProductSearchController::class, 'bySubcategory']);
-    Route::get('/categories/{id}/subcategories', [ProductSearchController::class, 'subcategoriesByCategory']);
     
     // User Notification routes
     Route::get('/notifications', [NotificationController::class, 'index']);
