@@ -63,10 +63,6 @@ class PasswordResetController extends ApiController
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
-            return $this->sendError('No account found with this email address.', [], 404);
-        }
-
         // Check if a recent OTP exists (rate limiting - 1 minute cooldown)
         $recentToken = DB::table('password_reset_tokens')
             ->where('email', $request->email)
@@ -91,18 +87,21 @@ class PasswordResetController extends ApiController
             'created_at' => Carbon::now(),
         ]);
 
-        // Send email with OTP
-        try {
-            $this->sendOtpEmail($user, $otp);
-        } catch (\Exception $e) {
-            \Log::error('Password reset OTP email failed: ' . $e->getMessage());
-            return $this->sendError('Failed to send OTP. Please try again later.', [], 500);
+        // Send email with OTP (only if user exists)
+        if ($user) {
+            try {
+                $this->sendOtpEmail($user, $otp);
+            } catch (\Exception $e) {
+                \Log::error('Password reset OTP email failed: ' . $e->getMessage());
+                // Don't return error - still show success for security
+            }
         }
 
+        // Always return success response (prevents email enumeration)
         return $this->sendResponse([
             'email' => $this->maskEmail($request->email),
             'expires_in' => 10, // minutes
-        ], 'OTP has been sent to your email address.');
+        ], 'If an account exists with this email, an OTP has been sent.');
     }
 
     /**
