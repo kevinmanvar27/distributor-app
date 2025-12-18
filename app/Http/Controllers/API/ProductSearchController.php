@@ -98,8 +98,7 @@ class ProductSearchController extends ApiController
         if ($query && strlen(trim($query)) > 0) {
             $productsQuery->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%")
-                  ->orWhere('sku', 'like', "%{$query}%");
+                  ->orWhere('description', 'like', "%{$query}%");
             });
         }
 
