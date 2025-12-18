@@ -468,21 +468,32 @@ class AuthController extends GetxController {
     }
   }
 
-  /// Forgot password
+  // Password Reset State
+  final RxString resetEmail = ''.obs;
+  final RxString resetToken = ''.obs;
+  final RxString maskedEmail = ''.obs;
+  final RxInt otpExpiresIn = 0.obs;
+  final RxInt resendCooldown = 0.obs;
+
+  /// Forgot password - Request OTP
   Future<bool> forgotPassword(String email) async {
     clearErrors();
     isLoading.value = true;
 
     try {
-      await _authRepository.forgotPassword(email);
+      final response = await _authRepository.forgotPassword(email);
+      
+      resetEmail.value = email;
+      maskedEmail.value = response['email'] ?? '';
+      otpExpiresIn.value = response['expires_in'] ?? 10;
 
       Get.snackbar(
-        'Email Sent',
-        'Password reset instructions have been sent to your email',
+        'OTP Sent',
+        'A verification code has been sent to your email',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green.shade100,
         colorText: Colors.green.shade900,
-        duration: const Duration(seconds: 5),
+        duration: const Duration(seconds: 3),
       );
 
       return true;
@@ -501,10 +512,107 @@ class AuthController extends GetxController {
     }
   }
 
+  /// Verify OTP
+  Future<bool> verifyOtp(String otp) async {
+    clearErrors();
+    isLoading.value = true;
+
+    try {
+      final response = await _authRepository.verifyOtp(
+        email: resetEmail.value,
+        otp: otp,
+      );
+
+      resetToken.value = response['reset_token'] ?? '';
+
+      Get.snackbar(
+        'Verified',
+        'OTP verified successfully',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade100,
+        colorText: Colors.green.shade900,
+      );
+
+      return true;
+    } on ApiException catch (e) {
+      errorMessage.value = e.message;
+      Get.snackbar(
+        'Error',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade900,
+      );
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Resend OTP
+  Future<bool> resendOtp() async {
+    if (resendCooldown.value > 0) {
+      Get.snackbar(
+        'Please Wait',
+        'You can resend OTP in ${resendCooldown.value} seconds',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange.shade100,
+        colorText: Colors.orange.shade900,
+      );
+      return false;
+    }
+
+    clearErrors();
+    isLoading.value = true;
+
+    try {
+      final response = await _authRepository.resendOtp(resetEmail.value);
+      
+      maskedEmail.value = response['email'] ?? maskedEmail.value;
+      otpExpiresIn.value = response['expires_in'] ?? 10;
+      
+      // Start cooldown timer
+      _startResendCooldown();
+
+      Get.snackbar(
+        'OTP Resent',
+        'A new verification code has been sent to your email',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade100,
+        colorText: Colors.green.shade900,
+      );
+
+      return true;
+    } on ApiException catch (e) {
+      errorMessage.value = e.message;
+      Get.snackbar(
+        'Error',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade900,
+      );
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Start resend cooldown timer
+  void _startResendCooldown() {
+    resendCooldown.value = 60;
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(seconds: 1));
+      if (resendCooldown.value > 0) {
+        resendCooldown.value--;
+        return true;
+      }
+      return false;
+    });
+  }
+
   /// Reset password
   Future<bool> resetPassword({
-    required String email,
-    required String token,
     required String password,
     required String passwordConfirmation,
   }) async {
@@ -513,11 +621,16 @@ class AuthController extends GetxController {
 
     try {
       await _authRepository.resetPassword(
-        email: email,
-        token: token,
+        email: resetEmail.value,
+        token: resetToken.value,
         password: password,
         passwordConfirmation: passwordConfirmation,
       );
+
+      // Clear reset state
+      resetEmail.value = '';
+      resetToken.value = '';
+      maskedEmail.value = '';
 
       Get.snackbar(
         'Success',
@@ -535,10 +648,26 @@ class AuthController extends GetxController {
           e.errors!.map((key, value) => MapEntry(key, value.toString())),
         ));
       }
+      Get.snackbar(
+        'Error',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade900,
+      );
       return false;
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Clear password reset state
+  void clearResetState() {
+    resetEmail.value = '';
+    resetToken.value = '';
+    maskedEmail.value = '';
+    otpExpiresIn.value = 0;
+    resendCooldown.value = 0;
   }
 
   /// Resend verification email

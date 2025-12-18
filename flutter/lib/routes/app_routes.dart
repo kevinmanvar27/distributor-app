@@ -4,6 +4,8 @@ import '../views/screens/main_screen.dart';
 import '../views/screens/auth/login_screen.dart';
 import '../views/screens/auth/register_screen.dart';
 import '../views/screens/auth/forgot_password_screen.dart';
+import '../views/screens/auth/otp_verification_screen.dart';
+import '../views/screens/auth/reset_password_screen.dart';
 import '../views/screens/home/home_screen.dart';
 import '../views/screens/products/products_screen.dart';
 import '../views/screens/products/product_detail_screen.dart';
@@ -29,6 +31,8 @@ class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
+  static const String otpVerification = '/otp-verification';
+  static const String resetPassword = '/reset-password';
   static const String home = '/home';
   static const String products = '/products';
   static const String productDetail = '/product/:id';
@@ -86,6 +90,16 @@ class AppRoutes {
     GetPage(
       name: forgotPassword,
       page: () => const ForgotPasswordScreen(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: otpVerification,
+      page: () => const OtpVerificationScreen(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: resetPassword,
+      page: () => const ResetPasswordScreen(),
       transition: Transition.rightToLeft,
     ),
 
@@ -240,6 +254,8 @@ class AppRoutes {
   static void toLogin() => Get.offAllNamed(login);
   static void toRegister() => Get.toNamed(register);
   static void toForgotPassword() => Get.toNamed(forgotPassword);
+  static void toOtpVerification() => Get.toNamed(otpVerification);
+  static void toResetPassword() => Get.toNamed(resetPassword);
   static void toHome() => Get.toNamed(home);
   static void toProducts({Map<String, dynamic>? arguments}) =>
       Get.toNamed(products, arguments: arguments);

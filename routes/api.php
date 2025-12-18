@@ -42,8 +42,10 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
     
-    // Password Reset routes (public)
+    // Password Reset routes with OTP (public)
     Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
+    Route::post('/verify-otp', [PasswordResetController::class, 'verifyOtp']);
+    Route::post('/resend-otp', [PasswordResetController::class, 'resendOtp']);
     Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
     Route::post('/verify-reset-token', [PasswordResetController::class, 'verifyResetToken']);
     

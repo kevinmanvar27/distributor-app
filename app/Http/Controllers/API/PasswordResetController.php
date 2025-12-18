@@ -13,20 +13,20 @@ use Carbon\Carbon;
 /**
  * @OA\Tag(
  *     name="Password Reset",
- *     description="API Endpoints for Password Reset"
+ *     description="API Endpoints for Password Reset with OTP"
  * )
  */
 class PasswordResetController extends ApiController
 {
     /**
-     * Request password reset (forgot password)
+     * Request password reset (forgot password) - Sends OTP
      * 
      * @OA\Post(
      *      path="/api/v1/forgot-password",
      *      operationId="forgotPassword",
      *      tags={"Password Reset"},
-     *      summary="Request password reset",
-     *      description="Send password reset link to user's email",
+     *      summary="Request password reset OTP",
+     *      description="Send password reset OTP to user's email",
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(
@@ -36,7 +36,7 @@ class PasswordResetController extends ApiController
      *      ),
      *      @OA\Response(
      *          response=200,
-     *          description="Password reset link sent",
+     *          description="OTP sent successfully",
      *       ),
      *      @OA\Response(
      *          response=404,
@@ -64,42 +64,157 @@ class PasswordResetController extends ApiController
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            // For security, don't reveal if email exists or not
-            return $this->sendResponse(null, 'If the email exists, a password reset link will be sent.');
+            return $this->sendError('No account found with this email address.', [], 404);
         }
 
-        // Check if a recent token exists (rate limiting)
+        // Check if a recent OTP exists (rate limiting - 1 minute cooldown)
         $recentToken = DB::table('password_reset_tokens')
             ->where('email', $request->email)
-            ->where('created_at', '>', Carbon::now()->subMinutes(2))
+            ->where('created_at', '>', Carbon::now()->subMinutes(1))
             ->first();
 
         if ($recentToken) {
-            return $this->sendError('Please wait before requesting another reset link.', [], 429);
+            $remainingSeconds = 60 - Carbon::parse($recentToken->created_at)->diffInSeconds(Carbon::now());
+            return $this->sendError("Please wait {$remainingSeconds} seconds before requesting another OTP.", [], 429);
         }
 
-        // Generate token
-        $token = Str::random(64);
+        // Generate 6-digit OTP
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         // Delete any existing tokens for this email
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
-        // Store new token
+        // Store new OTP (hashed for security)
         DB::table('password_reset_tokens')->insert([
             'email' => $request->email,
-            'token' => Hash::make($token),
+            'token' => Hash::make($otp),
             'created_at' => Carbon::now(),
         ]);
 
-        // Send email with reset link
+        // Send email with OTP
         try {
-            $this->sendResetEmail($user, $token);
+            $this->sendOtpEmail($user, $otp);
         } catch (\Exception $e) {
-            // Log the error but don't reveal to user
-            \Log::error('Password reset email failed: ' . $e->getMessage());
+            \Log::error('Password reset OTP email failed: ' . $e->getMessage());
+            return $this->sendError('Failed to send OTP. Please try again later.', [], 500);
         }
 
-        return $this->sendResponse(null, 'If the email exists, a password reset link will be sent.');
+        return $this->sendResponse([
+            'email' => $this->maskEmail($request->email),
+            'expires_in' => 10, // minutes
+        ], 'OTP has been sent to your email address.');
+    }
+
+    /**
+     * Verify OTP
+     * 
+     * @OA\Post(
+     *      path="/api/v1/verify-otp",
+     *      operationId="verifyOtp",
+     *      tags={"Password Reset"},
+     *      summary="Verify OTP",
+     *      description="Verify the OTP sent to user's email",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"email", "otp"},
+     *              @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *              @OA\Property(property="otp", type="string", example="123456")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="OTP verified successfully",
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Invalid or expired OTP"
+     *      ),
+     *      @OA\Response(
+     *          response=422,
+     *          description="Validation error"
+     *      )
+     * )
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|string|size:6',
+        ]);
+
+        // Find the token record
+        $tokenRecord = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->first();
+
+        if (!$tokenRecord) {
+            return $this->sendError('Invalid or expired OTP. Please request a new one.', [], 400);
+        }
+
+        // Check if OTP is expired (10 minutes)
+        if (Carbon::parse($tokenRecord->created_at)->addMinutes(10)->isPast()) {
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            return $this->sendError('OTP has expired. Please request a new one.', [], 400);
+        }
+
+        // Verify OTP
+        if (!Hash::check($request->otp, $tokenRecord->token)) {
+            return $this->sendError('Invalid OTP. Please check and try again.', [], 400);
+        }
+
+        // Generate a reset token for the next step
+        $resetToken = Str::random(64);
+        
+        // Update the record with reset token
+        DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->update([
+                'token' => Hash::make($resetToken),
+                'created_at' => Carbon::now(), // Reset expiry
+            ]);
+
+        return $this->sendResponse([
+            'reset_token' => $resetToken,
+            'expires_in' => 10, // minutes
+        ], 'OTP verified successfully. You can now reset your password.');
+    }
+
+    /**
+     * Resend OTP
+     * 
+     * @OA\Post(
+     *      path="/api/v1/resend-otp",
+     *      operationId="resendOtp",
+     *      tags={"Password Reset"},
+     *      summary="Resend OTP",
+     *      description="Resend OTP to user's email",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"email"},
+     *              @OA\Property(property="email", type="string", format="email", example="user@example.com")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="OTP resent successfully",
+     *       ),
+     *      @OA\Response(
+     *          response=429,
+     *          description="Too many requests"
+     *      )
+     * )
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function resendOtp(Request $request)
+    {
+        return $this->forgotPassword($request);
     }
 
     /**
@@ -110,7 +225,7 @@ class PasswordResetController extends ApiController
      *      operationId="resetPassword",
      *      tags={"Password Reset"},
      *      summary="Reset password",
-     *      description="Reset password using token received via email",
+     *      description="Reset password using token received after OTP verification",
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(
@@ -155,11 +270,10 @@ class PasswordResetController extends ApiController
             return $this->sendError('Invalid or expired reset token.', [], 400);
         }
 
-        // Check if token is expired (60 minutes)
-        if (Carbon::parse($tokenRecord->created_at)->addMinutes(60)->isPast()) {
-            // Delete expired token
+        // Check if token is expired (10 minutes)
+        if (Carbon::parse($tokenRecord->created_at)->addMinutes(10)->isPast()) {
             DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-            return $this->sendError('Reset token has expired. Please request a new one.', [], 400);
+            return $this->sendError('Reset token has expired. Please start over.', [], 400);
         }
 
         // Verify token
@@ -237,8 +351,8 @@ class PasswordResetController extends ApiController
             return $this->sendError('Invalid or expired reset token.', [], 400);
         }
 
-        // Check if token is expired (60 minutes)
-        if (Carbon::parse($tokenRecord->created_at)->addMinutes(60)->isPast()) {
+        // Check if token is expired (10 minutes)
+        if (Carbon::parse($tokenRecord->created_at)->addMinutes(10)->isPast()) {
             return $this->sendError('Reset token has expired. Please request a new one.', [], 400);
         }
 
@@ -249,30 +363,43 @@ class PasswordResetController extends ApiController
 
         return $this->sendResponse([
             'valid' => true,
-            'expires_at' => Carbon::parse($tokenRecord->created_at)->addMinutes(60)->toIso8601String(),
+            'expires_at' => Carbon::parse($tokenRecord->created_at)->addMinutes(10)->toIso8601String(),
         ], 'Token is valid.');
     }
 
     /**
-     * Send reset email to user
+     * Send OTP email to user
      * 
      * @param User $user
-     * @param string $token
+     * @param string $otp
      * @return void
      */
-    private function sendResetEmail(User $user, string $token)
+    private function sendOtpEmail(User $user, string $otp)
     {
-        $resetUrl = config('app.frontend_url', config('app.url')) . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
-        
-        // Use Laravel's built-in mail or a custom mailable
-        Mail::send('emails.password-reset', [
+        Mail::send('emails.password-reset-otp', [
             'user' => $user,
-            'resetUrl' => $resetUrl,
-            'token' => $token,
-            'expiresIn' => '60 minutes',
+            'otp' => $otp,
+            'expiresIn' => '10 minutes',
         ], function ($message) use ($user) {
             $message->to($user->email, $user->name)
-                    ->subject('Password Reset Request - ' . config('app.name'));
+                    ->subject('Password Reset OTP - ' . config('app.name'));
         });
+    }
+
+    /**
+     * Mask email for privacy
+     * 
+     * @param string $email
+     * @return string
+     */
+    private function maskEmail(string $email): string
+    {
+        $parts = explode('@', $email);
+        $name = $parts[0];
+        $domain = $parts[1];
+        
+        $maskedName = substr($name, 0, 2) . str_repeat('*', max(strlen($name) - 4, 2)) . substr($name, -2);
+        
+        return $maskedName . '@' . $domain;
     }
 }

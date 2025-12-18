@@ -237,20 +237,67 @@ class AuthRepository {
     }
   }
 
-  /// Forgot password - Request reset link
-  Future<void> forgotPassword(String email) async {
-    final response = await _api.post(
+  /// Forgot password - Request OTP
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    final response = await _api.post<Map<String, dynamic>>(
       '/api/v1/forgot-password',
       body: {'email': email},
+      fromJsonT: (data) => data as Map<String, dynamic>,
     );
 
     if (!response.success) {
       throw ApiException(
-        message: response.message ?? 'Failed to send reset link',
+        message: response.message ?? 'Failed to send OTP',
         statusCode: response.statusCode,
         errors: response.errors,
       );
     }
+
+    return response.data ?? {};
+  }
+
+  /// Verify OTP
+  Future<Map<String, dynamic>> verifyOtp({
+    required String email,
+    required String otp,
+  }) async {
+    final response = await _api.post<Map<String, dynamic>>(
+      '/api/v1/verify-otp',
+      body: {
+        'email': email,
+        'otp': otp,
+      },
+      fromJsonT: (data) => data as Map<String, dynamic>,
+    );
+
+    if (!response.success) {
+      throw ApiException(
+        message: response.message ?? 'Invalid OTP',
+        statusCode: response.statusCode,
+        errors: response.errors,
+      );
+    }
+
+    return response.data ?? {};
+  }
+
+  /// Resend OTP
+  Future<Map<String, dynamic>> resendOtp(String email) async {
+    final response = await _api.post<Map<String, dynamic>>(
+      '/api/v1/resend-otp',
+      body: {'email': email},
+      fromJsonT: (data) => data as Map<String, dynamic>,
+    );
+
+    if (!response.success) {
+      throw ApiException(
+        message: response.message ?? 'Failed to resend OTP',
+        statusCode: response.statusCode,
+        errors: response.errors,
+      );
+    }
+
+    return response.data ?? {};
   }
 
   /// Reset password with token
