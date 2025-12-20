@@ -131,9 +131,12 @@
                                                 <tr>
                                                     <td>
                                                         <div>
-                                                            <strong>{{ $item['product_name'] ?? 'Product' }}</strong>
-                                                            @if(!empty($item['product_description']))
-                                                                <small class="text-muted">{{ Str::limit($item['product_description'], 50) }}</small>
+                                                            <strong>{{ $item['product_name'] ?? $item['name'] ?? $item['title'] ?? 'Product' }}</strong>
+                                                            @php
+                                                                $description = $item['product_description'] ?? $item['description'] ?? null;
+                                                            @endphp
+                                                            @if(!empty($description))
+                                                                <small class="text-muted">{{ Str::limit($description, 50) }}</small>
                                                             @endif
                                                         </div>
                                                     </td>
