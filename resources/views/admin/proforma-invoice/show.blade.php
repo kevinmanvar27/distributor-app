@@ -127,7 +127,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach($cartItems as $index => $item)
+                                                @forelse($cartItems as $index => $item)
                                                 <tr>
                                                     <td>
                                                         <div>
@@ -136,7 +136,7 @@
                                                                 $description = $item['product_description'] ?? $item['description'] ?? null;
                                                             @endphp
                                                             @if(!empty($description))
-                                                                <small class="text-muted">{{ Str::limit($description, 50) }}</small>
+                                                                <small class="text-muted d-block">{{ Str::limit($description, 50) }}</small>
                                                             @endif
                                                         </div>
                                                     </td>
@@ -171,7 +171,14 @@
                                                         </button>
                                                     </td>
                                                 </tr>
-                                                @endforeach
+                                                @empty
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted py-4">
+                                                        <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                                        No products found in this invoice
+                                                    </td>
+                                                </tr>
+                                                @endforelse
                                             </tbody>
                                         </table>
                                     </div>

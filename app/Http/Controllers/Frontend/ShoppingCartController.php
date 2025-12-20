@@ -577,8 +577,8 @@ class ShoppingCartController extends Controller
             return response()->json(['error' => 'Invoice not found'], 404);
         }
         
-        // Decode the invoice data
-        $invoiceData = json_decode($proformaInvoice->invoice_data, true);
+        // Get the invoice data (already decoded by model casting)
+        $invoiceData = $proformaInvoice->invoice_data;
         
         // Automatically remove all notifications for this invoice when viewing directly
         $unreadCount = 0;
@@ -648,8 +648,8 @@ class ShoppingCartController extends Controller
             return redirect()->route('frontend.cart.proforma.invoices')->with('error', 'Only draft invoices can be added to cart.');
         }
         
-        // Decode the invoice data
-        $invoiceData = json_decode($proformaInvoice->invoice_data, true);
+        // Get the invoice data (already decoded by model casting)
+        $invoiceData = $proformaInvoice->invoice_data;
         
         // Add each item from the invoice to the cart
         if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
@@ -797,8 +797,8 @@ class ShoppingCartController extends Controller
             return redirect()->route('frontend.cart.proforma.invoices')->with('error', 'Invoice not found.');
         }
         
-        // Decode the invoice data
-        $invoiceData = json_decode($proformaInvoice->invoice_data, true);
+        // Get the invoice data (already decoded by model casting)
+        $invoiceData = $proformaInvoice->invoice_data;
         
         // Prepare data for the PDF view
         $data = [

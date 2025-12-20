@@ -35,8 +35,22 @@ class ProformaInvoiceController extends Controller
     {
         $proformaInvoice = ProformaInvoice::with('user')->findOrFail($id);
         
-        // Get invoice data (already decoded by model casting)
+        // Get invoice data (handle both array and JSON string, including double-encoded)
         $invoiceData = $proformaInvoice->invoice_data;
+        
+        // Handle case where invoice_data might be a JSON string (double-encoded)
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            // Check if it's still a string (triple-encoded edge case)
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        // Ensure we have an array
+        if (!is_array($invoiceData)) {
+            $invoiceData = [];
+        }
         
         // Extract cart items and customer info
         $cartItems = $invoiceData['cart_items'] ?? [];
@@ -207,8 +221,22 @@ class ProformaInvoiceController extends Controller
     {
         $proformaInvoice = ProformaInvoice::with('user')->findOrFail($id);
         
-        // Get invoice data (already decoded by model casting)
+        // Get invoice data (handle both array and JSON string, including double-encoded)
         $invoiceData = $proformaInvoice->invoice_data;
+        
+        // Handle case where invoice_data might be a JSON string (double-encoded)
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            // Check if it's still a string (triple-encoded edge case)
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        // Ensure we have an array
+        if (!is_array($invoiceData)) {
+            $invoiceData = [];
+        }
         
         // Extract cart items and customer info
         $cartItems = $invoiceData['cart_items'] ?? [];
