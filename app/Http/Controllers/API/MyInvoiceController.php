@@ -18,6 +18,25 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class MyInvoiceController extends ApiController
 {
     /**
+     * Decode invoice data - handles both array (from model cast) and JSON string
+     *
+     * @param mixed $invoiceData
+     * @return array|null
+     */
+    private function decodeInvoiceData($invoiceData): ?array
+    {
+        if (is_array($invoiceData)) {
+            return $invoiceData;
+        }
+        
+        if (is_string($invoiceData)) {
+            return json_decode($invoiceData, true);
+        }
+        
+        return null;
+    }
+
+    /**
      * Get authenticated user's proforma invoices
      * 
      * @OA\Get(
@@ -70,7 +89,7 @@ class MyInvoiceController extends ApiController
         
         // Decode invoice_data for each invoice
         $invoices->getCollection()->transform(function ($invoice) {
-            $invoice->invoice_data_decoded = json_decode($invoice->invoice_data, true);
+            $invoice->invoice_data_decoded = $this->decodeInvoiceData($invoice->invoice_data);
             return $invoice;
         });
         
@@ -124,7 +143,7 @@ class MyInvoiceController extends ApiController
             return $this->sendError('Invoice not found.', [], 404);
         }
 
-        $invoiceData = json_decode($invoice->invoice_data, true);
+        $invoiceData = $this->decodeInvoiceData($invoice->invoice_data);
 
         return $this->sendResponse([
             'invoice' => $invoice,
@@ -182,7 +201,7 @@ class MyInvoiceController extends ApiController
             return $this->sendError('Invoice not found.', [], 404);
         }
 
-        $invoiceData = json_decode($invoice->invoice_data, true);
+        $invoiceData = $this->decodeInvoiceData($invoice->invoice_data);
 
         // Prepare data for the PDF view
         $data = [
@@ -261,7 +280,7 @@ class MyInvoiceController extends ApiController
             return $this->sendError('Only draft invoices can be added to cart.', [], 400);
         }
 
-        $invoiceData = json_decode($invoice->invoice_data, true);
+        $invoiceData = $this->decodeInvoiceData($invoice->invoice_data);
         $addedItems = [];
         $skippedItems = [];
 
