@@ -144,8 +144,20 @@ class ProformaInvoiceController extends Controller
         $invoiceData['discount_percentage'] = (float) $request->input('discount_percentage', $invoiceData['discount_percentage'] ?? 0);
         $invoiceData['discount_amount'] = (float) $request->input('discount_amount', $invoiceData['discount_amount'] ?? 0);
         $invoiceData['shipping'] = (float) $request->input('shipping', $invoiceData['shipping'] ?? 0);
-        $invoiceData['tax_percentage'] = (float) $request->input('tax_percentage', $invoiceData['tax_percentage'] ?? 0);
-        $invoiceData['tax_amount'] = (float) $request->input('tax_amount', $invoiceData['tax_amount'] ?? 0);
+        
+        // Handle GST type
+        $gstType = $request->input('gst_type', $invoiceData['gst_type'] ?? 'with_gst');
+        $invoiceData['gst_type'] = $gstType;
+        
+        // If without GST, force tax values to 0
+        if ($gstType === 'without_gst') {
+            $invoiceData['tax_percentage'] = 0;
+            $invoiceData['tax_amount'] = 0;
+        } else {
+            $invoiceData['tax_percentage'] = (float) $request->input('tax_percentage', $invoiceData['tax_percentage'] ?? 18);
+            $invoiceData['tax_amount'] = (float) $request->input('tax_amount', $invoiceData['tax_amount'] ?? 0);
+        }
+        
         $invoiceData['total'] = (float) $request->input('total', $invoiceData['total'] ?? 0);
         $invoiceData['notes'] = $request->input('notes', $invoiceData['notes'] ?? 'This is a proforma invoice and not a tax invoice. Payment is due upon receipt.');
         

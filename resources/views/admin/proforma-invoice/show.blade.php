@@ -112,6 +112,15 @@
                                                     @endforeach
                                                 </select>
                                             </div>
+                                            
+                                            <!-- GST Type Selection -->
+                                            <div class="mt-2">
+                                                <label for="gst_type" class="form-label">Invoice Type:</label>
+                                                <select name="gst_type" class="form-select form-select-sm" id="gst_type">
+                                                    <option value="with_gst" {{ ($invoiceData['gst_type'] ?? 'with_gst') == 'with_gst' ? 'selected' : '' }}>With GST</option>
+                                                    <option value="without_gst" {{ ($invoiceData['gst_type'] ?? 'with_gst') == 'without_gst' ? 'selected' : '' }}>Without GST</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                     
@@ -206,21 +215,21 @@
                                                                 </div>
                                                             </td>
                                                         </tr>
-                                                        <tr>
+                                                        <tr class="gst-row" style="{{ ($invoiceData['gst_type'] ?? 'with_gst') == 'without_gst' ? 'display: none;' : '' }}">
                                                             <td class="fw-bold">GST (%):</td>
                                                             <td class="text-end">
                                                                 <div class="input-group">
-                                                                    <input type="number" name="tax_percentage" class="form-control tax-percentage" value="{{ $invoiceData['tax_percentage'] ?? 18 }}" step="0.01" min="0" max="100">
+                                                                    <input type="number" name="tax_percentage" class="form-control tax-percentage" value="{{ ($invoiceData['gst_type'] ?? 'with_gst') == 'without_gst' ? 0 : ($invoiceData['tax_percentage'] ?? 18) }}" step="0.01" min="0" max="100">
                                                                     <span class="input-group-text">%</span>
                                                                 </div>
                                                             </td>
                                                         </tr>
-                                                        <tr>
+                                                        <tr class="gst-row" style="{{ ($invoiceData['gst_type'] ?? 'with_gst') == 'without_gst' ? 'display: none;' : '' }}">
                                                             <td class="fw-bold">Tax Amount:</td>
                                                             <td class="text-end">
                                                                 <div class="input-group">
                                                                     <span class="input-group-text">₹</span>
-                                                                    <input type="number" name="tax_amount" class="form-control tax-amount" value="{{ $invoiceData['tax_amount'] ?? 0 }}" step="0.01" min="0" readonly>
+                                                                    <input type="number" name="tax_amount" class="form-control tax-amount" value="{{ ($invoiceData['gst_type'] ?? 'with_gst') == 'without_gst' ? 0 : ($invoiceData['tax_amount'] ?? 0) }}" step="0.01" min="0" readonly>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -283,6 +292,41 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // GST Type Elements
+    const gstTypeSelect = document.getElementById('gst_type');
+    const gstRows = document.querySelectorAll('.gst-row');
+    const taxPercentageInput = document.querySelector('.tax-percentage');
+    const taxAmountInput = document.querySelector('.tax-amount');
+    
+    // Store original tax percentage for restoration
+    let originalTaxPercentage = parseFloat(taxPercentageInput.value) || 18;
+    
+    // GST Type toggle functionality
+    gstTypeSelect.addEventListener('change', function() {
+        const isWithoutGst = this.value === 'without_gst';
+        
+        // Show/Hide GST rows
+        gstRows.forEach(row => {
+            row.style.display = isWithoutGst ? 'none' : '';
+        });
+        
+        if (isWithoutGst) {
+            // Store current value before resetting (only if it's not already 0)
+            if (parseFloat(taxPercentageInput.value) > 0) {
+                originalTaxPercentage = parseFloat(taxPercentageInput.value);
+            }
+            // Set tax to 0 when Without GST
+            taxPercentageInput.value = '0';
+            taxAmountInput.value = '0';
+        } else {
+            // Restore original tax percentage when With GST
+            taxPercentageInput.value = originalTaxPercentage.toFixed(2);
+        }
+        
+        // Recalculate totals
+        calculateInvoiceTotals();
+    });
+
     // Calculate item totals and overall invoice totals
     function calculateItemTotal(row) {
         const priceInput = row.querySelector('.item-price');
@@ -299,33 +343,35 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Calculate overall invoice totals
     function calculateInvoiceTotals() {
-        // Calculate subtotal from invoice data or from item totals
+        // Calculate subtotal from item totals
         let subtotal = 0;
-        if (typeof invoiceData !== 'undefined' && invoiceData.subtotal) {
-            subtotal = parseFloat(invoiceData.subtotal);
-        } else {
-            // Fallback to calculating from item totals
-            document.querySelectorAll('.item-total').forEach(input => {
-                subtotal += parseFloat(input.value) || 0;
-            });
-        }
+        document.querySelectorAll('.item-total').forEach(input => {
+            subtotal += parseFloat(input.value) || 0;
+        });
         document.querySelector('.subtotal').value = subtotal.toFixed(2);
         
-        // Get tax percentage
-        const taxPercentage = parseFloat(document.querySelector('.tax-percentage').value) || 0;
+        // Check GST type
+        const isWithoutGst = gstTypeSelect.value === 'without_gst';
+        
+        // Get tax percentage (force 0 if without GST)
+        let taxPercentage = 0;
+        if (!isWithoutGst) {
+            taxPercentage = parseFloat(taxPercentageInput.value) || 0;
+        }
         
         // Get shipping
         const shipping = parseFloat(document.querySelector('.shipping').value) || 0;
         
         // Get discount amount
-        let discountAmount = parseFloat(document.querySelector('.discount-amount').value) || 0;
+        const discountAmount = parseFloat(document.querySelector('.discount-amount').value) || 0;
         
         // Calculate tax amount (tax on subtotal only, not including shipping)
-        const taxAmount = (subtotal * taxPercentage / 100);
-        document.querySelector('.tax-amount').value = taxAmount.toFixed(2);
+        const taxAmount = isWithoutGst ? 0 : (subtotal * taxPercentage / 100);
+        taxAmountInput.value = taxAmount.toFixed(2);
         
         // Calculate final total
-        // Total = (Subtotal + Shipping + Tax) - Discount
+        // With GST: Total = (Subtotal + Shipping + Tax Amount) - Discount
+        // Without GST: Total = (Subtotal + Shipping) - Discount
         const finalTotal = (subtotal + shipping + taxAmount) - discountAmount;
         document.querySelector('.total').value = finalTotal.toFixed(2);
     }
@@ -342,7 +388,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listeners to discount, shipping, and tax inputs
     document.querySelector('.discount-amount').addEventListener('input', calculateInvoiceTotals);
     document.querySelector('.shipping').addEventListener('input', calculateInvoiceTotals);
-    document.querySelector('.tax-percentage').addEventListener('input', calculateInvoiceTotals);
+    taxPercentageInput.addEventListener('input', function() {
+        // Update original tax percentage when manually changed (only if With GST)
+        if (gstTypeSelect.value === 'with_gst') {
+            originalTaxPercentage = parseFloat(this.value) || 0;
+        }
+        calculateInvoiceTotals();
+    });
     
     // Handle item removal
     document.querySelectorAll('.remove-item-btn').forEach(button => {

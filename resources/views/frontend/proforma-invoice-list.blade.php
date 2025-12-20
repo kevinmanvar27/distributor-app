@@ -1128,7 +1128,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <td class="fw-bold">Subtotal:</td>
                                         <td class="text-end">₹${subtotal.toFixed(2)}</td>
                                     </tr>` : ''}
-                                    ${taxPercentage > 0 ? `<tr>
+                                    ${(invoiceData.gst_type !== 'without_gst' && taxPercentage > 0) ? `<tr>
                                         <td class="fw-bold">GST (${taxPercentage.toFixed(2)}%):</td>
                                         <td class="text-end">₹${taxAmount.toFixed(2)}</td>
                                     </tr>` : ''}
@@ -1138,7 +1138,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </tr>` : ''}
                                     ${discountAmount > 0 ? `<tr>
                                         <td class="fw-bold">Discount Amount:</td>
-                                        <td class="text-end">₹${discountAmount.toFixed(2)}</td>
+                                        <td class="text-end">-₹${discountAmount.toFixed(2)}</td>
                                     </tr>` : ''}
                                     <tr class="border-top">
                                         <td class="fw-bold">Total:</td>

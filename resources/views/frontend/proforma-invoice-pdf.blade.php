@@ -213,6 +213,10 @@
 
     <div class="row">
         <table style="width:100%;">
+            @php
+                $gstType = $invoiceData['gst_type'] ?? 'with_gst';
+            @endphp
+            
             @if(!empty($invoiceData['subtotal']))
             <tr>
                 <td>Subtotal:</td>
@@ -220,21 +224,21 @@
             </tr>
             @endif
 
-            @if(!empty($invoiceData['tax_percentage']))
+            @if($gstType === 'with_gst' && !empty($invoiceData['tax_percentage']) && $invoiceData['tax_percentage'] > 0)
             <tr>
                 <td>GST ({{ $invoiceData['tax_percentage'] }}%):</td>
-                <td class="text-end">₹{{ number_format($invoiceData['tax_amount'], 2) }}</td>
+                <td class="text-end">₹{{ number_format($invoiceData['tax_amount'] ?? 0, 2) }}</td>
             </tr>
             @endif
 
-            @if(!empty($invoiceData['shipping']))
+            @if(!empty($invoiceData['shipping']) && $invoiceData['shipping'] > 0)
             <tr>
                 <td>Shipping:</td>
                 <td class="text-end">₹{{ number_format($invoiceData['shipping'], 2) }}</td>
             </tr>
             @endif
 
-            @if(!empty($invoiceData['discount_amount']))
+            @if(!empty($invoiceData['discount_amount']) && $invoiceData['discount_amount'] > 0)
             <tr>
                 <td>Discount:</td>
                 <td class="text-end">-₹{{ number_format($invoiceData['discount_amount'], 2) }}</td>
