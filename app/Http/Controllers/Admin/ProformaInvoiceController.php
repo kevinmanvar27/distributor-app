@@ -90,8 +90,22 @@ class ProformaInvoiceController extends Controller
     {
         $proformaInvoice = ProformaInvoice::findOrFail($id);
         
-        // Get the existing invoice data (already decoded by model casting)
+        // Get the existing invoice data (handle both array and JSON string for backward compatibility)
         $invoiceData = $proformaInvoice->invoice_data;
+        
+        // Handle case where invoice_data might be a JSON string (double-encoded from old records)
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            // Check if it's still a string (triple-encoded edge case)
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        // Ensure we have an array
+        if (!is_array($invoiceData)) {
+            $invoiceData = [];
+        }
         
         // Update status if provided
         if ($request->has('status')) {
@@ -177,8 +191,22 @@ class ProformaInvoiceController extends Controller
     {
         $proformaInvoice = ProformaInvoice::findOrFail($id);
         
-        // Get invoice data (already decoded by model casting)
+        // Get invoice data (handle both array and JSON string for backward compatibility)
         $invoiceData = $proformaInvoice->invoice_data;
+        
+        // Handle case where invoice_data might be a JSON string (double-encoded from old records)
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            // Check if it's still a string (triple-encoded edge case)
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        // Ensure we have an array
+        if (!is_array($invoiceData)) {
+            $invoiceData = [];
+        }
         
         // Get the item index to remove
         $itemIndex = $request->input('item_index');

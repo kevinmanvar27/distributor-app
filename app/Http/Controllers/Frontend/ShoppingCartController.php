@@ -568,8 +568,22 @@ class ShoppingCartController extends Controller
             return response()->json(['error' => 'Invoice not found'], 404);
         }
         
-        // Get the invoice data (already decoded by model casting)
+        // Get the invoice data (handle both array and JSON string for backward compatibility)
         $invoiceData = $proformaInvoice->invoice_data;
+        
+        // Handle case where invoice_data might be a JSON string (double-encoded from old records)
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            // Check if it's still a string (triple-encoded edge case)
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        // Ensure we have an array
+        if (!is_array($invoiceData)) {
+            $invoiceData = [];
+        }
         
         // Automatically remove all notifications for this invoice when viewing directly
         $unreadCount = 0;
@@ -639,8 +653,22 @@ class ShoppingCartController extends Controller
             return redirect()->route('frontend.cart.proforma.invoices')->with('error', 'Only draft invoices can be added to cart.');
         }
         
-        // Get the invoice data (already decoded by model casting)
+        // Get the invoice data (handle both array and JSON string for backward compatibility)
         $invoiceData = $proformaInvoice->invoice_data;
+        
+        // Handle case where invoice_data might be a JSON string (double-encoded from old records)
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            // Check if it's still a string (triple-encoded edge case)
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        // Ensure we have an array
+        if (!is_array($invoiceData)) {
+            $invoiceData = [];
+        }
         
         // Add each item from the invoice to the cart
         if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
@@ -786,7 +814,7 @@ class ShoppingCartController extends Controller
                         'user_id' => Auth::check() ? Auth::id() : null,
                         'session_id' => Auth::check() ? null : session()->getId(),
                         'total_amount' => $total,
-                        'invoice_data' => json_encode($invoiceData),
+                        'invoice_data' => $invoiceData,
                         'status' => ProformaInvoice::STATUS_DRAFT,
                     ]);
                 });
@@ -845,8 +873,22 @@ class ShoppingCartController extends Controller
             return redirect()->route('frontend.cart.proforma.invoices')->with('error', 'Invoice not found.');
         }
         
-        // Get the invoice data (already decoded by model casting)
+        // Get the invoice data (handle both array and JSON string for backward compatibility)
         $invoiceData = $proformaInvoice->invoice_data;
+        
+        // Handle case where invoice_data might be a JSON string (double-encoded from old records)
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            // Check if it's still a string (triple-encoded edge case)
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        // Ensure we have an array
+        if (!is_array($invoiceData)) {
+            $invoiceData = [];
+        }
         
         // Prepare data for the PDF view
         $data = [

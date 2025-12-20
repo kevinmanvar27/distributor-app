@@ -520,7 +520,7 @@ class CartController extends ApiController
                         'invoice_number' => $invoiceNumber,
                         'user_id' => $userId,
                         'total_amount' => $total,
-                        'invoice_data' => json_encode($invoiceData),
+                        'invoice_data' => $invoiceData,
                         'status' => ProformaInvoice::STATUS_DRAFT ?? 'draft',
                     ]);
                 });
