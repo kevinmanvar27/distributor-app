@@ -367,13 +367,13 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('frontend.categories.index') }}">
+                                <a href="{{ route('frontend.home') }}">
                                     <i class="fas fa-chevron-right"></i>
                                     Categories
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('frontend.cart') }}">
+                                <a href="{{ route('frontend.cart.index') }}">
                                     <i class="fas fa-chevron-right"></i>
                                     Shopping Cart
                                 </a>
