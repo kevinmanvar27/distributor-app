@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ProformaInvoice;
+use App\Models\WithoutGstInvoice;
 use App\Models\Setting;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ProformaInvoiceController extends Controller
@@ -146,11 +148,12 @@ class ProformaInvoiceController extends Controller
         $invoiceData['shipping'] = (float) $request->input('shipping', $invoiceData['shipping'] ?? 0);
         
         // Handle GST type
-        $gstType = $request->input('gst_type', $invoiceData['gst_type'] ?? 'with_gst');
-        $invoiceData['gst_type'] = $gstType;
+        $previousGstType = $invoiceData['gst_type'] ?? 'with_gst';
+        $newGstType = $request->input('gst_type', $previousGstType);
+        $invoiceData['gst_type'] = $newGstType;
         
         // If without GST, force tax values to 0
-        if ($gstType === 'without_gst') {
+        if ($newGstType === 'without_gst') {
             $invoiceData['tax_percentage'] = 0;
             $invoiceData['tax_amount'] = 0;
         } else {
@@ -161,12 +164,72 @@ class ProformaInvoiceController extends Controller
         $invoiceData['total'] = (float) $request->input('total', $invoiceData['total'] ?? 0);
         $invoiceData['notes'] = $request->input('notes', $invoiceData['notes'] ?? 'This is a proforma invoice and not a tax invoice. Payment is due upon receipt.');
         
+        // Check if GST type changed from "with_gst" to "without_gst" - move to separate table
+        if ($previousGstType !== 'without_gst' && $newGstType === 'without_gst') {
+            return $this->moveToWithoutGstTable($proformaInvoice, $invoiceData, $request);
+        }
+        
         // Update the proforma invoice
         $proformaInvoice->total_amount = (float) $request->input('total', $proformaInvoice->total_amount);
         $proformaInvoice->invoice_data = $invoiceData;
         $proformaInvoice->save();
         
         return redirect()->back()->with('success', 'Proforma invoice updated successfully.');
+    }
+    
+    /**
+     * Move a proforma invoice to the without_gst_invoices table.
+     *
+     * @param  \App\Models\ProformaInvoice  $proformaInvoice
+     * @param  array  $invoiceData
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    protected function moveToWithoutGstTable(ProformaInvoice $proformaInvoice, array $invoiceData, Request $request)
+    {
+        // Use database transaction to ensure data integrity
+        return DB::transaction(function () use ($proformaInvoice, $invoiceData, $request) {
+            // Store old invoice number for notification
+            $oldInvoiceNumber = $proformaInvoice->invoice_number;
+            $originalInvoiceId = $proformaInvoice->id;
+            
+            // Update status if provided
+            $status = $request->input('status', $proformaInvoice->status);
+            
+            // Create new record in without_gst_invoices table
+            $withoutGstInvoice = WithoutGstInvoice::create([
+                'user_id' => $proformaInvoice->user_id,
+                'session_id' => $proformaInvoice->session_id,
+                'total_amount' => (float) $request->input('total', $proformaInvoice->total_amount),
+                'invoice_data' => $invoiceData,
+                'status' => $status,
+                'original_invoice_id' => $originalInvoiceId,
+            ]);
+            
+            // Create notification for the user (if user exists)
+            if ($proformaInvoice->user_id) {
+                Notification::create([
+                    'user_id' => $proformaInvoice->user_id,
+                    'title' => 'Invoice Converted to Without GST',
+                    'message' => "Your invoice #{$oldInvoiceNumber} has been converted to Without GST invoice #{$withoutGstInvoice->invoice_number}",
+                    'type' => 'invoice_converted',
+                    'data' => json_encode([
+                        'old_invoice_number' => $oldInvoiceNumber,
+                        'new_invoice_number' => $withoutGstInvoice->invoice_number,
+                        'invoice_id' => $withoutGstInvoice->id,
+                        'invoice_type' => 'without_gst',
+                    ]),
+                    'read' => false,
+                ]);
+            }
+            
+            // Delete the original proforma invoice
+            $proformaInvoice->delete();
+            
+            // Redirect to the new without-GST invoice
+            return redirect()->route('admin.without-gst-invoice.show', $withoutGstInvoice->id)
+                ->with('success', "Invoice converted to Without GST successfully. New invoice number: {$withoutGstInvoice->invoice_number}");
+        });
     }
     
     /**

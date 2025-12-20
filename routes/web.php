@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\UserGroupController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\ProformaInvoiceController;
+use App\Http\Controllers\Admin\WithoutGstInvoiceController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Frontend\FrontendController;
@@ -84,6 +85,11 @@ Route::middleware(['frontend.access', 'auth'])->group(function () {
     Route::get('/cart/proforma-invoice/{id}/download-pdf', [ShoppingCartController::class, 'downloadProformaInvoicePDF'])->name('frontend.cart.proforma.invoice.download-pdf');
     Route::post('/cart/proforma-invoice/{id}/add-to-cart', [ShoppingCartController::class, 'addInvoiceToCart'])->name('frontend.cart.proforma.invoice.add-to-cart');
     Route::delete('/cart/proforma-invoice/{id}', [ShoppingCartController::class, 'deleteProformaInvoice'])->name('frontend.cart.proforma.invoice.delete');
+    
+    // Without GST Invoice Routes (Frontend)
+    Route::get('/cart/without-gst-invoices', [ShoppingCartController::class, 'listWithoutGstInvoices'])->name('frontend.cart.without-gst.invoices');
+    Route::get('/cart/without-gst-invoice/{id}', [ShoppingCartController::class, 'getWithoutGstInvoiceDetails'])->name('frontend.cart.without-gst.invoice.details');
+    Route::get('/cart/without-gst-invoice/{id}/download-pdf', [ShoppingCartController::class, 'downloadWithoutGstInvoicePDF'])->name('frontend.cart.without-gst.invoice.download-pdf');
 
 });
 
@@ -341,6 +347,17 @@ Route::middleware('auth')->group(function () {
         Route::put('/proforma-invoice/{id}/update-status', [ProformaInvoiceController::class, 'updateStatus'])->name('admin.proforma-invoice.update-status');
         Route::delete('/proforma-invoice/{id}/remove-item', [ProformaInvoiceController::class, 'removeItem'])->name('admin.proforma-invoice.remove-item');
         Route::delete('/proforma-invoice/{id}', [ProformaInvoiceController::class, 'destroy'])->name('admin.proforma-invoice.destroy');
+    });
+    
+    // Without GST Invoice Routes
+    Route::prefix('admin')->middleware(['permission:manage_proforma_invoices'])->group(function () {
+        Route::get('/proforma-invoice-black', [WithoutGstInvoiceController::class, 'index'])->name('admin.without-gst-invoice.index');
+        Route::get('/proforma-invoice-black/{id}', [WithoutGstInvoiceController::class, 'show'])->name('admin.without-gst-invoice.show');
+        Route::get('/proforma-invoice-black/{id}/download-pdf', [WithoutGstInvoiceController::class, 'downloadPDF'])->name('admin.without-gst-invoice.download-pdf');
+        Route::put('/proforma-invoice-black/{id}', [WithoutGstInvoiceController::class, 'update'])->name('admin.without-gst-invoice.update');
+        Route::put('/proforma-invoice-black/{id}/update-status', [WithoutGstInvoiceController::class, 'updateStatus'])->name('admin.without-gst-invoice.update-status');
+        Route::delete('/proforma-invoice-black/{id}/remove-item', [WithoutGstInvoiceController::class, 'removeItem'])->name('admin.without-gst-invoice.remove-item');
+        Route::delete('/proforma-invoice-black/{id}', [WithoutGstInvoiceController::class, 'destroy'])->name('admin.without-gst-invoice.destroy');
     });
     
     // Pages Routes

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ShoppingCartItem;
 use App\Models\ProformaInvoice;
+use App\Models\WithoutGstInvoice;
 use App\Models\User;
 use App\Models\Notification;
 use App\Services\NotificationService;
@@ -908,6 +909,197 @@ class ShoppingCartController extends Controller
         
         // Download the PDF with a meaningful filename
         return $pdf->download('proforma-invoice-' . $proformaInvoice->invoice_number . '.pdf');
+    }
+    
+    /**
+     * List all without-GST invoices for the authenticated user.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function listWithoutGstInvoices()
+    {
+        // Check if frontend requires authentication and user is not logged in
+        $setting = \App\Models\Setting::first();
+        $accessPermission = $setting->frontend_access_permission ?? 'open_for_all';
+        
+        // For registered_users_only and admin_approval_required modes, 
+        // redirect guests from cart pages to login, unless it's open_for_all
+        if ($accessPermission !== 'open_for_all' && !Auth::check()) {
+            return redirect()->route('frontend.login');
+        }
+        
+        // Get all without-GST invoices for the authenticated user
+        if (Auth::check()) {
+            $withoutGstInvoices = WithoutGstInvoice::where('user_id', Auth::id())
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            // For guests, get invoices by session ID
+            $sessionId = session()->getId();
+            $withoutGstInvoices = WithoutGstInvoice::where('session_id', $sessionId)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+        
+        return view('frontend.without-gst-invoice-list', compact('withoutGstInvoices'));
+    }
+    
+    /**
+     * Get the details of a specific without-GST invoice.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getWithoutGstInvoiceDetails($id)
+    {
+        // Check if frontend requires authentication and user is not logged in
+        $setting = \App\Models\Setting::first();
+        $accessPermission = $setting->frontend_access_permission ?? 'open_for_all';
+        
+        // For registered_users_only and admin_approval_required modes, 
+        // redirect guests from cart pages to login, unless it's open_for_all
+        if ($accessPermission !== 'open_for_all' && !Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        
+        // Find the without-GST invoice
+        if (Auth::check()) {
+            $invoice = WithoutGstInvoice::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->first();
+        } else {
+            // For guests, get invoice by session ID
+            $sessionId = session()->getId();
+            $invoice = WithoutGstInvoice::where('id', $id)
+                ->where('session_id', $sessionId)
+                ->first();
+        }
+        
+        if (!$invoice) {
+            return response()->json(['error' => 'Invoice not found'], 404);
+        }
+        
+        // Get the invoice data (handle both array and JSON string for backward compatibility)
+        $invoiceData = $invoice->invoice_data;
+        
+        // Handle case where invoice_data might be a JSON string (double-encoded from old records)
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            // Check if it's still a string (triple-encoded edge case)
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        // Ensure we have an array
+        if (!is_array($invoiceData)) {
+            $invoiceData = [];
+        }
+        
+        // Automatically remove all notifications for this invoice when viewing directly
+        $unreadCount = 0;
+        if (Auth::check()) {
+            // Get all unread notifications for the current user that are related to this invoice
+            $notifications = \App\Models\Notification::where('user_id', Auth::id())
+                ->where('read', false)
+                ->where('type', 'invoice_converted')
+                ->where('data', 'like', '%"invoice_id":' . $id . '%')
+                ->get();
+            
+            // Delete all matching notifications
+            foreach ($notifications as $notification) {
+                $notification->delete();
+            }
+            
+            // Get updated unread count
+            $unreadCount = \App\Models\Notification::where('user_id', Auth::id())
+                ->where('read', false)
+                ->count();
+        }
+        
+        return response()->json([
+            'invoice' => $invoice,
+            'data' => $invoiceData,
+            'unread_count' => $unreadCount
+        ]);
+    }
+    
+    /**
+     * Generate and download PDF for a without-GST invoice.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadWithoutGstInvoicePDF($id)
+    {
+        // Check if frontend requires authentication and user is not logged in
+        $setting = \App\Models\Setting::first();
+        $accessPermission = $setting->frontend_access_permission ?? 'open_for_all';
+        
+        // For registered_users_only and admin_approval_required modes, 
+        // redirect guests from cart pages to login, unless it's open_for_all
+        if ($accessPermission !== 'open_for_all' && !Auth::check()) {
+            return redirect()->route('frontend.login');
+        }
+        
+        // Find the without-GST invoice
+        if (Auth::check()) {
+            $invoice = WithoutGstInvoice::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->first();
+        } else {
+            // For guests, get invoice by session ID
+            $sessionId = session()->getId();
+            $invoice = WithoutGstInvoice::where('id', $id)
+                ->where('session_id', $sessionId)
+                ->first();
+        }
+        
+        if (!$invoice) {
+            return redirect()->route('frontend.cart.without-gst.invoices')->with('error', 'Invoice not found.');
+        }
+        
+        // Get the invoice data (handle both array and JSON string for backward compatibility)
+        $invoiceData = $invoice->invoice_data;
+        
+        // Handle case where invoice_data might be a JSON string (double-encoded from old records)
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            // Check if it's still a string (triple-encoded edge case)
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        // Ensure we have an array
+        if (!is_array($invoiceData)) {
+            $invoiceData = [];
+        }
+        
+        // Prepare data for the PDF view
+        $data = [
+            'invoice' => $invoice,
+            'invoiceData' => $invoiceData,
+            'invoiceNumber' => $invoice->invoice_number,
+            'invoiceDate' => $invoiceData['invoice_date'] ?? $invoice->created_at->format('Y-m-d'),
+            'customer' => $invoiceData['customer'] ?? null,
+            'cartItems' => $invoiceData['cart_items'] ?? $invoiceData['items'] ?? [],
+            'total' => $invoice->total_amount,
+            'siteTitle' => setting('site_title', 'Frontend App'),
+            'companyAddress' => setting('address', 'Company Address'),
+            'companyEmail' => setting('email', 'company@example.com'),
+            'companyPhone' => setting('phone', '+1 (555) 123-4567'),
+            'headerLogo' => setting('header_logo', null),
+        ];
+        
+        // Load the PDF view
+        $pdf = Pdf::loadView('frontend.without-gst-invoice-pdf', $data);
+        
+        // Set paper size and orientation
+        $pdf->setPaper('A4', 'portrait');
+        
+        // Download the PDF with a meaningful filename
+        return $pdf->download('without-gst-invoice-' . $invoice->invoice_number . '.pdf');
     }
 
 }

@@ -33,29 +33,50 @@ class AppConfigController extends ApiController
     public function appSettings()
     {
         $settings = [
-            // Theme colors
-            'primary_color' => $this->getSetting('primary_color', '#007bff'),
-            'secondary_color' => $this->getSetting('secondary_color', '#6c757d'),
-            'accent_color' => $this->getSetting('accent_color', '#28a745'),
-            'background_color' => $this->getSetting('background_color', '#ffffff'),
-            'text_color' => $this->getSetting('text_color', '#212529'),
-            'header_color' => $this->getSetting('header_color', '#007bff'),
-            'footer_color' => $this->getSetting('footer_color', '#343a40'),
+            // Theme colors - using actual database column names
+            'theme_color' => $this->getSetting('theme_color', '#FF6B00'),
+            'primary_color' => $this->getSetting('theme_color', '#FF6B00'), // alias for theme_color
+            'secondary_color' => $this->getSetting('background_color', '#FFFFFF'),
+            'background_color' => $this->getSetting('background_color', '#FFFFFF'),
+            'font_color' => $this->getSetting('font_color', '#333333'),
+            'text_color' => $this->getSetting('font_color', '#333333'), // alias for font_color
+            'sidebar_text_color' => $this->getSetting('sidebar_text_color', '#333333'),
+            'heading_text_color' => $this->getSetting('heading_text_color', '#333333'),
+            'label_text_color' => $this->getSetting('label_text_color', '#333333'),
+            'general_text_color' => $this->getSetting('general_text_color', '#333333'),
+            'link_color' => $this->getSetting('link_color', '#333333'),
+            'link_hover_color' => $this->getSetting('link_hover_color', '#FF6B00'),
+            'header_color' => $this->getSetting('theme_color', '#FF6B00'),
+            'footer_color' => $this->getSetting('theme_color', '#FF6B00'),
+            'accent_color' => $this->getSetting('link_hover_color', '#FF6B00'),
             
             // Fonts
-            'primary_font' => $this->getSetting('primary_font', 'Roboto'),
-            'secondary_font' => $this->getSetting('secondary_font', 'Open Sans'),
-            'font_size_base' => $this->getSetting('font_size_base', '16'),
+            'primary_font' => $this->getSetting('body_font_family', 'Roboto'),
+            'secondary_font' => $this->getSetting('h1_font_family', 'Open Sans'),
+            'font_size_base' => $this->getSetting('desktop_body_size', '16'),
+            'font_style' => $this->getSetting('font_style', 'normal'),
+            
+            // Font families (element-wise)
+            'h1_font_family' => $this->getSetting('h1_font_family', 'Roboto'),
+            'h2_font_family' => $this->getSetting('h2_font_family', 'Roboto'),
+            'h3_font_family' => $this->getSetting('h3_font_family', 'Roboto'),
+            'h4_font_family' => $this->getSetting('h4_font_family', 'Roboto'),
+            'h5_font_family' => $this->getSetting('h5_font_family', 'Roboto'),
+            'h6_font_family' => $this->getSetting('h6_font_family', 'Roboto'),
+            'body_font_family' => $this->getSetting('body_font_family', 'Roboto'),
             
             // App appearance
             'dark_mode_enabled' => $this->getSetting('dark_mode_enabled', 'false') === 'true',
-            'logo_url' => $this->getSetting('logo_url', null),
-            'favicon_url' => $this->getSetting('favicon_url', null),
+            'logo_url' => $this->getLogoUrl('header_logo'),
+            'footer_logo_url' => $this->getLogoUrl('footer_logo'),
+            'favicon_url' => $this->getLogoUrl('favicon'),
             'app_icon_url' => $this->getSetting('app_icon_url', null),
             'splash_screen_url' => $this->getSetting('splash_screen_url', null),
             
             // Branding
-            'brand_name' => $this->getSetting('brand_name', config('app.name')),
+            'brand_name' => $this->getSetting('site_title', config('app.name')),
+            'site_title' => $this->getSetting('site_title', config('app.name')),
+            'site_description' => $this->getSetting('site_description', ''),
             'tagline' => $this->getSetting('tagline', ''),
         ];
 
@@ -431,6 +452,29 @@ class AppConfigController extends ApiController
         ];
 
         return $this->sendResponse($data, 'App version check completed.');
+    }
+
+    /**
+     * Get logo/image URL from setting
+     * 
+     * @param string $key
+     * @return string|null
+     */
+    private function getLogoUrl($key)
+    {
+        $value = $this->getSetting($key, null);
+        
+        if (empty($value)) {
+            return null;
+        }
+        
+        // If it's already a full URL, return as is
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            return $value;
+        }
+        
+        // Otherwise, prepend the app URL
+        return rtrim(config('app.url'), '/') . '/' . ltrim($value, '/');
     }
 
     /**

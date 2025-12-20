@@ -1,12 +1,13 @@
+
 @extends('frontend.layouts.app')
 
-@section('title', 'My Proforma Invoices - ' . setting('site_title', 'Frontend App'))
+@section('title', 'My Without GST Invoices - ' . setting('site_title', 'Frontend App'))
 
 @push('styles')
 <style>
-    /* Page Header Styles */
+    /* Page Header Styles - Gray Theme for Without GST */
     .invoice-page-header {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        background: linear-gradient(135deg, #6c757d, #495057);
         padding: 3rem 0;
         margin-bottom: 0;
         position: relative;
@@ -84,9 +85,9 @@
     }
     
     .invoice-tab-btn.active {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        background: linear-gradient(135deg, #6c757d, #495057);
         color: white;
-        box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.3);
+        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
     }
     
     .invoice-tab-btn:not(.active) {
@@ -96,8 +97,8 @@
     }
     
     .invoice-tab-btn:not(.active):hover {
-        border-color: var(--primary-color);
-        color: var(--primary-color);
+        border-color: #6c757d;
+        color: #6c757d;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
     
@@ -109,8 +110,8 @@
     }
     
     .invoice-tab-btn:not(.active) .badge {
-        background: rgba(var(--primary-rgb), 0.1);
-        color: var(--primary-color);
+        background: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
     }
 
     /* Invoice Card */
@@ -123,7 +124,7 @@
     
     .invoice-main-card .card-header {
         background: white;
-        border-bottom: 1px solid rgba(var(--primary-rgb), 0.1);
+        border-bottom: 1px solid rgba(108, 117, 125, 0.1);
         padding: 1.5rem 2rem;
     }
     
@@ -137,7 +138,7 @@
     }
     
     .invoice-table thead {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        background: linear-gradient(135deg, #6c757d, #495057);
     }
     
     .invoice-table thead th {
@@ -152,7 +153,7 @@
     }
     
     .invoice-table tbody tr:hover {
-        background: rgba(var(--primary-rgb), 0.05);
+        background: rgba(108, 117, 125, 0.05);
     }
     
     .invoice-table tbody td {
@@ -164,13 +165,24 @@
     /* Invoice Number Cell */
     .invoice-number {
         font-weight: 600;
-        color: var(--primary-color);
+        color: #6c757d;
     }
     
     /* Amount Cell */
     .invoice-amount {
         font-weight: 700;
         color: var(--text-color);
+    }
+    
+    /* GST Badge */
+    .gst-badge {
+        background: linear-gradient(135deg, #6c757d, #495057);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
     }
     
     /* Status Badge Styles */
@@ -182,9 +194,6 @@
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-    }
-    
-    .status-badge:hover {
     }
     
     .status-badge i {
@@ -210,9 +219,9 @@
     }
     
     .status-delivery {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
         color: white;
-        box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+        box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
     }
     
     .status-delivered {
@@ -248,7 +257,7 @@
     }
     
     .modal-header {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        background: linear-gradient(135deg, #6c757d, #495057);
         color: white;
         border: none;
         padding: 1.25rem 1.5rem;
@@ -276,8 +285,8 @@
     .loading-spinner {
         width: 50px;
         height: 50px;
-        border: 3px solid rgba(var(--primary-rgb), 0.1);
-        border-top-color: var(--primary-color);
+        border: 3px solid rgba(108, 117, 125, 0.1);
+        border-top-color: #6c757d;
         border-radius: 50%;
     }
     
@@ -290,7 +299,7 @@
     .empty-state-icon {
         width: 100px;
         height: 100px;
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        background: linear-gradient(135deg, #6c757d, #495057);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -333,201 +342,10 @@
         .invoice-table tbody tr:hover {
         }
     }
-</style>
-@endpush
-
-@section('content')
-<!-- Page Header -->
-<div class="invoice-page-header">
-    <div class="container">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ route('frontend.home') }}">
-                        <i class="fas fa-home me-1"></i> Home
-                    </a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">My Proforma Invoices</li>
-            </ol>
-        </nav>
-        <h1>
-            <i class="fas fa-file-invoice me-2"></i> My Proforma Invoices
-        </h1>
-    </div>
-</div>
-
-<!-- Invoice Content -->
-<div class="invoice-content-wrapper">
-    <div class="container">
-        
-        <div class="row justify-content-center">
-            <div class="col-lg-12">
-                <div class="invoice-main-card">
-                    <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0" style="color: var(--text-color);">
-                                <i class="fas fa-list me-2" style="color: var(--primary-color);"></i>
-                                With GST Invoice List
-                            </h5>
-                            @if($proformaInvoices->count() > 0)
-                            <span class="badge" style="background: var(--primary-color); padding: 0.5rem 1rem; border-radius: 50px;">
-                                {{ $proformaInvoices->count() }} {{ Str::plural('Invoice', $proformaInvoices->count()) }}
-                            </span>
-                            @endif
-                        </div>
-                    </div>
-                    
-                    <div class="card-body">
-                        @if($proformaInvoices->count() > 0)
-                            <div class="table-responsive">
-                                <table class="table invoice-table">
-                                    <thead>
-                                        <tr>
-                                            <th><i class="fas fa-hashtag me-1"></i> #</th>
-                                            <th><i class="fas fa-file-invoice me-1"></i> Invoice #</th>
-                                            <th><i class="fas fa-calendar me-1"></i> Date</th>
-                                            <th><i class="fas fa-rupee-sign me-1"></i> Amount</th>
-                                            <th><i class="fas fa-info-circle me-1"></i> Status</th>
-                                            <th><i class="fas fa-cog me-1"></i> Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($proformaInvoices as $invoice)
-                                        <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td class="invoice-number">{{ $invoice->invoice_number }}</td>
-                                            <td>{{ $invoice->created_at->format('Y-m-d') }}</td>
-                                            <td class="invoice-amount">₹{{ number_format($invoice->total_amount, 2) }}</td>
-                                            <td>
-                                                @switch($invoice->status)
-                                                    @case('Draft')
-                                                        <span class="status-badge status-draft">
-                                                            <i class="fas fa-pencil-alt"></i> Draft
-                                                        </span>
-                                                        @break
-                                                    @case('Approved')
-                                                        <span class="status-badge status-approved">
-                                                            <i class="fas fa-check-circle"></i> Approved
-                                                        </span>
-                                                    @break
-                                                @case('Dispatch')
-                                                        <span class="status-badge status-dispatch">
-                                                            <i class="fas fa-truck-loading"></i> Dispatch
-                                                        </span>
-                                                    @break
-                                                @case('Out for Delivery')
-                                                        <span class="status-badge status-delivery">
-                                                            <i class="fas fa-shipping-fast"></i> Out for Delivery
-                                                        </span>
-                                                    @break
-                                                @case('Delivered')
-                                                        <span class="status-badge status-delivered">
-                                                            <i class="fas fa-check-double"></i> Delivered
-                                                        </span>
-                                                    @break
-                                                @case('Return')
-                                                        <span class="status-badge status-return">
-                                                            <i class="fas fa-undo-alt"></i> Return
-                                                        </span>
-                                                    @break
-                                                @default
-                                                        <span class="status-badge status-default">
-                                                            <i class="fas fa-question-circle"></i> {{ $invoice->status }}
-                                                        </span>
-                                            @endswitch
-                                        </td>
-                                        <td class="action-buttons">
-                                            <!-- View Button - Theme colored -->
-                                            <button class="btn btn-sm btn-view-theme view-invoice" data-invoice-id="{{ $invoice->id }}">
-                                                <i class="fas fa-eye me-1"></i>View
-                                            </button>
-                                            
-                                            @if($invoice->status === 'Draft')
-                                                <!-- Add to Cart Button -->
-                                                <form action="{{ route('frontend.cart.proforma.invoice.add-to-cart', $invoice->id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-sm btn-cart-theme" onclick="return confirm('Are you sure you want to add all products from this invoice to your cart and remove this invoice?')">
-                                                        <i class="fas fa-cart-plus me-1"></i>Add to Cart
-                                                    </button>
-                                                </form>
-                                                <!-- Delete Button -->
-                                                <form action="{{ route('frontend.cart.proforma.invoice.delete', $invoice->id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-delete-theme" onclick="return confirm('Are you sure you want to delete this proforma invoice?')">
-                                                        <i class="fas fa-trash me-1"></i>Delete
-                                                    </button>
-                                                </form>
-                                            @else
-                                                <!-- PDF Download Button -->
-                                                <a href="{{ route('frontend.cart.proforma.invoice.download-pdf', $invoice->id) }}" class="btn btn-sm btn-pdf-theme">
-                                                    <i class="fas fa-file-pdf me-1"></i>PDF
-                                                </a>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        <div class="empty-state text-center py-5">
-                            <div class="empty-icon mb-3">
-                                <i class="fas fa-file-invoice fa-3x"></i>
-                            </div>
-                            <h5 class="mb-2">No proforma invoices found</h5>
-                            <p class="mb-0 text-muted">You haven't generated any proforma invoices yet.</p>
-                            <a href="{{ route('frontend.cart.index') }}" class="btn btn-theme mt-3">
-                                <i class="fas fa-shopping-cart me-2"></i>Go to Cart
-                                <i class="fas fa-arrow-right ms-2 btn-arrow"></i>
-                            </a>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Invoice Details Modal -->
-<div class="modal fade invoice-modal" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="invoiceModalLabel">
-                    <i class="fas fa-file-invoice me-2"></i>Proforma Invoice Details
-                </h5>
-                <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="Close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="invoiceModalBody">
-                <!-- Invoice details will be loaded here -->
-                <div class="text-center py-5">
-                    <div class="loading-spinner">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-3 text-muted">Loading invoice details...</p>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-modal-close" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Close
-                </button>
-                <button type="button" class="btn btn-theme btn-modal-download" id="downloadPdfBtn">
-                    <i class="fas fa-file-pdf me-2"></i>Download PDF
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
+    
     /* ===== Base Button Styles ===== */
     .btn-theme {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
         border: none;
         color: white !important;
         position: relative;
@@ -545,87 +363,28 @@
     }
     
     .btn-theme:hover {
-        box-shadow: 0 8px 25px rgba(var(--primary-rgb), 0.35);
+        box-shadow: 0 8px 25px rgba(108, 117, 125, 0.35);
     }
     
     .btn-theme:hover::before {
         left: 100%;
     }
     
-    .btn-theme .btn-arrow {
-    }
-    
-    .btn-theme:hover .btn-arrow {
-    }
-    
     .btn-outline-theme {
-        border: 2px solid var(--primary-color);
-        color: var(--primary-color);
+        border: 2px solid #6c757d;
+        color: #6c757d;
         background: transparent;
     }
     
     .btn-outline-theme:hover {
-        background: var(--primary-color);
+        background: #6c757d;
         color: white;
-        box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.3);
-    }
-    
-    /* ===== Status Badge Styles ===== */
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-    
-    .status-badge:hover {
-    }
-    
-    .status-badge i {
-        font-size: 0.75rem;
-    }
-    
-    .status-draft {
-        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-        color: white;
-    }
-    
-    .status-approved {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        color: white;
-    }
-    
-    .status-dispatch {
-        background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
-        color: white;
-    }
-    
-    .status-delivery {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-        color: white;
-    }
-    
-    .status-delivered {
-        background: linear-gradient(135deg, #155724 0%, #28a745 100%);
-        color: white;
-    }
-    
-    .status-return {
-        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-        color: white;
-    }
-    
-    .status-default {
-        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-        color: white;
+        box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
     }
     
     /* ===== Action Button Styles ===== */
     .btn-view-theme {
-        background: var(--theme-color);
+        background: #6c757d;
         border: none;
         color: white !important;
         border-radius: 6px;
@@ -634,30 +393,7 @@
     }
     
     .btn-view-theme:hover {
-        background: var(--theme-color);
-        opacity: 0.9;
-        color: white !important;
-    }
-    
-    .btn-cart-theme {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        border: none;
-        color: white !important;
-    }
-    
-    .btn-cart-theme:hover {
-        box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
-        color: white !important;
-    }
-    
-    .btn-delete-theme {
-        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-        border: none;
-        color: white !important;
-    }
-    
-    .btn-delete-theme:hover {
-        box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+        background: #5a6268;
         color: white !important;
     }
     
@@ -686,21 +422,12 @@
         padding: 6px 12px;
     }
     
-    .action-buttons .btn i {
-    }
-    
-    .action-buttons .btn:hover i {
-    }
-    
     /* ===== Empty State ===== */
-    .empty-state {
-    }
-    
     .empty-icon {
         width: 100px;
         height: 100px;
         margin: 0 auto;
-        background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(var(--secondary-rgb), 0.1) 100%);
+        background: linear-gradient(135deg, rgba(108, 117, 125, 0.1) 0%, rgba(73, 80, 87, 0.1) 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -708,7 +435,7 @@
     }
     
     .empty-icon i {
-        color: var(--primary-color);
+        color: #6c757d;
         opacity: 0.7;
     }
     
@@ -721,7 +448,7 @@
     }
     
     .invoice-modal .modal-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
         color: white;
         border: none;
         padding: 1.25rem 1.5rem;
@@ -731,9 +458,6 @@
         font-weight: 600;
         display: flex;
         align-items: center;
-    }
-    
-    .invoice-modal .modal-title i {
     }
     
     .btn-close-custom {
@@ -775,24 +499,16 @@
     }
     
     .btn-modal-download {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
         position: relative;
         overflow: hidden;
     }
     
-    .btn-modal-download i {
-    }
-    
-    .btn-modal-download:hover i {
-    }
-    
     /* Loading Spinner */
-    .loading-spinner {
-    }
-    
     .loading-spinner .spinner-border {
         width: 3rem;
         height: 3rem;
-        color: var(--primary-color);
+        color: #6c757d;
     }
     
     /* ===== Print Styles ===== */
@@ -835,17 +551,11 @@
         .invoice-modal .modal-header {
             padding: 1rem;
         }
-        
-        .btn-view-theme:hover,
-        .btn-cart-theme:hover,
-        .btn-delete-theme:hover,
-        .btn-pdf-theme:hover {
-        }
     }
     
     /* ===== Product Link Styles ===== */
     .product-link {
-        color: var(--primary-color);
+        color: #6c757d;
         font-weight: 600;
         position: relative;
     }
@@ -857,19 +567,207 @@
         left: 0;
         width: 0;
         height: 2px;
-        background: var(--primary-color);
+        background: #6c757d;
     }
     
     .product-link:hover {
-        color: var(--secondary-color);
+        color: #495057;
     }
     
     .product-link:hover::after {
         width: 100%;
     }
-    
-
 </style>
+@endpush
+
+@section('content')
+<!-- Page Header -->
+<div class="invoice-page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ route('frontend.home') }}">
+                        <i class="fas fa-home me-1"></i> Home
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">My Without GST Invoices</li>
+            </ol>
+        </nav>
+        <h1>
+            <i class="fas fa-file-alt me-2"></i> My Without GST Invoices
+        </h1>
+    </div>
+</div>
+
+<!-- Invoice Content -->
+<div class="invoice-content-wrapper">
+    <div class="container">
+        <!-- Tab Navigation -->
+        <div class="invoice-tabs">
+            <a href="{{ route('frontend.cart.proforma.invoices') }}" class="invoice-tab-btn">
+                <i class="fas fa-file-invoice"></i>
+                With GST Invoices
+            </a>
+            <a href="{{ route('frontend.cart.without-gst.invoices') }}" class="invoice-tab-btn active">
+                <i class="fas fa-file-alt"></i>
+                Without GST Invoices
+                @if($withoutGstInvoices->count() > 0)
+                    <span class="badge">{{ $withoutGstInvoices->count() }}</span>
+                @endif
+            </a>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="invoice-main-card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0" style="color: var(--text-color);">
+                                <i class="fas fa-list me-2" style="color: #6c757d;"></i>
+                                Without GST Invoice List
+                            </h5>
+                            @if($withoutGstInvoices->count() > 0)
+                            <span class="badge" style="background: #6c757d; padding: 0.5rem 1rem; border-radius: 50px;">
+                                {{ $withoutGstInvoices->count() }} {{ Str::plural('Invoice', $withoutGstInvoices->count()) }}
+                            </span>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        @if($withoutGstInvoices->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table invoice-table">
+                                    <thead>
+                                        <tr>
+                                            <th><i class="fas fa-hashtag me-1"></i> #</th>
+                                            <th><i class="fas fa-file-alt me-1"></i> Invoice #</th>
+                                            <th><i class="fas fa-calendar me-1"></i> Date</th>
+                                            <th><i class="fas fa-rupee-sign me-1"></i> Amount</th>
+                                            <th><i class="fas fa-info-circle me-1"></i> Status</th>
+                                            <th><i class="fas fa-cog me-1"></i> Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($withoutGstInvoices as $invoice)
+                                        <tr>
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td class="invoice-number">
+                                                {{ $invoice->invoice_number }}
+                                                <span class="gst-badge">NO GST</span>
+                                            </td>
+                                            <td>{{ $invoice->created_at->format('Y-m-d') }}</td>
+                                            <td class="invoice-amount">₹{{ number_format($invoice->total_amount, 2) }}</td>
+                                            <td>
+                                                @switch($invoice->status)
+                                                    @case('Draft')
+                                                        <span class="status-badge status-draft">
+                                                            <i class="fas fa-pencil-alt"></i> Draft
+                                                        </span>
+                                                        @break
+                                                    @case('Approved')
+                                                        <span class="status-badge status-approved">
+                                                            <i class="fas fa-check-circle"></i> Approved
+                                                        </span>
+                                                    @break
+                                                @case('Dispatch')
+                                                        <span class="status-badge status-dispatch">
+                                                            <i class="fas fa-truck-loading"></i> Dispatch
+                                                        </span>
+                                                    @break
+                                                @case('Out for Delivery')
+                                                        <span class="status-badge status-delivery">
+                                                            <i class="fas fa-shipping-fast"></i> Out for Delivery
+                                                        </span>
+                                                    @break
+                                                @case('Delivered')
+                                                        <span class="status-badge status-delivered">
+                                                            <i class="fas fa-check-double"></i> Delivered
+                                                        </span>
+                                                    @break
+                                                @case('Return')
+                                                        <span class="status-badge status-return">
+                                                            <i class="fas fa-undo-alt"></i> Return
+                                                        </span>
+                                                    @break
+                                                @default
+                                                        <span class="status-badge status-default">
+                                                            <i class="fas fa-question-circle"></i> {{ $invoice->status }}
+                                                        </span>
+                                            @endswitch
+                                        </td>
+                                        <td class="action-buttons">
+                                            <!-- View Button -->
+                                            <button class="btn btn-sm btn-view-theme view-invoice" data-invoice-id="{{ $invoice->id }}">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </button>
+                                            
+                                            @if($invoice->status !== 'Draft')
+                                                <!-- PDF Download Button -->
+                                                <a href="{{ route('frontend.cart.without-gst.invoice.download-pdf', $invoice->id) }}" class="btn btn-sm btn-pdf-theme">
+                                                    <i class="fas fa-file-pdf me-1"></i>PDF
+                                                </a>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="empty-state text-center py-5">
+                            <div class="empty-icon mb-3">
+                                <i class="fas fa-file-alt fa-3x"></i>
+                            </div>
+                            <h5 class="mb-2">No without GST invoices found</h5>
+                            <p class="mb-0 text-muted">You don't have any without GST invoices yet.</p>
+                            <a href="{{ route('frontend.cart.proforma.invoices') }}" class="btn btn-theme mt-3">
+                                <i class="fas fa-file-invoice me-2"></i>View With GST Invoices
+                                <i class="fas fa-arrow-right ms-2 btn-arrow"></i>
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice Details Modal -->
+<div class="modal fade invoice-modal" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="invoiceModalLabel">
+                    <i class="fas fa-file-alt me-2"></i>Without GST Invoice Details
+                </h5>
+                <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="invoiceModalBody">
+                <!-- Invoice details will be loaded here -->
+                <div class="text-center py-5">
+                    <div class="loading-spinner">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Loading invoice details...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-modal-close" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Close
+                </button>
+                <button type="button" class="btn btn-theme btn-modal-download d-none" id="downloadPdfBtn">
+                    <i class="fas fa-file-pdf me-2"></i>Download PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -891,26 +789,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Download PDF button handler
     document.getElementById('downloadPdfBtn').addEventListener('click', function() {
-        // Get the currently loaded invoice ID from the active button
         const activeButton = document.querySelector('.view-invoice.active');
         if (activeButton) {
             const invoiceId = activeButton.getAttribute('data-invoice-id');
             if (invoiceId) {
-                // Redirect to the PDF download route
-                window.location.href = `/cart/proforma-invoice/${invoiceId}/download-pdf`;
+                window.location.href = `/cart/without-gst-invoice/${invoiceId}/download-pdf`;
             }
         }
     });
     
     // Load invoice details via AJAX
     function loadInvoiceDetails(invoiceId) {
-        // Show the modal with loading spinner
         const modal = new bootstrap.Modal(document.getElementById('invoiceModal'));
         
         // Reset modal body to show loading spinner
         document.getElementById('invoiceModalBody').innerHTML = `
             <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
+                <div class="spinner-border" style="color: #6c757d;" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <p class="mt-2 text-muted">Loading invoice details...</p>
@@ -920,7 +815,7 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.show();
         
         // Fetch invoice details
-        fetch(`/cart/proforma-invoice/${invoiceId}`, {
+        fetch(`/cart/without-gst-invoice/${invoiceId}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -934,7 +829,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                console.log('Invoice data received:', data); // Debug log
+                console.log('Invoice data received:', data);
                 
                 if (data.error) {
                     document.getElementById('invoiceModalBody').innerHTML = `
@@ -945,7 +840,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                // Validate data structure
                 if (!data.invoice || !data.data) {
                     document.getElementById('invoiceModalBody').innerHTML = `
                         <div class="alert alert-warning">
@@ -955,12 +849,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                // Update notification count if provided
-                if (data.unread_count !== undefined) {
-                    updateNotificationCount(data.unread_count);
-                }
-                
-                // Render invoice details
                 renderInvoiceDetails(data);
             })
             .catch(error => {
@@ -973,33 +861,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
             });
-    }
-    
-    // Function to update notification count in header
-    function updateNotificationCount(count) {
-        const notificationsDropdown = document.querySelector('#notificationsDropdown');
-        
-        // Exit early if notifications dropdown doesn't exist on this page
-        if (!notificationsDropdown) {
-            return;
-        }
-        
-        const countElement = notificationsDropdown.querySelector('.notification-count');
-        if (count > 0) {
-            if (countElement) {
-                countElement.textContent = count;
-            } else {
-                // Create count element if it doesn't exist
-                const badge = document.createElement('span');
-                badge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count';
-                badge.textContent = count;
-                notificationsDropdown.appendChild(badge);
-            }
-        } else {
-            if (countElement) {
-                countElement.remove();
-            }
-        }
     }
     
     // Get status badge HTML based on status
@@ -1027,10 +888,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const invoice = data.invoice;
         const invoiceData = data.data || {};
         
-        console.log('Rendering invoice:', invoice); // Debug log
-        console.log('Invoice data:', invoiceData); // Debug log
+        console.log('Rendering invoice:', invoice);
+        console.log('Invoice data:', invoiceData);
         
-        // Get site settings from meta tags or use defaults
         const siteTitle = document.querySelector('meta[name="site-title"]')?.getAttribute('content') || '{{ setting("site_title", "Frontend App") }}';
         const companyAddress = document.querySelector('meta[name="company-address"]')?.getAttribute('content') || '{{ setting("company_address", "Company Address") }}';
         const companyEmail = document.querySelector('meta[name="company-email"]')?.getAttribute('content') || '{{ setting("company_email", "company@example.com") }}';
@@ -1052,15 +912,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         let cartItemsHtml = '';
-        // Handle different possible data structures for cart items
         const cartItems = invoiceData.cart_items || invoiceData.items || invoiceData.products || [];
         
-        console.log('Cart items:', cartItems); // Debug log
+        console.log('Cart items:', cartItems);
         
         if (cartItems && cartItems.length > 0) {
             let index = 1;
             cartItems.forEach(item => {
-                // Ensure price and total are valid numbers
                 const price = parseFloat(item.price) || parseFloat(item.unit_price) || 0;
                 const total = parseFloat(item.total) || parseFloat(item.line_total) || (price * (parseInt(item.quantity) || 0));
                 const quantity = parseInt(item.quantity) || parseInt(item.qty) || 0;
@@ -1068,7 +926,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const productSlug = item.product_slug || item.slug || '';
                 const productDesc = item.product_description || item.description || '';
                 
-                // Create product link if slug is available
                 const productLink = productSlug ? `/product/${productSlug}` : '#';
                 const productNameHtml = productSlug 
                     ? `<a href="${productLink}" class="product-link text-decoration-none">${productName}</a>`
@@ -1099,24 +956,26 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }
         
-        // Ensure all financial values are valid numbers
+        // Ensure all financial values are valid numbers (no GST for this invoice type)
         const subtotal = parseFloat(invoiceData.subtotal) || 0;
-        const taxPercentage = parseFloat(invoiceData.tax_percentage) || 0;
-        const taxAmount = parseFloat(invoiceData.tax_amount) || 0;
         const shipping = parseFloat(invoiceData.shipping) || 0;
         const discountAmount = parseFloat(invoiceData.discount_amount) || 0;
         const invoiceTotal = parseFloat(invoiceData.total) || 0;
         
+        // Show/hide download button based on status
         if (invoice.status === 'Draft') {
-            // Always show the download button
-            $('#downloadPdfBtn').addClass('d-none');
+            document.getElementById('downloadPdfBtn').classList.add('d-none');
         } else {
-            // Hide the download button for other statuses
-            $('#downloadPdfBtn').removeClass('d-none');
+            document.getElementById('downloadPdfBtn').classList.remove('d-none');
         }
         
         document.getElementById('invoiceModalBody').innerHTML = `
             <div class="container-fluid">
+                <div class="alert alert-secondary mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Without GST Invoice</strong> - This invoice does not include GST/Tax charges.
+                </div>
+                
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <h5 class="fw-bold mb-3">From:</h5>
@@ -1134,7 +993,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 <div class="row mb-4">
                     <div class="col-md-6">
-                        <p class="mb-1"><strong>Invoice #:</strong> ${invoice.invoice_number}</p>
+                        <p class="mb-1"><strong>Invoice #:</strong> ${invoice.invoice_number} <span class="badge bg-secondary">NO GST</span></p>
                         <p class="mb-1"><strong>Date:</strong> ${invoiceData.invoice_date || new Date(invoice.created_at).toLocaleDateString()}</p>
                     </div>
                     <div class="col-md-6">
@@ -1166,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="card border-0 bg-light">
                             <div class="card-body">
                                 <h5 class="card-title">Notes</h5>
-                                <p class="mb-0">${invoiceData.notes || 'This is a proforma invoice and not a tax invoice. Payment is due upon receipt.'}</p>
+                                <p class="mb-0">${invoiceData.notes || 'This is a proforma invoice without GST. Payment is due upon receipt.'}</p>
                             </div>
                         </div>
                     </div>
@@ -1178,10 +1037,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                     ${subtotal > 0 ? `<tr>
                                         <td class="fw-bold">Subtotal:</td>
                                         <td class="text-end">₹${subtotal.toFixed(2)}</td>
-                                    </tr>` : ''}
-                                    ${(invoiceData.gst_type !== 'without_gst' && taxPercentage > 0) ? `<tr>
-                                        <td class="fw-bold">GST (${taxPercentage.toFixed(2)}%):</td>
-                                        <td class="text-end">₹${taxAmount.toFixed(2)}</td>
                                     </tr>` : ''}
                                     ${shipping > 0 ? `<tr>
                                         <td class="fw-bold">Shipping:</td>
