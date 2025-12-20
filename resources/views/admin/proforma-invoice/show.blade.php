@@ -157,7 +157,7 @@
                                                             <span class="input-group-text">₹</span>
                                                             <input type="number" name="items[{{ $index }}][total]" 
                                                                    class="form-control item-total" 
-                                                                   value="{{ $item['total'] }}" 
+                                                                   value="{{ $item['total'] ?? ($item['price'] * $item['quantity']) }}" 
                                                                    step="0.01" min="0" readonly>
                                                         </div>
                                                     </td>

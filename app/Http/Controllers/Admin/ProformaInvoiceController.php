@@ -76,8 +76,8 @@ class ProformaInvoiceController extends Controller
     {
         $proformaInvoice = ProformaInvoice::findOrFail($id);
         
-        // Get the existing invoice data
-        $invoiceData = json_decode($proformaInvoice->invoice_data, true);
+        // Get the existing invoice data (already decoded by model casting)
+        $invoiceData = $proformaInvoice->invoice_data;
         
         // Update status if provided
         if ($request->has('status')) {
@@ -123,7 +123,7 @@ class ProformaInvoiceController extends Controller
         
         // Update the proforma invoice
         $proformaInvoice->total_amount = (float) $request->input('total', $proformaInvoice->total_amount);
-        $proformaInvoice->invoice_data = json_encode($invoiceData);
+        $proformaInvoice->invoice_data = $invoiceData;
         $proformaInvoice->save();
         
         return redirect()->back()->with('success', 'Proforma invoice updated successfully.');
@@ -191,7 +191,7 @@ class ProformaInvoiceController extends Controller
         
         // Update the proforma invoice
         $proformaInvoice->total_amount = $newTotal;
-        $proformaInvoice->invoice_data = json_encode($invoiceData);
+        $proformaInvoice->invoice_data = $invoiceData;
         $proformaInvoice->save();
         
         return redirect()->back()->with('success', 'Item removed successfully. Total updated.');
