@@ -412,9 +412,6 @@ class ShoppingCartController extends Controller
             return $item->price * $item->quantity;
         });
         
-        // Generate serialized invoice number
-        $invoiceNumber = $this->generateInvoiceNumber();
-        
         // Generate invoice date
         $invoiceDate = now()->format('Y-m-d');
         
@@ -444,15 +441,9 @@ class ShoppingCartController extends Controller
             'session_id' => Auth::check() ? null : session()->getId()
         ];
         
-        // Save the proforma invoice to the database
-        $proformaInvoice = ProformaInvoice::create([
-            'invoice_number' => $invoiceNumber,
-            'user_id' => Auth::check() ? Auth::id() : null,
-            'session_id' => Auth::check() ? null : session()->getId(),
-            'total_amount' => $total,
-            'invoice_data' => json_encode($invoiceData),
-            'status' => ProformaInvoice::STATUS_DRAFT, // Set status to 'Draft' when creating
-        ]);
+        // Save the proforma invoice to the database with retry logic for duplicate invoice numbers
+        $proformaInvoice = $this->createProformaInvoiceWithRetry($total, $invoiceData);
+        $invoiceNumber = $proformaInvoice->invoice_number;
         
         // Create database notifications for admin users
         $adminUsers = User::where('user_role', 'admin')->orWhere('user_role', 'super_admin')->get();
@@ -726,7 +717,7 @@ class ShoppingCartController extends Controller
     }
     
     /**
-     * Generate a serialized invoice number.
+     * Generate a serialized invoice number with database locking to prevent duplicates.
      *
      * @return string
      */
@@ -734,32 +725,89 @@ class ShoppingCartController extends Controller
     {
         // Get the current year
         $year = date('Y');
+        $prefix = "INV-{$year}-";
         
-        // Get the latest invoice to determine the next sequence number
-        $latestInvoice = ProformaInvoice::orderBy('id', 'desc')->first();
-        
-        if ($latestInvoice) {
-            // Extract the sequence number from the latest invoice
-            $latestNumber = $latestInvoice->invoice_number;
-            $parts = explode('-', $latestNumber);
+        // Use database locking to prevent race conditions
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($year, $prefix) {
+            // Lock the table for reading to prevent concurrent reads
+            $latestInvoice = ProformaInvoice::where('invoice_number', 'like', $prefix . '%')
+                ->orderBy('invoice_number', 'desc')
+                ->lockForUpdate()
+                ->first();
             
-            // If the latest invoice is from the current year, increment the sequence
-            if (count($parts) >= 3 && $parts[1] == $year) {
-                $sequence = (int)$parts[2] + 1;
+            if ($latestInvoice) {
+                // Extract the sequence number from the latest invoice
+                $latestNumber = $latestInvoice->invoice_number;
+                $parts = explode('-', $latestNumber);
+                
+                // If the latest invoice is from the current year, increment the sequence
+                if (count($parts) >= 3 && $parts[1] == $year) {
+                    $sequence = (int)$parts[2] + 1;
+                } else {
+                    // If it's a new year or no previous invoices, start from 1
+                    $sequence = 1;
+                }
             } else {
-                // If it's a new year or no previous invoices, start from 1
+                // If no previous invoices, start from 1
                 $sequence = 1;
             }
-        } else {
-            // If no previous invoices, start from 1
-            $sequence = 1;
+            
+            // Format the sequence number with leading zeros (e.g., 0001)
+            $sequenceFormatted = str_pad($sequence, 4, '0', STR_PAD_LEFT);
+            
+            // Return the formatted invoice number (e.g., INV-2025-0001)
+            return "INV-{$year}-{$sequenceFormatted}";
+        });
+    }
+    
+    /**
+     * Create a proforma invoice with retry logic to handle duplicate invoice numbers.
+     *
+     * @param  float  $total
+     * @param  array  $invoiceData
+     * @param  int  $maxRetries
+     * @return \App\Models\ProformaInvoice
+     * @throws \Exception
+     */
+    private function createProformaInvoiceWithRetry($total, $invoiceData, $maxRetries = 5)
+    {
+        $attempts = 0;
+        $lastException = null;
+        
+        while ($attempts < $maxRetries) {
+            try {
+                return \Illuminate\Support\Facades\DB::transaction(function () use ($total, $invoiceData) {
+                    // Generate invoice number inside the transaction
+                    $invoiceNumber = $this->generateInvoiceNumber();
+                    
+                    // Create the proforma invoice
+                    return ProformaInvoice::create([
+                        'invoice_number' => $invoiceNumber,
+                        'user_id' => Auth::check() ? Auth::id() : null,
+                        'session_id' => Auth::check() ? null : session()->getId(),
+                        'total_amount' => $total,
+                        'invoice_data' => json_encode($invoiceData),
+                        'status' => ProformaInvoice::STATUS_DRAFT,
+                    ]);
+                });
+            } catch (\Illuminate\Database\QueryException $e) {
+                $lastException = $e;
+                
+                // Check if it's a duplicate entry error (MySQL error code 1062)
+                if ($e->errorInfo[1] == 1062) {
+                    $attempts++;
+                    // Small delay before retry to reduce collision chance
+                    usleep(100000 * $attempts); // 100ms * attempt number
+                    continue;
+                }
+                
+                // If it's not a duplicate entry error, rethrow
+                throw $e;
+            }
         }
         
-        // Format the sequence number with leading zeros (e.g., 0001)
-        $sequenceFormatted = str_pad($sequence, 4, '0', STR_PAD_LEFT);
-        
-        // Return the formatted invoice number (e.g., INV-2025-0001)
-        return "INV-{$year}-{$sequenceFormatted}";
+        // If we've exhausted all retries, throw the last exception
+        throw $lastException ?? new \Exception('Failed to create proforma invoice after ' . $maxRetries . ' attempts');
     }
     
     /**

@@ -388,8 +388,6 @@ class CartController extends ApiController
             return $item->price * $item->quantity;
         });
 
-        // Generate invoice number
-        $invoiceNumber = $this->generateInvoiceNumber();
         $invoiceDate = now()->format('Y-m-d');
 
         // Prepare invoice data
@@ -416,14 +414,9 @@ class CartController extends ApiController
             ],
         ];
 
-        // Create proforma invoice
-        $proformaInvoice = ProformaInvoice::create([
-            'invoice_number' => $invoiceNumber,
-            'user_id' => $user->id,
-            'total_amount' => $total,
-            'invoice_data' => json_encode($invoiceData),
-            'status' => ProformaInvoice::STATUS_DRAFT ?? 'draft',
-        ]);
+        // Create proforma invoice with retry logic for duplicate invoice numbers
+        $proformaInvoice = $this->createProformaInvoiceWithRetry($user->id, $total, $invoiceData);
+        $invoiceNumber = $proformaInvoice->invoice_number;
 
         // Create notifications for admin users
         $adminUsers = User::whereIn('user_role', ['admin', 'super_admin'])->get();
@@ -469,27 +462,86 @@ class CartController extends ApiController
     }
 
     /**
-     * Generate a serialized invoice number
+     * Generate a serialized invoice number with database locking to prevent duplicates
      *
      * @return string
      */
     private function generateInvoiceNumber()
     {
         $year = date('Y');
-        $latestInvoice = ProformaInvoice::orderBy('id', 'desc')->first();
+        $prefix = "INV-{$year}-";
+        
+        // Use database locking to prevent race conditions
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($year, $prefix) {
+            // Lock the table for reading to prevent concurrent reads
+            $latestInvoice = ProformaInvoice::where('invoice_number', 'like', $prefix . '%')
+                ->orderBy('invoice_number', 'desc')
+                ->lockForUpdate()
+                ->first();
 
-        if ($latestInvoice) {
-            $parts = explode('-', $latestInvoice->invoice_number);
-            if (count($parts) >= 3 && $parts[1] == $year) {
-                $sequence = (int)$parts[2] + 1;
+            if ($latestInvoice) {
+                $parts = explode('-', $latestInvoice->invoice_number);
+                if (count($parts) >= 3 && $parts[1] == $year) {
+                    $sequence = (int)$parts[2] + 1;
+                } else {
+                    $sequence = 1;
+                }
             } else {
                 $sequence = 1;
             }
-        } else {
-            $sequence = 1;
-        }
 
-        return "INV-{$year}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+            return "INV-{$year}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        });
+    }
+
+    /**
+     * Create a proforma invoice with retry logic to handle duplicate invoice numbers.
+     *
+     * @param  int  $userId
+     * @param  float  $total
+     * @param  array  $invoiceData
+     * @param  int  $maxRetries
+     * @return \App\Models\ProformaInvoice
+     * @throws \Exception
+     */
+    private function createProformaInvoiceWithRetry($userId, $total, $invoiceData, $maxRetries = 5)
+    {
+        $attempts = 0;
+        $lastException = null;
+        
+        while ($attempts < $maxRetries) {
+            try {
+                return \Illuminate\Support\Facades\DB::transaction(function () use ($userId, $total, $invoiceData) {
+                    // Generate invoice number inside the transaction
+                    $invoiceNumber = $this->generateInvoiceNumber();
+                    
+                    // Create the proforma invoice
+                    return ProformaInvoice::create([
+                        'invoice_number' => $invoiceNumber,
+                        'user_id' => $userId,
+                        'total_amount' => $total,
+                        'invoice_data' => json_encode($invoiceData),
+                        'status' => ProformaInvoice::STATUS_DRAFT ?? 'draft',
+                    ]);
+                });
+            } catch (\Illuminate\Database\QueryException $e) {
+                $lastException = $e;
+                
+                // Check if it's a duplicate entry error (MySQL error code 1062)
+                if ($e->errorInfo[1] == 1062) {
+                    $attempts++;
+                    // Small delay before retry to reduce collision chance
+                    usleep(100000 * $attempts); // 100ms * attempt number
+                    continue;
+                }
+                
+                // If it's not a duplicate entry error, rethrow
+                throw $e;
+            }
+        }
+        
+        // If we've exhausted all retries, throw the last exception
+        throw $lastException ?? new \Exception('Failed to create proforma invoice after ' . $maxRetries . ' attempts');
     }
 
     /**
