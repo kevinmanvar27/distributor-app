@@ -35,8 +35,8 @@ class ProformaInvoiceController extends Controller
     {
         $proformaInvoice = ProformaInvoice::with('user')->findOrFail($id);
         
-        // Decode the invoice data
-        $invoiceData = json_decode($proformaInvoice->invoice_data, true);
+        // Get invoice data (already decoded by model casting)
+        $invoiceData = $proformaInvoice->invoice_data;
         
         // Extract cart items and customer info
         $cartItems = $invoiceData['cart_items'] ?? [];
@@ -163,8 +163,8 @@ class ProformaInvoiceController extends Controller
     {
         $proformaInvoice = ProformaInvoice::findOrFail($id);
         
-        // Decode the invoice data
-        $invoiceData = json_decode($proformaInvoice->invoice_data, true);
+        // Get invoice data (already decoded by model casting)
+        $invoiceData = $proformaInvoice->invoice_data;
         
         // Get the item index to remove
         $itemIndex = $request->input('item_index');
@@ -207,8 +207,8 @@ class ProformaInvoiceController extends Controller
     {
         $proformaInvoice = ProformaInvoice::with('user')->findOrFail($id);
         
-        // Decode the invoice data
-        $invoiceData = json_decode($proformaInvoice->invoice_data, true);
+        // Get invoice data (already decoded by model casting)
+        $invoiceData = $proformaInvoice->invoice_data;
         
         // Extract cart items and customer info
         $cartItems = $invoiceData['cart_items'] ?? [];
