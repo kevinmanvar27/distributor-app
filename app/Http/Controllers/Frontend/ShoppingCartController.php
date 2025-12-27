@@ -10,6 +10,7 @@ use App\Models\ProformaInvoice;
 use App\Models\WithoutGstInvoice;
 use App\Models\User;
 use App\Models\Notification;
+use App\Models\Coupon;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -408,10 +409,41 @@ class ShoppingCartController extends Controller
             $cartItems = ShoppingCartItem::forSession($sessionId)->with('product.mainPhoto')->get();
         }
         
-        $total = $cartItems->sum(function ($item) {
+        $subtotal = $cartItems->sum(function ($item) {
             // Use the price stored in the cart item, which was calculated at time of adding
             return $item->price * $item->quantity;
         });
+        
+        // Check for applied coupon
+        $appliedCoupon = session('applied_coupon');
+        $couponDiscount = 0;
+        $couponData = null;
+        $couponToRecord = null;
+        
+        if ($appliedCoupon) {
+            $coupon = Coupon::find($appliedCoupon['id']);
+            
+            // Verify coupon is still valid
+            if ($coupon && $coupon->isValid() && $coupon->canBeUsedBy(Auth::user())) {
+                // Check minimum order amount
+                if (!$coupon->min_order_amount || $subtotal >= $coupon->min_order_amount) {
+                    $couponDiscount = $coupon->calculateDiscount($subtotal);
+                    $couponData = [
+                        'id' => $coupon->id,
+                        'code' => $coupon->code,
+                        'discount_type' => $coupon->discount_type,
+                        'discount_value' => $coupon->discount_value,
+                        'discount_amount' => $couponDiscount,
+                    ];
+                    
+                    // Store coupon for recording usage after invoice creation
+                    $couponToRecord = $coupon;
+                }
+            }
+        }
+        
+        // Calculate final total
+        $total = $subtotal - $couponDiscount;
         
         // Generate invoice date
         $invoiceDate = now()->format('Y-m-d');
@@ -430,6 +462,9 @@ class ShoppingCartController extends Controller
                     'total' => $item->price * $item->quantity
                 ];
             })->toArray(),
+            'subtotal' => $subtotal,
+            'coupon' => $couponData,
+            'coupon_discount' => $couponDiscount,
             'total' => $total,
             'invoice_date' => $invoiceDate,
             'customer' => Auth::check() ? [
@@ -445,6 +480,11 @@ class ShoppingCartController extends Controller
         // Save the proforma invoice to the database with retry logic for duplicate invoice numbers
         $proformaInvoice = $this->createProformaInvoiceWithRetry($total, $invoiceData);
         $invoiceNumber = $proformaInvoice->invoice_number;
+        
+        // Record coupon usage after invoice is created (so we can link to invoice)
+        if ($couponToRecord && $couponDiscount > 0) {
+            $couponToRecord->recordUsage(Auth::user(), $couponDiscount, $proformaInvoice->id);
+        }
         
         // Create database notifications for admin users
         $adminUsers = User::where('user_role', 'admin')->orWhere('user_role', 'super_admin')->get();
@@ -496,6 +536,9 @@ class ShoppingCartController extends Controller
             // For guests, delete all cart items for the session
             ShoppingCartItem::where('session_id', session()->getId())->delete();
         }
+        
+        // Clear the applied coupon from session
+        session()->forget('applied_coupon');
         
         // Redirect to the invoices list instead of showing the proforma invoice page
         return redirect()->route('frontend.cart.proforma.invoices')->with('success', 'Proforma invoice generated successfully! Cart has been emptied.');
@@ -1100,6 +1143,215 @@ class ShoppingCartController extends Controller
         
         // Download the PDF with a meaningful filename
         return $pdf->download('without-gst-invoice-' . $invoice->invoice_number . '.pdf');
+    }
+
+    /**
+     * Apply a coupon code to the cart.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function applyCoupon(Request $request)
+    {
+        $request->validate([
+            'coupon_code' => 'required|string|max:50',
+        ]);
+
+        $code = strtoupper(trim($request->coupon_code));
+        
+        // Find the coupon
+        $coupon = Coupon::where('code', $code)->first();
+        
+        if (!$coupon) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid coupon code. Please check and try again.'
+            ], 400);
+        }
+
+        // Check if coupon is valid (active, not expired, not exhausted)
+        if (!$coupon->isValid()) {
+            $status = $coupon->status;
+            $message = match($status) {
+                'inactive' => 'This coupon is currently inactive.',
+                'expired' => 'This coupon has expired.',
+                'scheduled' => 'This coupon is not yet active.',
+                'exhausted' => 'This coupon has reached its usage limit.',
+                default => 'This coupon is not valid.'
+            };
+            
+            return response()->json([
+                'success' => false,
+                'message' => $message
+            ], 400);
+        }
+
+        // Check per-user limit for authenticated users
+        $user = Auth::user();
+        if (!$coupon->canBeUsedBy($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already used this coupon the maximum number of times.'
+            ], 400);
+        }
+
+        // Get cart total
+        if (Auth::check()) {
+            $cartItems = Auth::user()->cartItems()->with('product')->get();
+        } else {
+            $sessionId = session()->getId();
+            $cartItems = ShoppingCartItem::forSession($sessionId)->with('product')->get();
+        }
+
+        $cartTotal = $cartItems->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        if ($cartItems->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your cart is empty.'
+            ], 400);
+        }
+
+        // Check minimum order amount
+        if ($coupon->min_order_amount && $cartTotal < $coupon->min_order_amount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Minimum order amount of ₹' . number_format($coupon->min_order_amount, 2) . ' required to use this coupon.'
+            ], 400);
+        }
+
+        // Calculate discount
+        $discount = $coupon->calculateDiscount($cartTotal);
+        $newTotal = $cartTotal - $discount;
+
+        // Store coupon in session
+        session([
+            'applied_coupon' => [
+                'id' => $coupon->id,
+                'code' => $coupon->code,
+                'discount_type' => $coupon->discount_type,
+                'discount_value' => $coupon->discount_value,
+                'discount_amount' => $discount,
+            ]
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Coupon applied successfully!',
+            'coupon' => [
+                'code' => $coupon->code,
+                'discount_type' => $coupon->discount_type,
+                'discount_value' => $coupon->discount_value,
+                'discount_amount' => $discount,
+                'discount_display' => $coupon->discount_type === 'percentage' 
+                    ? $coupon->discount_value . '% off' 
+                    : '₹' . number_format($coupon->discount_value, 2) . ' off',
+            ],
+            'cart_subtotal' => number_format($cartTotal, 2),
+            'cart_total' => number_format($newTotal, 2),
+        ]);
+    }
+
+    /**
+     * Remove the applied coupon from the cart.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function removeCoupon()
+    {
+        // Remove coupon from session
+        session()->forget('applied_coupon');
+
+        // Get cart total
+        if (Auth::check()) {
+            $cartItems = Auth::user()->cartItems()->with('product')->get();
+        } else {
+            $sessionId = session()->getId();
+            $cartItems = ShoppingCartItem::forSession($sessionId)->with('product')->get();
+        }
+
+        $cartTotal = $cartItems->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Coupon removed successfully.',
+            'cart_total' => number_format($cartTotal, 2),
+        ]);
+    }
+
+    /**
+     * Get the currently applied coupon details.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAppliedCoupon()
+    {
+        $appliedCoupon = session('applied_coupon');
+        
+        if (!$appliedCoupon) {
+            return response()->json([
+                'success' => true,
+                'coupon' => null,
+            ]);
+        }
+
+        // Verify the coupon is still valid
+        $coupon = Coupon::find($appliedCoupon['id']);
+        
+        if (!$coupon || !$coupon->isValid()) {
+            session()->forget('applied_coupon');
+            return response()->json([
+                'success' => true,
+                'coupon' => null,
+                'message' => 'The previously applied coupon is no longer valid.',
+            ]);
+        }
+
+        // Recalculate discount based on current cart
+        if (Auth::check()) {
+            $cartItems = Auth::user()->cartItems()->with('product')->get();
+        } else {
+            $sessionId = session()->getId();
+            $cartItems = ShoppingCartItem::forSession($sessionId)->with('product')->get();
+        }
+
+        $cartTotal = $cartItems->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        // Check if cart still meets minimum order requirement
+        if ($coupon->min_order_amount && $cartTotal < $coupon->min_order_amount) {
+            session()->forget('applied_coupon');
+            return response()->json([
+                'success' => true,
+                'coupon' => null,
+                'message' => 'Cart no longer meets the minimum order amount for the coupon.',
+            ]);
+        }
+
+        $discount = $coupon->calculateDiscount($cartTotal);
+
+        // Update session with new discount amount
+        session([
+            'applied_coupon' => array_merge($appliedCoupon, ['discount_amount' => $discount])
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'coupon' => [
+                'code' => $coupon->code,
+                'discount_type' => $coupon->discount_type,
+                'discount_value' => $coupon->discount_value,
+                'discount_amount' => $discount,
+                'discount_display' => $coupon->discount_type === 'percentage' 
+                    ? $coupon->discount_value . '% off' 
+                    : '₹' . number_format($coupon->discount_value, 2) . ' off',
+            ],
+        ]);
     }
 
 }

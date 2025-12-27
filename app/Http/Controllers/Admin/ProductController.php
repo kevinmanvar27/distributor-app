@@ -22,7 +22,13 @@ class ProductController extends Controller
         $this->authorize('viewAny', Product::class);
         
         $products = Product::with('mainPhoto')->latest()->paginate(10);
-        return view('admin.products.index', compact('products'));
+        
+        // Get low stock products count for alert badge
+        $lowStockCount = Product::where('in_stock', true)
+            ->whereColumn('stock_quantity', '<=', 'low_quantity_threshold')
+            ->count();
+        
+        return view('admin.products.index', compact('products', 'lowStockCount'));
     }
 
     /**
@@ -55,6 +61,7 @@ class ProductController extends Controller
             'selling_price' => 'nullable|numeric|lt:mrp',
             'in_stock' => 'required|boolean',
             'stock_quantity' => 'nullable|integer|min:0',
+            'low_quantity_threshold' => 'nullable|integer|min:0',
             'status' => 'required|in:draft,published',
             'main_photo_id' => 'nullable|integer|exists:media,id',
             'product_gallery' => 'nullable',
@@ -87,6 +94,9 @@ class ProductController extends Controller
         if (!isset($data['stock_quantity']) || is_null($data['stock_quantity'])) {
             $data['stock_quantity'] = 0;
         }
+        
+        // Handle low quantity threshold - default to 10 if not provided
+        $data['low_quantity_threshold'] = $request->low_quantity_threshold ?? 10;
         
         // Handle product gallery - convert from JSON string to array if needed
         $productGallery = $request->product_gallery;
@@ -167,6 +177,7 @@ class ProductController extends Controller
             'selling_price' => 'nullable|numeric|lt:mrp',
             'in_stock' => 'required|boolean',
             'stock_quantity' => 'nullable|integer|min:0',
+            'low_quantity_threshold' => 'nullable|integer|min:0',
             'status' => 'required|in:draft,published',
             'main_photo_id' => 'nullable|integer|exists:media,id',
             'product_gallery' => 'nullable',
@@ -178,6 +189,7 @@ class ProductController extends Controller
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:255',
         ]);
+
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
@@ -198,6 +210,9 @@ class ProductController extends Controller
         if (!isset($data['stock_quantity']) || is_null($data['stock_quantity'])) {
             $data['stock_quantity'] = 0;
         }
+        
+        // Handle low quantity threshold - keep existing value if not provided
+        $data['low_quantity_threshold'] = $request->low_quantity_threshold ?? $product->low_quantity_threshold ?? 10;
         
         // Handle product gallery - convert from JSON string to array if needed
         $productGallery = $request->product_gallery;
@@ -234,6 +249,22 @@ class ProductController extends Controller
         $product->delete();
         
         return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
+    }
+
+    /**
+     * Display products with low stock.
+     */
+    public function lowStock()
+    {
+        $this->authorize('viewAny', Product::class);
+        
+        $products = Product::with('mainPhoto')
+            ->where('in_stock', true)
+            ->whereColumn('stock_quantity', '<=', 'low_quantity_threshold')
+            ->latest()
+            ->paginate(10);
+        
+        return view('admin.products.low-stock', compact('products'));
     }
 
     /**

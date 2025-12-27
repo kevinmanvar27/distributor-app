@@ -13,6 +13,63 @@
             <div class="pt-4 pb-2 mb-3">
                 <div class="row justify-content-center">
                     <div class="col-lg-10">
+                        <!-- Payment Status Card -->
+                        @php
+                            $pendingAmount = $proformaInvoice->total_amount - $proformaInvoice->paid_amount;
+                        @endphp
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h5 class="card-title mb-0 fw-bold">Payment Status</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-3">
+                                        <div class="p-3 bg-light rounded">
+                                            <small class="text-muted d-block">Total Amount</small>
+                                            <h5 class="mb-0 fw-bold">₹{{ number_format($proformaInvoice->total_amount, 2) }}</h5>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="p-3 bg-success bg-opacity-10 rounded">
+                                            <small class="text-muted d-block">Paid Amount</small>
+                                            <h5 class="mb-0 fw-bold text-success">₹{{ number_format($proformaInvoice->paid_amount, 2) }}</h5>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="p-3 bg-danger bg-opacity-10 rounded">
+                                            <small class="text-muted d-block">Pending Amount</small>
+                                            <h5 class="mb-0 fw-bold text-danger">₹{{ number_format($pendingAmount, 2) }}</h5>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="p-3 rounded">
+                                            <small class="text-muted d-block">Payment Status</small>
+                                            @switch($proformaInvoice->payment_status)
+                                                @case('unpaid')
+                                                    <span class="badge bg-secondary fs-6">Unpaid</span>
+                                                    @break
+                                                @case('partial')
+                                                    <span class="badge bg-warning fs-6">Partial</span>
+                                                    @break
+                                                @case('paid')
+                                                    <span class="badge bg-success fs-6">Paid</span>
+                                                    @break
+                                            @endswitch
+                                        </div>
+                                    </div>
+                                </div>
+                                @if($pendingAmount > 0)
+                                <div class="text-center mt-3">
+                                    <button type="button" class="btn btn-success rounded-pill px-4" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#paymentModal">
+                                        <i class="fas fa-plus me-1"></i> Add Payment
+                                    </button>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+
                         <div class="card border-0 shadow-sm mb-4">
                             <div class="card-header bg-white border-0 py-3">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -37,6 +94,13 @@
                                 @if(session('success'))
                                     <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3 mb-4" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                @endif
+
+                                @if(session('error'))
+                                    <div class="alert alert-danger alert-dismissible fade show rounded-pill px-4 py-3 mb-4" role="alert">
+                                        <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
@@ -251,6 +315,19 @@
                                                                 </div>
                                                             </td>
                                                         </tr>
+                                                        @if(!empty($invoiceData['coupon']) && !empty($invoiceData['coupon_discount']) && $invoiceData['coupon_discount'] > 0)
+                                                        <tr>
+                                                            <td class="fw-bold">
+                                                                <span class="text-success">
+                                                                    <i class="fas fa-ticket-alt me-1"></i>Coupon ({{ $invoiceData['coupon']['code'] }}):
+                                                                </span>
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <span class="text-success fw-bold">-₹{{ number_format($invoiceData['coupon_discount'], 2) }}</span>
+                                                                <input type="hidden" name="coupon_discount" value="{{ $invoiceData['coupon_discount'] }}">
+                                                            </td>
+                                                        </tr>
+                                                        @endif
                                                         <tr class="border-top">
                                                             <td class="fw-bold">Total:</td>
                                                             <td class="text-end fw-bold">
@@ -290,8 +367,76 @@
     </div>
 </div>
 
+<!-- Payment Modal -->
+@if($pendingAmount > 0)
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Payment - {{ $invoiceNumber }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('admin.pending-bills.add-payment', $proformaInvoice->id) }}" method="POST" id="paymentForm">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <small class="text-muted">Total</small>
+                                <h6 class="mb-0">₹{{ number_format($proformaInvoice->total_amount, 2) }}</h6>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Paid</small>
+                                <h6 class="mb-0 text-success">₹{{ number_format($proformaInvoice->paid_amount, 2) }}</h6>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Pending</small>
+                                <h6 class="mb-0 text-danger">₹{{ number_format($pendingAmount, 2) }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" name="amount" id="paymentAmount" class="form-control" 
+                                   step="0.01" min="0.01" max="{{ $pendingAmount }}"
+                                   placeholder="Enter amount" required>
+                        </div>
+                        <small class="text-muted">Max: ₹{{ number_format($pendingAmount, 2) }}</small>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="payFullAmountBtn"
+                                data-amount="{{ number_format($pendingAmount, 2, '.', '') }}">
+                            Pay Full Amount (₹{{ number_format($pendingAmount, 2) }})
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success rounded-pill">
+                        <i class="fas fa-check me-1"></i> Add Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Pay Full Amount button handler
+    const payFullAmountBtn = document.getElementById('payFullAmountBtn');
+    const paymentAmountInput = document.getElementById('paymentAmount');
+    
+    if (payFullAmountBtn && paymentAmountInput) {
+        payFullAmountBtn.addEventListener('click', function() {
+            const amount = this.getAttribute('data-amount');
+            paymentAmountInput.value = amount;
+        });
+    }
+
     // GST Type Elements
     const gstTypeSelect = document.getElementById('gst_type');
     const gstRows = document.querySelectorAll('.gst-row');

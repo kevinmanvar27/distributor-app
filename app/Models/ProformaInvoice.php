@@ -37,6 +37,8 @@ class ProformaInvoice extends Model
         'user_id',
         'session_id',
         'total_amount',
+        'paid_amount',
+        'payment_status',
         'invoice_data',
         'status',
     ];
@@ -49,9 +51,40 @@ class ProformaInvoice extends Model
     protected $casts = [
         'invoice_data' => 'array',
         'total_amount' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get the pending amount.
+     *
+     * @return float
+     */
+    public function getPendingAmountAttribute()
+    {
+        return $this->total_amount - $this->paid_amount;
+    }
+
+    /**
+     * Check if the invoice is fully paid.
+     *
+     * @return bool
+     */
+    public function isFullyPaid()
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    /**
+     * Check if the invoice has partial payment.
+     *
+     * @return bool
+     */
+    public function hasPartialPayment()
+    {
+        return $this->payment_status === 'partial';
+    }
 
     /**
      * Get the user that owns the proforma invoice.

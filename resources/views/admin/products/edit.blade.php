@@ -81,8 +81,20 @@
                                                     </label>
                                                 </div>
                                                 <div id="stock_quantity_container" class="{{ old('in_stock', $product->in_stock) ? '' : 'd-none' }}">
-                                                    <label for="stock_quantity" class="form-label">Stock Quantity</label>
-                                                    <input type="number" class="form-control rounded-pill px-4 py-2" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', $product->stock_quantity) }}" min="0">
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="stock_quantity" class="form-label">Stock Quantity</label>
+                                                            <input type="number" class="form-control rounded-pill px-4 py-2" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', $product->stock_quantity) }}" min="0">
+                                                        </div>
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="low_quantity_threshold" class="form-label">Low Stock Alert Threshold</label>
+                                                            <input type="number" class="form-control rounded-pill px-4 py-2" id="low_quantity_threshold" name="low_quantity_threshold" value="{{ old('low_quantity_threshold', $product->low_quantity_threshold ?? 10) }}" min="0">
+                                                            <div class="form-text text-muted">
+                                                                <i class="fas fa-bell text-warning me-1"></i>
+                                                                You'll receive a notification when stock falls below this quantity
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             

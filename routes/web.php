@@ -17,6 +17,8 @@ use App\Http\Controllers\Admin\ProformaInvoiceController;
 use App\Http\Controllers\Admin\WithoutGstInvoiceController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\LeadController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Frontend\LoginController as FrontendLoginController;
 use App\Http\Controllers\Frontend\RegisterController;
@@ -90,6 +92,11 @@ Route::middleware(['frontend.access', 'auth'])->group(function () {
     Route::get('/cart/without-gst-invoices', [ShoppingCartController::class, 'listWithoutGstInvoices'])->name('frontend.cart.without-gst.invoices');
     Route::get('/cart/without-gst-invoice/{id}', [ShoppingCartController::class, 'getWithoutGstInvoiceDetails'])->name('frontend.cart.without-gst.invoice.details');
     Route::get('/cart/without-gst-invoice/{id}/download-pdf', [ShoppingCartController::class, 'downloadWithoutGstInvoicePDF'])->name('frontend.cart.without-gst.invoice.download-pdf');
+
+    // Coupon Routes
+    Route::post('/cart/coupon/apply', [ShoppingCartController::class, 'applyCoupon'])->name('frontend.cart.coupon.apply');
+    Route::post('/cart/coupon/remove', [ShoppingCartController::class, 'removeCoupon'])->name('frontend.cart.coupon.remove');
+    Route::get('/cart/coupon/applied', [ShoppingCartController::class, 'getAppliedCoupon'])->name('frontend.cart.coupon.applied');
 
 });
 
@@ -294,6 +301,7 @@ Route::middleware('auth')->group(function () {
         
         // Additional product routes
         Route::get('/products/{product}/details', [ProductController::class, 'showDetails'])->name('admin.products.details');
+        Route::get('/products-low-stock', [ProductController::class, 'lowStock'])->name('admin.products.low-stock');
         
         // Media Library Routes
         // Media Management Routes
@@ -359,6 +367,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('/proforma-invoice-black/{id}/remove-item', [WithoutGstInvoiceController::class, 'removeItem'])->name('admin.without-gst-invoice.remove-item');
         Route::delete('/proforma-invoice-black/{id}', [WithoutGstInvoiceController::class, 'destroy'])->name('admin.without-gst-invoice.destroy');
     });
+
+    // Pending Bills Routes
+    Route::prefix('admin')->middleware(['permission:manage_pending_bills'])->group(function () {
+        Route::get('/pending-bills', [\App\Http\Controllers\Admin\PendingBillController::class, 'index'])->name('admin.pending-bills.index');
+        Route::get('/pending-bills/user-summary', [\App\Http\Controllers\Admin\PendingBillController::class, 'userSummary'])->name('admin.pending-bills.user-summary');
+        Route::get('/pending-bills/user/{userId}', [\App\Http\Controllers\Admin\PendingBillController::class, 'userBills'])->name('admin.pending-bills.user');
+        Route::post('/pending-bills/{id}/update-payment', [\App\Http\Controllers\Admin\PendingBillController::class, 'updatePayment'])->name('admin.pending-bills.update-payment');
+        Route::post('/pending-bills/{id}/add-payment', [\App\Http\Controllers\Admin\PendingBillController::class, 'addPayment'])->name('admin.pending-bills.add-payment');
+    });
     
     // Pages Routes
     Route::prefix('admin')->group(function () {
@@ -380,6 +397,38 @@ Route::middleware('auth')->group(function () {
         Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('admin.notifications.mark-all-as-read');
         Route::post('/notifications/invoice/{invoiceId}/mark-as-read', [NotificationController::class, 'markInvoiceNotificationsAsRead'])->name('admin.notifications.invoice.mark-as-read');
         Route::get('/notifications/data', [NotificationController::class, 'getUserNotifications'])->name('admin.notifications.data');
+    });
+
+    // Lead Management Routes
+    Route::prefix('admin')->middleware(['permission:viewAny_lead'])->group(function () {
+        Route::resource('leads', LeadController::class)->names([
+            'index' => 'admin.leads.index',
+            'create' => 'admin.leads.create',
+            'store' => 'admin.leads.store',
+            'show' => 'admin.leads.show',
+            'edit' => 'admin.leads.edit',
+            'update' => 'admin.leads.update',
+            'destroy' => 'admin.leads.destroy',
+        ]);
+        
+        // Trashed leads routes
+        Route::get('/leads-trashed', [LeadController::class, 'trashed'])->name('admin.leads.trashed');
+        Route::post('/leads/{id}/restore', [LeadController::class, 'restore'])->name('admin.leads.restore');
+        Route::delete('/leads/{id}/force-delete', [LeadController::class, 'forceDelete'])->name('admin.leads.force-delete');
+    });
+
+    // Coupon Management Routes
+    Route::prefix('admin')->middleware(['permission:viewAny_coupon'])->group(function () {
+        Route::resource('coupons', CouponController::class)->names([
+            'index' => 'admin.coupons.index',
+            'create' => 'admin.coupons.create',
+            'store' => 'admin.coupons.store',
+            'show' => 'admin.coupons.show',
+            'edit' => 'admin.coupons.edit',
+            'update' => 'admin.coupons.update',
+            'destroy' => 'admin.coupons.destroy',
+        ]);
+        Route::post('/coupons/{coupon}/toggle-status', [CouponController::class, 'toggleStatus'])->name('admin.coupons.toggle-status');
     });
 
 });

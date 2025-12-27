@@ -257,6 +257,13 @@
                 <td class="text-end">-₹{{ number_format($discountAmount, 2) }}</td>
             </tr>
 
+            @if(!empty($invoiceData['coupon']) && !empty($invoiceData['coupon_discount']) && $invoiceData['coupon_discount'] > 0)
+            <tr>
+                <td>Coupon ({{ $invoiceData['coupon']['code'] }}):</td>
+                <td class="text-end text-success">-₹{{ number_format($invoiceData['coupon_discount'], 2) }}</td>
+            </tr>
+            @endif
+
             <tr class="total-row">
                 <td><strong>Total:</strong></td>
                 <td class="text-end"><strong>₹{{ number_format($totalAmount, 2) }}</strong></td>

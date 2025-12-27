@@ -24,10 +24,11 @@ class Product extends Model
         'selling_price',
         'in_stock',
         'stock_quantity',
+        'low_quantity_threshold', // Added for low stock alerts
         'status',
         'main_photo_id',
         'product_gallery',
-        'product_categories', // Added for category/subcategory storage
+        'product_categories',
         'meta_title',
         'meta_description',
         'meta_keywords',
@@ -41,9 +42,10 @@ class Product extends Model
     protected $casts = [
         'in_stock' => 'boolean',
         'product_gallery' => 'array',
-        'product_categories' => 'array', // Added for category/subcategory storage
+        'product_categories' => 'array',
         'mrp' => 'decimal:2',
         'selling_price' => 'decimal:2',
+        'low_quantity_threshold' => 'integer',
     ];
 
     /**
@@ -67,6 +69,29 @@ class Product extends Model
     }
 
     /**
+     * Check if the product has low stock
+     *
+     * @return bool
+     */
+    public function isLowStock(): bool
+    {
+        $threshold = $this->low_quantity_threshold ?? 10;
+        return $this->in_stock && $this->stock_quantity <= $threshold;
+    }
+
+    /**
+     * Get all products with low stock
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function getLowStockProducts()
+    {
+        return static::where('in_stock', true)
+            ->whereColumn('stock_quantity', '<=', 'low_quantity_threshold')
+            ->get();
+    }
+
+    /**
      * Get the main photo for the product.
      */
     public function mainPhoto()
@@ -79,9 +104,8 @@ class Product extends Model
      */
     public function galleryMedia()
     {
-        // Gallery is stored as JSON array of media IDs
         if (empty($this->product_gallery)) {
-            return $this->hasMany(Media::class, 'id', 'id'); // Return empty relationship
+            return $this->hasMany(Media::class, 'id', 'id');
         }
         
         return Media::whereIn('id', $this->product_gallery);

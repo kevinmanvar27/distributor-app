@@ -238,6 +238,19 @@
                                                                 </div>
                                                             </td>
                                                         </tr>
+                                                        @if(!empty($invoiceData['coupon']) && !empty($invoiceData['coupon_discount']) && $invoiceData['coupon_discount'] > 0)
+                                                        <tr>
+                                                            <td class="fw-bold">
+                                                                <span class="text-success">
+                                                                    <i class="fas fa-ticket-alt me-1"></i>Coupon ({{ $invoiceData['coupon']['code'] }}):
+                                                                </span>
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <span class="text-success fw-bold">-₹{{ number_format($invoiceData['coupon_discount'], 2) }}</span>
+                                                                <input type="hidden" name="coupon_discount" value="{{ $invoiceData['coupon_discount'] }}">
+                                                            </td>
+                                                        </tr>
+                                                        @endif
                                                         <tr class="border-top">
                                                             <td class="fw-bold">Total:</td>
                                                             <td class="text-end fw-bold">

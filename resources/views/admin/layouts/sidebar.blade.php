@@ -128,6 +128,16 @@
                         </a>
                     </li>
                 @endif
+
+                <!-- Pending Bills Section -->
+                @if(auth()->user()->hasPermission('manage_pending_bills'))
+                    <li class="nav-item mb-1">
+                        <a class="nav-link {{ request()->routeIs('admin.pending-bills*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.pending-bills.index') }}">
+                            <i class="fas fa-money-bill-wave me-3"></i>
+                            <span class="sidebar-text">Pending Bills</span>
+                        </a>
+                    </li>
+                @endif
                 
                 <!-- Without GST Invoice Section -->
                 <!-- @if(auth()->user()->hasPermission('manage_proforma_invoices'))
@@ -158,6 +168,29 @@
                             <span class="sidebar-text">Pages</span>
                         </a>
                     </li>
+                @endif
+
+                <!-- Leads Section -->
+                @if(auth()->user()->hasPermission('viewAny_lead') || 
+                    auth()->user()->hasPermission('create_lead') || 
+                    auth()->user()->hasPermission('update_lead') || 
+                    auth()->user()->hasPermission('delete_lead'))
+                    <li class="nav-item mb-1">
+                        <a class="nav-link {{ request()->routeIs('admin.leads*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.leads.index') }}">
+                            <i class="fas fa-user-tie me-3"></i>
+                            <span class="sidebar-text">Leads</span>
+                        </a>
+                    </li>
+                @endif
+
+                <!-- Coupons Section -->
+                @if(auth()->user()->hasPermission('viewAny_coupon'))
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('admin.coupons*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.coupons.index') }}">
+                        <i class="fas fa-ticket-alt me-3"></i>
+                        <span class="sidebar-text">Coupons</span>
+                    </a>
+                </li>
                 @endif
 
             </ul>

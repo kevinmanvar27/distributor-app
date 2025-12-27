@@ -229,6 +229,13 @@ class RolesAndPermissionsSeeder extends Seeder
                 'description' => 'Access and manage proforma invoices'
             ],
             
+            // Pending Bills Management Permissions
+            [
+                'name' => 'manage_pending_bills',
+                'display_name' => 'Manage Pending Bills',
+                'description' => 'View pending bills, add payments, and view user-wise summaries'
+            ],
+            
             // Page Management Permissions
             [
                 'name' => 'viewAny_page',
@@ -254,6 +261,33 @@ class RolesAndPermissionsSeeder extends Seeder
                 'name' => 'delete_page',
                 'display_name' => 'Delete Page',
                 'description' => 'Remove pages'
+            ],
+            
+            // Lead Management Permissions
+            [
+                'name' => 'viewAny_lead',
+                'display_name' => 'View Any Lead',
+                'description' => 'View all leads'
+            ],
+            [
+                'name' => 'view_lead',
+                'display_name' => 'View Lead',
+                'description' => 'View a specific lead'
+            ],
+            [
+                'name' => 'create_lead',
+                'display_name' => 'Create Lead',
+                'description' => 'Create new leads'
+            ],
+            [
+                'name' => 'update_lead',
+                'display_name' => 'Update Lead',
+                'description' => 'Modify existing leads'
+            ],
+            [
+                'name' => 'delete_lead',
+                'display_name' => 'Delete Lead',
+                'description' => 'Remove leads (soft delete)'
             ],
         ];
 

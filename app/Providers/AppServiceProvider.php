@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\Product;
+use App\Observers\ProductObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,5 +25,8 @@ class AppServiceProvider extends ServiceProvider
         foreach (glob(app_path('Helpers') . '/*.php') as $file) {
             require_once $file;
         }
+
+        // Register Product Observer for low stock notifications
+        Product::observe(ProductObserver::class);
     }
 }

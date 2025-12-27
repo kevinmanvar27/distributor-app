@@ -164,6 +164,41 @@
         </div>
         
         <div class="col-lg-4">
+            <!-- Coupon Code Section -->
+            <div class="card shadow-sm border-0 mb-4 hover-lift">
+                <div class="card-body">
+                    <h5 class="card-title mb-3"><i class="fas fa-ticket-alt me-2"></i>Have a Coupon?</h5>
+                    
+                    <!-- Coupon Input Form -->
+                    <div id="coupon-input-section">
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-animated" id="coupon-code-input" placeholder="Enter coupon code" maxlength="50">
+                            <button class="btn btn-theme btn-ripple" type="button" id="apply-coupon-btn">
+                                <span class="btn-text">Apply</span>
+                                <span class="btn-loading d-none">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                </span>
+                            </button>
+                        </div>
+                        <div id="coupon-error" class="text-danger small mt-2 d-none"></div>
+                    </div>
+                    
+                    <!-- Applied Coupon Display -->
+                    <div id="applied-coupon-section" class="d-none">
+                        <div class="d-flex justify-content-between align-items-center bg-success bg-opacity-10 rounded p-3">
+                            <div>
+                                <span class="badge bg-success me-2"><i class="fas fa-check-circle me-1"></i>Applied</span>
+                                <span class="fw-bold coupon-code-display"></span>
+                                <div class="small text-muted coupon-discount-display"></div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger btn-ripple" type="button" id="remove-coupon-btn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Order Summary Section -->
             <div class="card shadow-sm border-0 mb-4 hover-lift order-summary-card">
                 <div class="card-body">
@@ -175,6 +210,15 @@
                             <span>Subtotal:</span>
                             <span class="fw-bold cart-subtotal">₹{{ number_format($total, 2) }}</span>
                         </div>
+                        
+                        <!-- Coupon Discount Row (hidden by default) -->
+                        <div class="d-flex justify-content-between mb-2 summary-row coupon-discount-row d-none">
+                            <span class="text-success">
+                                <i class="fas fa-tag me-1"></i>Coupon Discount:
+                            </span>
+                            <span class="fw-bold text-success coupon-discount-amount">-₹0.00</span>
+                        </div>
+                        
                         <div class="d-flex justify-content-between mb-2 summary-row">
                             <span>Shipping:</span>
                             <span class="fw-bold text-success">Free</span>
@@ -547,6 +591,293 @@ document.addEventListener('DOMContentLoaded', function() {
                 cartCountElement.classList.add('d-none');
             }
         }
+    }
+
+    // ==================== COUPON FUNCTIONALITY ====================
+    
+    const couponInputSection = document.getElementById('coupon-input-section');
+    const appliedCouponSection = document.getElementById('applied-coupon-section');
+    const couponCodeInput = document.getElementById('coupon-code-input');
+    const applyCouponBtn = document.getElementById('apply-coupon-btn');
+    const removeCouponBtn = document.getElementById('remove-coupon-btn');
+    const couponError = document.getElementById('coupon-error');
+    const couponDiscountRow = document.querySelector('.coupon-discount-row');
+    const couponDiscountAmount = document.querySelector('.coupon-discount-amount');
+    const couponCodeDisplay = document.querySelector('.coupon-code-display');
+    const couponDiscountDisplay = document.querySelector('.coupon-discount-display');
+    
+    // Store original subtotal for calculations
+    let originalSubtotal = {{ $total }};
+    let appliedCouponData = null;
+    
+    // Check for existing applied coupon on page load
+    checkAppliedCoupon();
+    
+    // Apply coupon button click handler
+    if (applyCouponBtn) {
+        applyCouponBtn.addEventListener('click', function() {
+            applyCoupon();
+        });
+    }
+    
+    // Apply coupon on Enter key
+    if (couponCodeInput) {
+        couponCodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyCoupon();
+            }
+        });
+    }
+    
+    // Remove coupon button click handler
+    if (removeCouponBtn) {
+        removeCouponBtn.addEventListener('click', function() {
+            removeCoupon();
+        });
+    }
+    
+    // Function to check for existing applied coupon
+    function checkAppliedCoupon() {
+        fetch('{{ route("frontend.cart.coupon.applied") }}', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.coupon) {
+                appliedCouponData = data.coupon;
+                showAppliedCoupon(data.coupon);
+            }
+        })
+        .catch(error => {
+            console.error('Error checking applied coupon:', error);
+        });
+    }
+    
+    // Function to apply coupon
+    function applyCoupon() {
+        const code = couponCodeInput.value.trim();
+        
+        if (!code) {
+            showCouponError('Please enter a coupon code.');
+            return;
+        }
+        
+        // Show loading state
+        applyCouponBtn.querySelector('.btn-text').classList.add('d-none');
+        applyCouponBtn.querySelector('.btn-loading').classList.remove('d-none');
+        applyCouponBtn.disabled = true;
+        hideCouponError();
+        
+        fetch('{{ route("frontend.cart.coupon.apply") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ coupon_code: code })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Reset button state
+            applyCouponBtn.querySelector('.btn-text').classList.remove('d-none');
+            applyCouponBtn.querySelector('.btn-loading').classList.add('d-none');
+            applyCouponBtn.disabled = false;
+            
+            if (data.success) {
+                appliedCouponData = data.coupon;
+                showAppliedCoupon(data.coupon);
+                updateCartTotals(data.cart_subtotal, data.cart_total, data.coupon.discount_amount);
+                showToast(data.message, 'success');
+                couponCodeInput.value = '';
+            } else {
+                showCouponError(data.message);
+            }
+        })
+        .catch(error => {
+            // Reset button state
+            applyCouponBtn.querySelector('.btn-text').classList.remove('d-none');
+            applyCouponBtn.querySelector('.btn-loading').classList.add('d-none');
+            applyCouponBtn.disabled = false;
+            
+            showCouponError('An error occurred. Please try again.');
+            console.error('Error applying coupon:', error);
+        });
+    }
+    
+    // Function to remove coupon
+    function removeCoupon() {
+        fetch('{{ route("frontend.cart.coupon.remove") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                appliedCouponData = null;
+                hideAppliedCoupon();
+                
+                // Update totals - remove discount
+                document.querySelectorAll('.cart-total').forEach(el => {
+                    el.textContent = '₹' + data.cart_total;
+                });
+                
+                // Hide coupon discount row
+                if (couponDiscountRow) {
+                    couponDiscountRow.classList.add('d-none');
+                }
+                
+                showToast(data.message, 'success');
+            }
+        })
+        .catch(error => {
+            showToast('An error occurred. Please try again.', 'error');
+            console.error('Error removing coupon:', error);
+        });
+    }
+    
+    // Function to show applied coupon
+    function showAppliedCoupon(coupon) {
+        if (couponInputSection) couponInputSection.classList.add('d-none');
+        if (appliedCouponSection) appliedCouponSection.classList.remove('d-none');
+        if (couponCodeDisplay) couponCodeDisplay.textContent = coupon.code;
+        if (couponDiscountDisplay) couponDiscountDisplay.textContent = coupon.discount_display;
+        
+        // Show discount row in order summary
+        if (couponDiscountRow) {
+            couponDiscountRow.classList.remove('d-none');
+            if (couponDiscountAmount) {
+                couponDiscountAmount.textContent = '-₹' + parseFloat(coupon.discount_amount).toFixed(2);
+            }
+        }
+    }
+    
+    // Function to hide applied coupon
+    function hideAppliedCoupon() {
+        if (couponInputSection) couponInputSection.classList.remove('d-none');
+        if (appliedCouponSection) appliedCouponSection.classList.add('d-none');
+    }
+    
+    // Function to update cart totals
+    function updateCartTotals(subtotal, total, discountAmount) {
+        document.querySelectorAll('.cart-subtotal').forEach(el => {
+            el.textContent = '₹' + subtotal;
+        });
+        document.querySelectorAll('.cart-total').forEach(el => {
+            el.textContent = '₹' + total;
+        });
+        
+        // Update discount row
+        if (couponDiscountRow && discountAmount > 0) {
+            couponDiscountRow.classList.remove('d-none');
+            if (couponDiscountAmount) {
+                couponDiscountAmount.textContent = '-₹' + parseFloat(discountAmount).toFixed(2);
+            }
+        }
+    }
+    
+    // Function to show coupon error
+    function showCouponError(message) {
+        if (couponError) {
+            couponError.textContent = message;
+            couponError.classList.remove('d-none');
+        }
+    }
+    
+    // Function to hide coupon error
+    function hideCouponError() {
+        if (couponError) {
+            couponError.classList.add('d-none');
+        }
+    }
+    
+    // Update cart totals when items are updated (override existing function)
+    const originalUpdateCartItem = window.updateCartItem;
+    function updateCartItemWithCoupon(itemId, quantity) {
+        if (document.querySelector('meta[name="csrf-token"]')) {
+            fetch(`/cart/update/${itemId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ quantity: quantity })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const row = document.querySelector(`tr[data-cart-item-id="${itemId}"]`);
+                    
+                    // Update the item total
+                    const itemTotal = row.querySelector('.item-total');
+                    itemTotal.textContent = '₹' + data.item_total;
+                    
+                    // Update subtotal
+                    originalSubtotal = parseFloat(data.cart_total.replace(/,/g, ''));
+                    document.querySelectorAll('.cart-subtotal').forEach(el => {
+                        el.textContent = '₹' + data.cart_total;
+                    });
+                    
+                    // Recalculate with coupon if applied
+                    if (appliedCouponData) {
+                        recalculateCouponDiscount();
+                    } else {
+                        document.querySelectorAll('.cart-total').forEach(el => {
+                            el.textContent = '₹' + data.cart_total;
+                        });
+                    }
+                    
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showToast('An error occurred while updating the cart.', 'error');
+            });
+        }
+    }
+    
+    // Recalculate coupon discount after cart changes
+    function recalculateCouponDiscount() {
+        fetch('{{ route("frontend.cart.coupon.applied") }}', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.coupon) {
+                appliedCouponData = data.coupon;
+                showAppliedCoupon(data.coupon);
+                
+                // Calculate new total
+                const newTotal = originalSubtotal - parseFloat(data.coupon.discount_amount);
+                document.querySelectorAll('.cart-total').forEach(el => {
+                    el.textContent = '₹' + newTotal.toFixed(2);
+                });
+            } else if (data.message) {
+                // Coupon no longer valid
+                hideAppliedCoupon();
+                if (couponDiscountRow) couponDiscountRow.classList.add('d-none');
+                document.querySelectorAll('.cart-total').forEach(el => {
+                    el.textContent = '₹' + originalSubtotal.toFixed(2);
+                });
+                showToast(data.message, 'warning');
+            }
+        })
+        .catch(error => {
+            console.error('Error recalculating coupon:', error);
+        });
     }
 });
 </script>

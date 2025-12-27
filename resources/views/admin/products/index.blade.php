@@ -19,11 +19,19 @@
                                     <h4 class="card-title mb-0 fw-bold">Product Management</h4>
                                     <p class="mb-0 text-muted">Manage all products</p>
                                 </div>
-                                @can('create', App\Models\Product::class)
-                                <a href="{{ route('admin.products.create') }}" class="btn btn-theme rounded-pill px-4">
-                                    <i class="fas fa-plus me-2"></i> Add New Product
-                                </a>
-                                @endcan
+                                <div class="d-flex gap-2">
+                                    @if(isset($lowStockCount) && $lowStockCount > 0)
+                                    <a href="{{ route('admin.products.low-stock') }}" class="btn btn-warning rounded-pill px-4">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> Low Stock 
+                                        <span class="badge bg-danger ms-1">{{ $lowStockCount }}</span>
+                                    </a>
+                                    @endif
+                                    @can('create', App\Models\Product::class)
+                                    <a href="{{ route('admin.products.create') }}" class="btn btn-theme rounded-pill px-4">
+                                        <i class="fas fa-plus me-2"></i> Add New Product
+                                    </a>
+                                    @endcan
+                                </div>
                             </div>
                             
                             <div class="card-body">
@@ -72,9 +80,15 @@
                                                     <td>₹{{ number_format($product->selling_price ?? 0, 2) }}</td>
                                                     <td>
                                                         @if($product->in_stock)
-                                                            <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2">
-                                                                In Stock ({{ $product->stock_quantity }})
-                                                            </span>
+                                                            @if($product->isLowStock())
+                                                                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2" title="Low Stock Alert! Threshold: {{ $product->low_quantity_threshold }}">
+                                                                    <i class="fas fa-exclamation-triangle me-1"></i> Low Stock ({{ $product->stock_quantity }})
+                                                                </span>
+                                                            @else
+                                                                <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2">
+                                                                    In Stock ({{ $product->stock_quantity }})
+                                                                </span>
+                                                            @endif
                                                         @else
                                                             <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill px-3 py-2">
                                                                 Out of Stock
