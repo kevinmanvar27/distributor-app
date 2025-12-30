@@ -105,7 +105,7 @@ class HomeController extends ApiController
             ->get()
             ->map(function ($category) {
                 // Count products in this category
-                $productCount = Product::whereIn('status', ['active', 'published'])
+                $productCount = Product::where('status', 'published')
                     ->get()
                     ->filter(function ($product) use ($category) {
                         if (!$product->product_categories) {
@@ -126,7 +126,7 @@ class HomeController extends ApiController
                 
                 // Add product count to subcategories
                 $category->subCategories->transform(function ($subCategory) use ($category) {
-                    $subProductCount = Product::whereIn('status', ['active', 'published'])
+                    $subProductCount = Product::where('status', 'published')
                         ->get()
                         ->filter(function ($product) use ($category, $subCategory) {
                             if (!$product->product_categories) {
@@ -168,9 +168,9 @@ class HomeController extends ApiController
      */
     private function getFeaturedProducts($user, $limit = 10)
     {
-        // For now, featured products are the most recently updated active products
+        // For now, featured products are the most recently updated published products
         // This can be enhanced with a 'is_featured' flag in the future
-        $products = Product::whereIn('status', ['active', 'published'])
+        $products = Product::where('status', 'published')
             ->where('in_stock', true)
             ->with('mainPhoto')
             ->orderBy('updated_at', 'desc')
@@ -189,7 +189,7 @@ class HomeController extends ApiController
      */
     private function getLatestProducts($user, $limit = 10)
     {
-        $products = Product::whereIn('status', ['active', 'published'])
+        $products = Product::where('status', 'published')
             ->with('mainPhoto')
             ->orderBy('created_at', 'desc')
             ->limit($limit)

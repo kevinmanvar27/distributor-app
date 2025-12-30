@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\WithoutGstInvoice;
 use App\Models\Setting;
 use App\Models\Notification;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -169,8 +170,26 @@ class WithoutGstInvoiceController extends Controller
             return redirect()->back()->with('error', 'Invalid item selection.');
         }
         
+        // RESTORE STOCK for the removed item
+        $removedItem = $invoiceData['cart_items'][$itemIndex];
+        $product = Product::find($removedItem['product_id'] ?? null);
+        if ($product) {
+            $product->increment('stock_quantity', $removedItem['quantity']);
+            
+            // Update in_stock status if stock was restored
+            if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                $product->update(['in_stock' => true]);
+            }
+        }
+        
         unset($invoiceData['cart_items'][$itemIndex]);
         $invoiceData['cart_items'] = array_values($invoiceData['cart_items']);
+        
+        // If no items left, delete the invoice
+        if (empty($invoiceData['cart_items'])) {
+            $invoice->delete();
+            return redirect()->route('admin.without-gst-invoice.index')->with('success', 'Last item removed. Invoice has been deleted.');
+        }
         
         $newTotal = 0;
         foreach ($invoiceData['cart_items'] as $item) {
@@ -244,8 +263,32 @@ class WithoutGstInvoiceController extends Controller
     public function destroy($id)
     {
         $invoice = WithoutGstInvoice::findOrFail($id);
+        
+        // RESTORE STOCK for all items in the invoice before deleting
+        $invoiceData = $invoice->invoice_data;
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
+            foreach ($invoiceData['cart_items'] as $item) {
+                $product = Product::find($item['product_id'] ?? null);
+                if ($product) {
+                    $product->increment('stock_quantity', $item['quantity']);
+                    
+                    // Update in_stock status if stock was restored
+                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                        $product->update(['in_stock' => true]);
+                    }
+                }
+            }
+        }
+        
         $invoice->delete();
         
-        return redirect()->route('admin.without-gst-invoice.index')->with('success', 'Without GST invoice deleted successfully.');
+        return redirect()->route('admin.without-gst-invoice.index')->with('success', 'Without GST invoice deleted and stock restored successfully.');
     }
 }

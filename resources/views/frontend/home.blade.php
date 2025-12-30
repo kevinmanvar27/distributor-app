@@ -76,7 +76,7 @@
                             </div>
                         @endif
                         <div class="position-absolute top-0 end-0 m-2">
-                            <span class="badge bg-theme text-white">{{ $category->is_active ? 'Active' : 'Inactive' }}</span>
+                            <span class="badge bg-success text-white">{{ $category->product_count }} Products</span>
                         </div>
                     </div>
                     <div class="card-body d-flex flex-column">

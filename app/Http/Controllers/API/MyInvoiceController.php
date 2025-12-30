@@ -221,39 +221,11 @@ class MyInvoiceController extends ApiController
     }
 
     /**
-     * Add invoice items back to cart
+     * Add invoice items to cart
      * 
-     * @OA\Post(
-     *      path="/api/v1/my-invoices/{id}/add-to-cart",
-     *      operationId="addInvoiceToCart",
-     *      tags={"My Invoices"},
-     *      summary="Add invoice to cart",
-     *      description="Add all items from a proforma invoice back to the cart",
-     *      security={{"sanctum": {}}},
-     *      @OA\Parameter(
-     *          name="id",
-     *          description="Invoice id",
-     *          required=true,
-     *          in="path",
-     *          @OA\Schema(type="integer")
-     *      ),
-     *      @OA\Response(
-     *          response=200,
-     *          description="Successful operation",
-     *       ),
-     *      @OA\Response(
-     *          response=400,
-     *          description="Bad Request"
-     *      ),
-     *      @OA\Response(
-     *          response=401,
-     *          description="Unauthenticated"
-     *      ),
-     *      @OA\Response(
-     *          response=404,
-     *          description="Not Found"
-     *      )
-     * )
+     * NOTE: Stock was already reduced when the invoice was created.
+     * When adding invoice items back to cart, we don't reduce stock again.
+     * The items are simply moving from invoice to cart.
      * 
      * @param Request $request
      * @param int $id
@@ -284,38 +256,53 @@ class MyInvoiceController extends ApiController
         $addedItems = [];
         $skippedItems = [];
 
+        // NOTE: Stock was already reduced when invoice was created
+        // We're just moving items from invoice to cart, no stock change needed
         if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
             foreach ($invoiceData['cart_items'] as $item) {
-                // Check if product still exists and is in stock
+                // Check if product still exists
                 $product = Product::find($item['product_id']);
                 
-                if (!$product || !$product->in_stock || $product->stock_quantity < $item['quantity']) {
+                if (!$product) {
                     $skippedItems[] = $item['product_name'] ?? 'Unknown Product';
                     continue;
                 }
 
-                // Add or update cart item
-                ShoppingCartItem::updateOrCreate(
-                    [
+                // Check if item already exists in cart
+                $existingCartItem = ShoppingCartItem::where('user_id', $user->id)
+                    ->where('product_id', $item['product_id'])
+                    ->first();
+
+                if ($existingCartItem) {
+                    // Item already in cart - merge quantities
+                    // Stock was already reduced for invoice items, so just add quantity
+                    $newQuantity = $existingCartItem->quantity + $item['quantity'];
+                    $existingCartItem->update([
+                        'quantity' => $newQuantity,
+                        'price' => $item['price']
+                    ]);
+                } else {
+                    // Item not in cart - create new cart item
+                    // Stock was already reduced when invoice was created, no need to reduce again
+                    ShoppingCartItem::create([
                         'user_id' => $user->id,
                         'product_id' => $item['product_id'],
-                    ],
-                    [
                         'quantity' => $item['quantity'],
                         'price' => $item['price'],
-                    ]
-                );
+                    ]);
+                }
                 
                 $addedItems[] = $item['product_name'];
             }
         }
 
         // Delete the invoice after adding items to cart
+        // NOTE: We don't restore stock here because items are moving to cart (stock stays reduced)
         $invoice->delete();
 
         $message = 'Products from invoice added to cart successfully.';
         if (!empty($skippedItems)) {
-            $message .= ' Some items were skipped (out of stock or unavailable): ' . implode(', ', $skippedItems);
+            $message .= ' Some items were skipped (product no longer available): ' . implode(', ', $skippedItems);
         }
 
         return $this->sendResponse([
@@ -372,8 +359,149 @@ class MyInvoiceController extends ApiController
             return $this->sendError('Invoice not found.', [], 404);
         }
 
+        // RESTORE STOCK for all items in the invoice before deleting
+        $invoiceData = $this->decodeInvoiceData($invoice->invoice_data);
+        
+        if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
+            foreach ($invoiceData['cart_items'] as $item) {
+                $product = Product::find($item['product_id'] ?? null);
+                if ($product) {
+                    $product->increment('stock_quantity', $item['quantity']);
+                    
+                    // Update in_stock status if stock was restored
+                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                        $product->update(['in_stock' => true]);
+                    }
+                }
+            }
+        }
+
         $invoice->delete();
 
-        return $this->sendResponse(null, 'Invoice deleted successfully.');
+        return $this->sendResponse(null, 'Invoice deleted and stock restored successfully.');
+    }
+
+    /**
+     * Remove a specific item from user's proforma invoice.
+     * If the invoice becomes empty after removal, it will be automatically deleted.
+     * 
+     * @OA\Delete(
+     *      path="/api/v1/my-invoices/{id}/items/{productId}",
+     *      operationId="removeMyInvoiceItem",
+     *      tags={"My Invoices"},
+     *      summary="Remove item from invoice",
+     *      description="Removes a specific item from the user's proforma invoice and restores stock. If the invoice becomes empty, it will be automatically deleted.",
+     *      security={{"sanctum": {}}},
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Invoice id",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\Parameter(
+     *          name="productId",
+     *          description="Product ID to remove from invoice",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not Found"
+     *      )
+     * )
+     * 
+     * @param Request $request
+     * @param int $id
+     * @param int $productId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function removeItem(Request $request, $id, $productId)
+    {
+        $user = $request->user();
+        
+        $invoice = ProformaInvoice::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$invoice) {
+            return $this->sendError('Invoice not found.', [], 404);
+        }
+
+        // Decode invoice data
+        $invoiceData = $this->decodeInvoiceData($invoice->invoice_data);
+
+        if (!isset($invoiceData['cart_items']) || !is_array($invoiceData['cart_items'])) {
+            return $this->sendError('Invoice has no items.');
+        }
+
+        // Find and remove the item
+        $itemFound = false;
+        $removedItem = null;
+        $newCartItems = [];
+
+        foreach ($invoiceData['cart_items'] as $item) {
+            if (($item['product_id'] ?? null) == $productId) {
+                $itemFound = true;
+                $removedItem = $item;
+                
+                // RESTORE STOCK for the removed item
+                $product = Product::find($productId);
+                if ($product) {
+                    $product->increment('stock_quantity', $item['quantity']);
+                    
+                    // Update in_stock status if stock was restored
+                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                        $product->update(['in_stock' => true]);
+                    }
+                }
+            } else {
+                $newCartItems[] = $item;
+            }
+        }
+
+        if (!$itemFound) {
+            return $this->sendError('Item not found in invoice.', [], 404);
+        }
+
+        // Check if invoice is now empty - auto-delete if so
+        if (empty($newCartItems)) {
+            $invoice->delete();
+            return $this->sendResponse([
+                'invoice_deleted' => true,
+                'removed_item' => $removedItem,
+            ], 'Last item removed. Invoice has been deleted.');
+        }
+
+        // Update invoice data with remaining items
+        $invoiceData['cart_items'] = $newCartItems;
+        
+        // Recalculate total
+        $newTotal = array_reduce($newCartItems, function ($carry, $item) {
+            return $carry + (($item['price'] ?? 0) * ($item['quantity'] ?? 0));
+        }, 0);
+        
+        $invoiceData['total'] = $newTotal;
+
+        // Update the invoice
+        $invoice->update([
+            'invoice_data' => $invoiceData,
+            'total_amount' => $newTotal,
+        ]);
+
+        return $this->sendResponse([
+            'invoice' => $invoice->fresh(),
+            'removed_item' => $removedItem,
+            'invoice_deleted' => false,
+        ], 'Item removed from invoice and stock restored successfully.');
     }
 }

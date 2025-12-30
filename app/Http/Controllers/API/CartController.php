@@ -137,7 +137,16 @@ class CartController extends ApiController
         $product = Product::findOrFail($request->product_id);
         $quantity = $request->quantity ?? 1;
 
-        // Check if product is in stock
+        // Check if item already exists in cart to calculate total needed quantity
+        $existingCartItem = ShoppingCartItem::where('user_id', $user->id)
+            ->where('product_id', $product->id)
+            ->first();
+
+        // Calculate total quantity needed (existing + new)
+        $existingQuantity = $existingCartItem ? $existingCartItem->quantity : 0;
+        $totalQuantityNeeded = $existingQuantity + $quantity;
+
+        // Check if product is in stock for the additional quantity being added
         if (!$product->in_stock || $product->stock_quantity < $quantity) {
             return $this->sendError('Product is out of stock or insufficient quantity available.', [], 400);
         }
@@ -159,10 +168,18 @@ class CartController extends ApiController
                 'product_id' => $product->id,
             ],
             [
-                'quantity' => $quantity,
+                'quantity' => $totalQuantityNeeded,
                 'price' => $discountedPrice,
             ]
         );
+
+        // REDUCE STOCK QUANTITY by the quantity being added (not total)
+        $product->decrement('stock_quantity', $quantity);
+        
+        // Update in_stock status if stock is depleted
+        if ($product->fresh()->stock_quantity <= 0) {
+            $product->update(['in_stock' => false]);
+        }
 
         // Get updated cart count
         $cartCount = ShoppingCartItem::where('user_id', $user->id)->count();
@@ -232,13 +249,31 @@ class CartController extends ApiController
         }
 
         $product = $cartItem->product;
+        $oldQuantity = $cartItem->quantity;
+        $newQuantity = $request->quantity;
+        $quantityDifference = $newQuantity - $oldQuantity;
 
-        // Check if product is in stock
-        if (!$product->in_stock || $product->stock_quantity < $request->quantity) {
-            return $this->sendError('Product is out of stock or insufficient quantity available.', [], 400);
+        // If increasing quantity, check if enough stock is available
+        if ($quantityDifference > 0) {
+            if ($product->stock_quantity < $quantityDifference) {
+                return $this->sendError('Product is out of stock or insufficient quantity available. Only ' . $product->stock_quantity . ' more available.', [], 400);
+            }
+            // Reduce stock by the difference
+            $product->decrement('stock_quantity', $quantityDifference);
+        } elseif ($quantityDifference < 0) {
+            // Restore stock by the difference (absolute value)
+            $product->increment('stock_quantity', abs($quantityDifference));
         }
 
-        $cartItem->update(['quantity' => $request->quantity]);
+        // Update in_stock status based on new stock quantity
+        $product->refresh();
+        if ($product->stock_quantity <= 0) {
+            $product->update(['in_stock' => false]);
+        } elseif ($product->stock_quantity > 0 && !$product->in_stock) {
+            $product->update(['in_stock' => true]);
+        }
+
+        $cartItem->update(['quantity' => $newQuantity]);
 
         // Calculate totals
         $itemTotal = $cartItem->price * $cartItem->quantity;
@@ -298,6 +333,17 @@ class CartController extends ApiController
 
         if (!$cartItem) {
             return $this->sendError('Cart item not found.', [], 404);
+        }
+
+        // RESTORE STOCK QUANTITY before deleting the cart item
+        $product = $cartItem->product;
+        if ($product) {
+            $product->increment('stock_quantity', $cartItem->quantity);
+            
+            // Update in_stock status if stock was restored
+            if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                $product->update(['in_stock' => true]);
+            }
         }
 
         $cartItem->delete();
@@ -552,7 +598,7 @@ class CartController extends ApiController
      *      operationId="clearCart",
      *      tags={"Cart"},
      *      summary="Clear cart",
-     *      description="Remove all items from the cart",
+     *      description="Remove all items from the cart and restore stock",
      *      security={{"sanctum": {}}},
      *      @OA\Response(
      *          response=200,
@@ -570,8 +616,28 @@ class CartController extends ApiController
     public function clear(Request $request)
     {
         $user = $request->user();
+        
+        // Get all cart items to restore stock
+        $cartItems = ShoppingCartItem::where('user_id', $user->id)->with('product')->get();
+        
+        // RESTORE STOCK for all items before clearing
+        foreach ($cartItems as $cartItem) {
+            $product = $cartItem->product;
+            if ($product) {
+                $product->increment('stock_quantity', $cartItem->quantity);
+                
+                // Update in_stock status if stock was restored
+                if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                    $product->update(['in_stock' => true]);
+                }
+            }
+        }
+        
+        // Delete all cart items
         ShoppingCartItem::where('user_id', $user->id)->delete();
         
-        return $this->sendResponse(null, 'Cart cleared successfully.');
+        return $this->sendResponse([
+            'items_removed' => $cartItems->count(),
+        ], 'Cart cleared and stock restored successfully.');
     }
 }

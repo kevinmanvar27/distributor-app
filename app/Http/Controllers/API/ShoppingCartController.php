@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\ShoppingCartItem;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 /**
@@ -99,9 +100,43 @@ class ShoppingCartController extends ApiController
             'price' => 'required|numeric|min:0',
         ]);
 
-        $cartItem = ShoppingCartItem::create($request->all());
+        $product = Product::find($request->product_id);
+        $quantity = $request->quantity;
 
-        return $this->sendResponse($cartItem, 'Shopping cart item created successfully.', 201);
+        // Check if product has enough stock
+        if (!$product->in_stock || $product->stock_quantity < $quantity) {
+            return $this->sendError('Product is out of stock or insufficient quantity available.', [
+                'available_quantity' => $product->stock_quantity ?? 0,
+                'requested_quantity' => $quantity,
+            ], 400);
+        }
+
+        // Check if item already exists in cart for this user
+        $existingCartItem = ShoppingCartItem::where('user_id', $request->user_id)
+            ->where('product_id', $request->product_id)
+            ->first();
+
+        if ($existingCartItem) {
+            // Update existing cart item - only reduce stock by the additional quantity
+            $existingCartItem->update([
+                'quantity' => $existingCartItem->quantity + $quantity,
+                'price' => $request->price,
+            ]);
+            $cartItem = $existingCartItem;
+        } else {
+            // Create new cart item
+            $cartItem = ShoppingCartItem::create($request->all());
+        }
+
+        // REDUCE STOCK QUANTITY
+        $product->decrement('stock_quantity', $quantity);
+        
+        // Update in_stock status if stock is depleted
+        if ($product->fresh()->stock_quantity <= 0) {
+            $product->update(['in_stock' => false]);
+        }
+
+        return $this->sendResponse($cartItem->load(['user', 'product']), 'Shopping cart item created successfully.', 201);
     }
 
     /**
@@ -214,9 +249,38 @@ class ShoppingCartController extends ApiController
             'price' => 'required|numeric|min:0',
         ]);
 
+        $product = $cartItem->product;
+        $oldQuantity = $cartItem->quantity;
+        $newQuantity = $request->quantity;
+        $quantityDifference = $newQuantity - $oldQuantity;
+
+        // ADJUST STOCK based on quantity change
+        if ($quantityDifference > 0) {
+            // Increasing quantity - check if enough stock available
+            if ($product->stock_quantity < $quantityDifference) {
+                return $this->sendError('Insufficient stock available.', [
+                    'available_quantity' => $product->stock_quantity,
+                    'requested_additional' => $quantityDifference,
+                ], 400);
+            }
+            // Reduce stock by the difference
+            $product->decrement('stock_quantity', $quantityDifference);
+        } elseif ($quantityDifference < 0) {
+            // Decreasing quantity - restore stock by the difference
+            $product->increment('stock_quantity', abs($quantityDifference));
+        }
+
+        // Update in_stock status based on new stock quantity
+        $product->refresh();
+        if ($product->stock_quantity <= 0) {
+            $product->update(['in_stock' => false]);
+        } elseif ($product->stock_quantity > 0 && !$product->in_stock) {
+            $product->update(['in_stock' => true]);
+        }
+
         $cartItem->update($request->all());
 
-        return $this->sendResponse($cartItem, 'Shopping cart item updated successfully.');
+        return $this->sendResponse($cartItem->load(['user', 'product']), 'Shopping cart item updated successfully.');
     }
 
     /**
@@ -227,7 +291,7 @@ class ShoppingCartController extends ApiController
      *      operationId="deleteShoppingCartItem",
      *      tags={"Shopping Cart"},
      *      summary="Delete shopping cart item",
-     *      description="Deletes a shopping cart item",
+     *      description="Deletes a shopping cart item and restores stock",
      *      security={{"sanctum": {}}},
      *      @OA\Parameter(
      *          name="id",
@@ -264,8 +328,19 @@ class ShoppingCartController extends ApiController
             return $this->sendError('Shopping cart item not found.');
         }
 
+        // RESTORE STOCK QUANTITY before deleting
+        $product = $cartItem->product;
+        if ($product) {
+            $product->increment('stock_quantity', $cartItem->quantity);
+            
+            // Update in_stock status if stock was restored
+            if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                $product->update(['in_stock' => true]);
+            }
+        }
+
         $cartItem->delete();
 
-        return $this->sendResponse(null, 'Shopping cart item deleted successfully.');
+        return $this->sendResponse(null, 'Shopping cart item deleted and stock restored successfully.');
     }
 }

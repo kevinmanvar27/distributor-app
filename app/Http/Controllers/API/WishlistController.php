@@ -151,9 +151,9 @@ class WishlistController extends ApiController
     {
         $user = $request->user();
         
-        // Check if product exists and is active
+        // Check if product exists and is published
         $product = Product::where('id', $productId)
-            ->whereIn('status', ['active', 'published'])
+            ->where('status', 'published')
             ->first();
         
         if (!$product) {
@@ -362,7 +362,7 @@ class WishlistController extends ApiController
         
         // Get the product
         $product = Product::where('id', $productId)
-            ->whereIn('status', ['active', 'published'])
+            ->where('status', 'published')
             ->first();
         
         if (!$product) {
@@ -396,8 +396,8 @@ class WishlistController extends ApiController
             $newQuantity = $cartItem->quantity + $quantity;
             
             // Check if new quantity exceeds stock
-            if ($product->stock_quantity < $newQuantity) {
-                return $this->sendError('Cannot add more. Total quantity would exceed available stock.', [
+            if ($product->stock_quantity < $quantity) {
+                return $this->sendError('Cannot add more. Insufficient stock available.', [
                     'available_quantity' => $product->stock_quantity,
                     'current_cart_quantity' => $cartItem->quantity,
                     'requested_additional' => $quantity,
@@ -407,6 +407,9 @@ class WishlistController extends ApiController
             $cartItem->quantity = $newQuantity;
             $cartItem->price = $discountedPrice;
             $cartItem->save();
+            
+            // REDUCE STOCK QUANTITY by the quantity being added
+            $product->decrement('stock_quantity', $quantity);
         } else {
             // Create new cart item
             $cartItem = ShoppingCartItem::create([
@@ -415,6 +418,14 @@ class WishlistController extends ApiController
                 'quantity' => $quantity,
                 'price' => $discountedPrice,
             ]);
+            
+            // REDUCE STOCK QUANTITY by the quantity being added
+            $product->decrement('stock_quantity', $quantity);
+        }
+        
+        // Update in_stock status if stock is depleted
+        if ($product->fresh()->stock_quantity <= 0) {
+            $product->update(['in_stock' => false]);
         }
         
         // Remove from wishlist if requested

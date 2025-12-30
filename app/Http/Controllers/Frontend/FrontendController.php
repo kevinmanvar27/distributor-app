@@ -32,7 +32,7 @@ class FrontendController extends Controller
                 // Check if category has any subcategories with products
                 foreach ($category->subCategories as $subCategory) {
                     // Check if this subcategory has any products
-                    $products = Product::whereIn('status', ['active', 'published'])
+                    $products = Product::where('status', 'published')
                         ->get()
                         ->filter(function ($product) use ($category, $subCategory) {
                             if (!$product->product_categories) {
@@ -57,7 +57,7 @@ class FrontendController extends Controller
                 }
                 
                 // NEW: Check if the parent category itself has products (not in subcategories)
-                $directCategoryProducts = Product::whereIn('status', ['active', 'published'])
+                $directCategoryProducts = Product::where('status', 'published')
                     ->get()
                     ->filter(function ($product) use ($category) {
                         if (!$product->product_categories) {
@@ -88,7 +88,7 @@ class FrontendController extends Controller
             ->values()
             ->map(function ($category) {
                 // Count products for this category (including both direct and subcategory products)
-                $productCount = Product::whereIn('status', ['active', 'published'])
+                $productCount = Product::where('status', 'published')
                     ->get()
                     ->filter(function ($product) use ($category) {
                         if (!$product->product_categories) {
@@ -111,9 +111,9 @@ class FrontendController extends Controller
                 return $category;
             });
             
-        // Fetch all active or published products with their main photos
+        // Fetch only published products with their main photos
         // Note: Not loading galleryMedia due to implementation issues
-        $products = Product::whereIn('status', ['active', 'published'])
+        $products = Product::where('status', 'published')
             ->with('mainPhoto')
             ->get();
 
@@ -151,7 +151,7 @@ class FrontendController extends Controller
             ->get()
             ->filter(function ($subCategory) use ($category) {
                 // Check if this subcategory has any products in this category
-                $products = Product::whereIn('status', ['active', 'published'])
+                $products = Product::where('status', 'published')
                     ->get()
                     ->filter(function ($product) use ($category, $subCategory) {
                         if (!$product->product_categories) {
@@ -179,9 +179,9 @@ class FrontendController extends Controller
         // Get the sort parameter from the request
         $sort = $request->query('sort', 'default');
         
-        // Load products associated with this category (active or published)
+        // Load products associated with this category (published only)
         // Products store categories in a JSON array in the product_categories field
-        $products = Product::whereIn('status', ['active', 'published'])
+        $products = Product::where('status', 'published')
             ->get()
             ->filter(function ($product) use ($category, $selectedSubcategoryId) {
                 if (!$product->product_categories) {
@@ -245,8 +245,8 @@ class FrontendController extends Controller
      */
     public function showProduct(Product $product)
     {
-        // Check if product is active or published
-        if (!in_array($product->status, ['active', 'published'])) {
+        // Check if product is published
+        if ($product->status !== 'published') {
             abort(404);
         }
         

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\ProformaInvoice;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -461,8 +462,156 @@ class ProformaInvoiceController extends ApiController
             return $this->sendError('Proforma invoice not found.');
         }
 
+        // RESTORE STOCK for all items in the invoice before deleting
+        $invoiceData = $invoice->invoice_data;
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
+            foreach ($invoiceData['cart_items'] as $item) {
+                $product = Product::find($item['product_id'] ?? null);
+                if ($product) {
+                    $product->increment('stock_quantity', $item['quantity']);
+                    
+                    // Update in_stock status if stock was restored
+                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                        $product->update(['in_stock' => true]);
+                    }
+                }
+            }
+        }
+
         $invoice->delete();
 
-        return $this->sendResponse(null, 'Proforma invoice deleted successfully.');
+        return $this->sendResponse(null, 'Proforma invoice deleted and stock restored successfully.');
+    }
+
+    /**
+     * Remove a specific item from a proforma invoice.
+     * If the invoice becomes empty after removal, it will be automatically deleted.
+     *
+     * @OA\Delete(
+     *      path="/api/v1/proforma-invoices/{id}/items/{productId}",
+     *      operationId="removeProformaInvoiceItem",
+     *      tags={"Proforma Invoices"},
+     *      summary="Remove item from proforma invoice",
+     *      description="Removes a specific item from a proforma invoice and restores stock. If the invoice becomes empty, it will be automatically deleted.",
+     *      security={{"sanctum": {}}},
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Proforma invoice id",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\Parameter(
+     *          name="productId",
+     *          description="Product ID to remove from invoice",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated"
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not Found"
+     *      )
+     * )
+     */
+    public function removeItem($id, $productId)
+    {
+        $invoice = ProformaInvoice::find($id);
+
+        if (is_null($invoice)) {
+            return $this->sendError('Proforma invoice not found.');
+        }
+
+        // Decode invoice data
+        $invoiceData = $invoice->invoice_data;
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+
+        if (!isset($invoiceData['cart_items']) || !is_array($invoiceData['cart_items'])) {
+            return $this->sendError('Invoice has no items.');
+        }
+
+        // Find and remove the item
+        $itemFound = false;
+        $removedItem = null;
+        $newCartItems = [];
+
+        foreach ($invoiceData['cart_items'] as $item) {
+            if (($item['product_id'] ?? null) == $productId) {
+                $itemFound = true;
+                $removedItem = $item;
+                
+                // RESTORE STOCK for the removed item
+                $product = Product::find($productId);
+                if ($product) {
+                    $product->increment('stock_quantity', $item['quantity']);
+                    
+                    // Update in_stock status if stock was restored
+                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                        $product->update(['in_stock' => true]);
+                    }
+                }
+            } else {
+                $newCartItems[] = $item;
+            }
+        }
+
+        if (!$itemFound) {
+            return $this->sendError('Item not found in invoice.', [], 404);
+        }
+
+        // Check if invoice is now empty - auto-delete if so
+        if (empty($newCartItems)) {
+            $invoice->delete();
+            return $this->sendResponse([
+                'invoice_deleted' => true,
+                'removed_item' => $removedItem,
+            ], 'Last item removed. Invoice has been deleted.');
+        }
+
+        // Update invoice data with remaining items
+        $invoiceData['cart_items'] = $newCartItems;
+        
+        // Recalculate total
+        $newTotal = array_reduce($newCartItems, function ($carry, $item) {
+            return $carry + (($item['price'] ?? 0) * ($item['quantity'] ?? 0));
+        }, 0);
+        
+        $invoiceData['total'] = $newTotal;
+
+        // Update the invoice
+        $invoice->update([
+            'invoice_data' => $invoiceData,
+            'total_amount' => $newTotal,
+        ]);
+
+        return $this->sendResponse([
+            'invoice' => $invoice->fresh()->load('user'),
+            'removed_item' => $removedItem,
+            'invoice_deleted' => false,
+        ], 'Item removed from invoice and stock restored successfully.');
     }
 }

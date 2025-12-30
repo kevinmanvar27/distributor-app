@@ -1,0 +1,1553 @@
+================================================================================
+                    INVENTORY MANAGEMENT API DOCUMENTATION
+                    Mobile App & Admin Panel Reference
+================================================================================
+
+Last Updated: January 2025
+Version: 1.0
+
+================================================================================
+                            TABLE OF CONTENTS
+================================================================================
+
+1. OVERVIEW
+   - Base URL
+   - Authentication
+   - Response Format
+   - Stock Management Philosophy
+
+2. CART CONTROLLER (User Cart Operations)
+   - GET /api/v1/cart - Get user's cart
+   - POST /api/v1/cart/add - Add product to cart
+   - PUT /api/v1/cart/{id} - Update cart item quantity
+   - DELETE /api/v1/cart/{id} - Remove item from cart
+   - GET /api/v1/cart/count - Get cart items count
+   - POST /api/v1/cart/generate-invoice - Generate proforma invoice
+   - DELETE /api/v1/cart/clear - Clear entire cart
+
+3. SHOPPING CART CONTROLLER (Admin Cart Management)
+   - GET /api/v1/shopping-cart - List all cart items
+   - POST /api/v1/shopping-cart - Create cart item
+   - GET /api/v1/shopping-cart/{id} - Get cart item
+   - PUT /api/v1/shopping-cart/{id} - Update cart item
+   - DELETE /api/v1/shopping-cart/{id} - Delete cart item
+
+4. MY INVOICE CONTROLLER (User's Own Invoices)
+   - GET /api/v1/my-invoices - Get user's invoices
+   - GET /api/v1/my-invoices/{id} - Get invoice details
+   - GET /api/v1/my-invoices/{id}/download-pdf - Download invoice PDF
+   - POST /api/v1/my-invoices/{id}/add-to-cart - Add invoice items to cart
+   - DELETE /api/v1/my-invoices/{id}/items/{productId} - Remove item from invoice
+   - DELETE /api/v1/my-invoices/{id} - Delete invoice
+
+5. PROFORMA INVOICE CONTROLLER (Admin Invoice Management)
+   - GET /api/v1/proforma-invoices - List all invoices
+   - POST /api/v1/proforma-invoices - Create invoice
+   - GET /api/v1/proforma-invoices/{id} - Get invoice
+   - PUT /api/v1/proforma-invoices/{id} - Update invoice
+   - PATCH /api/v1/proforma-invoices/{id}/status - Update status
+   - DELETE /api/v1/proforma-invoices/{id}/items/{productId} - Remove item
+   - DELETE /api/v1/proforma-invoices/{id} - Delete invoice
+
+6. WISHLIST CONTROLLER (Wishlist Operations)
+   - GET /api/v1/wishlist - Get user's wishlist
+   - POST /api/v1/wishlist/{productId} - Add to wishlist
+   - DELETE /api/v1/wishlist/{productId} - Remove from wishlist
+   - GET /api/v1/wishlist/check/{productId} - Check if in wishlist
+   - POST /api/v1/wishlist/{productId}/add-to-cart - Move to cart
+   - DELETE /api/v1/wishlist/clear - Clear wishlist
+
+7. ERROR CODES & TROUBLESHOOTING
+
+
+================================================================================
+                              1. OVERVIEW
+================================================================================
+
+BASE URL
+--------
+Production: https://your-domain.com/api/v1
+Development: http://localhost/distributor-app/api/v1
+
+AUTHENTICATION
+--------------
+All protected endpoints require Bearer token authentication using Laravel Sanctum.
+
+Header:
+  Authorization: Bearer {your_access_token}
+  Content-Type: application/json
+  Accept: application/json
+
+RESPONSE FORMAT
+---------------
+Success Response:
+{
+    "success": true,
+    "data": { ... },
+    "message": "Operation completed successfully."
+}
+
+Error Response:
+{
+    "success": false,
+    "message": "Error description",
+    "data": {},
+    "code": 400
+}
+
+Paginated Response:
+{
+    "success": true,
+    "data": {
+        "current_page": 1,
+        "data": [ ... ],
+        "first_page_url": "...",
+        "from": 1,
+        "last_page": 5,
+        "last_page_url": "...",
+        "next_page_url": "...",
+        "path": "...",
+        "per_page": 15,
+        "prev_page_url": null,
+        "to": 15,
+        "total": 75
+    },
+    "message": "Items retrieved successfully."
+}
+
+HTTP STATUS CODES
+-----------------
+200 - OK (Success)
+201 - Created (Resource created successfully)
+400 - Bad Request (Invalid request or business logic error)
+401 - Unauthorized (Authentication required)
+403 - Forbidden (Insufficient permissions)
+404 - Not Found (Resource not found)
+422 - Unprocessable Entity (Validation error)
+500 - Internal Server Error
+
+STOCK MANAGEMENT PHILOSOPHY
+---------------------------
+1. IMMEDIATE: Stock is reduced immediately when items are added to cart
+2. REAL-TIME: Stock changes are reflected instantly
+3. DELTA-BASED: When quantity changes, only the difference affects stock
+4. AUTO-RESTORE: Stock is restored when items are removed or cart is cleared
+5. TRANSFER-SAFE: Moving items between invoice and cart doesn't double-reduce stock
+
+
+================================================================================
+                    2. CART CONTROLLER (User Cart Operations)
+================================================================================
+
+These endpoints manage the authenticated user's shopping cart.
+
+--------------------------------------------------------------------------------
+GET /api/v1/cart
+--------------------------------------------------------------------------------
+Description: Get the authenticated user's shopping cart items
+
+Authentication: Required (Bearer Token)
+
+Request:
+  curl -X GET "https://your-domain.com/api/v1/cart" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "items": [
+            {
+                "id": 1,
+                "user_id": 5,
+                "product_id": 42,
+                "quantity": 2,
+                "price": "150.00",
+                "created_at": "2025-01-15T10:30:00.000000Z",
+                "updated_at": "2025-01-15T10:30:00.000000Z",
+                "product": {
+                    "id": 42,
+                    "name": "Product Name",
+                    "description": "Product description",
+                    "mrp": "200.00",
+                    "selling_price": "150.00",
+                    "stock_quantity": 48,
+                    "in_stock": true,
+                    "main_photo": {
+                        "id": 101,
+                        "path": "products/image.jpg"
+                    }
+                }
+            }
+        ],
+        "total": "300.00",
+        "count": 1
+    },
+    "message": "Cart items retrieved successfully."
+}
+
+Stock Behavior: None (read-only operation)
+
+--------------------------------------------------------------------------------
+POST /api/v1/cart/add
+--------------------------------------------------------------------------------
+Description: Add a product to the authenticated user's cart
+
+Authentication: Required (Bearer Token)
+
+Request Body:
+{
+    "product_id": 42,
+    "quantity": 2        // Optional, default: 1
+}
+
+Request:
+  curl -X POST "https://your-domain.com/api/v1/cart/add" \
+    -H "Authorization: Bearer {token}" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{"product_id": 42, "quantity": 2}'
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "cart_item": {
+            "id": 1,
+            "user_id": 5,
+            "product_id": 42,
+            "quantity": 2,
+            "price": "150.00",
+            "product": { ... }
+        },
+        "cart_count": 1
+    },
+    "message": "Product added to cart successfully."
+}
+
+Error Response (400 - Out of Stock):
+{
+    "success": false,
+    "message": "Product is out of stock or insufficient quantity available.",
+    "data": {}
+}
+
+Stock Behavior:
+  - REDUCES stock_quantity by the quantity being added
+  - If product already in cart, only reduces by the NEW quantity (not total)
+  - Sets in_stock = false if stock_quantity becomes 0 or less
+
+--------------------------------------------------------------------------------
+PUT /api/v1/cart/{id}
+--------------------------------------------------------------------------------
+Description: Update the quantity of a cart item
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Cart item ID (integer, required)
+
+Request Body:
+{
+    "quantity": 3
+}
+
+Request:
+  curl -X PUT "https://your-domain.com/api/v1/cart/1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{"quantity": 3}'
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "cart_item": {
+            "id": 1,
+            "user_id": 5,
+            "product_id": 42,
+            "quantity": 3,
+            "price": "150.00",
+            "product": { ... }
+        },
+        "item_total": "450.00",
+        "cart_total": "450.00"
+    },
+    "message": "Cart item updated successfully."
+}
+
+Error Response (400 - Insufficient Stock):
+{
+    "success": false,
+    "message": "Product is out of stock or insufficient quantity available. Only 5 more available.",
+    "data": {}
+}
+
+Stock Behavior:
+  - DELTA-BASED adjustment:
+    - If quantity INCREASES: Reduces stock by the difference
+    - If quantity DECREASES: Restores stock by the difference
+  - Updates in_stock status accordingly
+
+--------------------------------------------------------------------------------
+DELETE /api/v1/cart/{id}
+--------------------------------------------------------------------------------
+Description: Remove an item from the cart
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Cart item ID (integer, required)
+
+Request:
+  curl -X DELETE "https://your-domain.com/api/v1/cart/1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "cart_count": 0,
+        "cart_total": "0.00"
+    },
+    "message": "Item removed from cart successfully."
+}
+
+Stock Behavior:
+  - RESTORES stock_quantity by the item's quantity
+  - Sets in_stock = true if stock_quantity becomes > 0
+
+--------------------------------------------------------------------------------
+GET /api/v1/cart/count
+--------------------------------------------------------------------------------
+Description: Get the number of items in the cart
+
+Authentication: Required (Bearer Token)
+
+Request:
+  curl -X GET "https://your-domain.com/api/v1/cart/count" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "cart_count": 3
+    },
+    "message": "Cart count retrieved successfully."
+}
+
+Stock Behavior: None (read-only operation)
+
+--------------------------------------------------------------------------------
+POST /api/v1/cart/generate-invoice
+--------------------------------------------------------------------------------
+Description: Generate a proforma invoice from cart items
+
+Authentication: Required (Bearer Token)
+
+Request:
+  curl -X POST "https://your-domain.com/api/v1/cart/generate-invoice" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (201 Created):
+{
+    "success": true,
+    "data": {
+        "invoice": {
+            "id": 1,
+            "invoice_number": "INV-2025-0001",
+            "user_id": 5,
+            "total_amount": "300.00",
+            "status": "Draft",
+            "created_at": "2025-01-15T10:30:00.000000Z"
+        },
+        "invoice_data": {
+            "cart_items": [
+                {
+                    "id": 1,
+                    "product_id": 42,
+                    "product_name": "Product Name",
+                    "product_description": "Description",
+                    "quantity": 2,
+                    "price": "150.00",
+                    "total": 300
+                }
+            ],
+            "total": 300,
+            "invoice_date": "2025-01-15",
+            "customer": {
+                "id": 5,
+                "name": "John Doe",
+                "email": "john@example.com",
+                "address": "123 Main St",
+                "mobile_number": "+1234567890"
+            }
+        }
+    },
+    "message": "Proforma invoice generated successfully."
+}
+
+Error Response (400 - Empty Cart):
+{
+    "success": false,
+    "message": "Cart is empty.",
+    "data": {}
+}
+
+Stock Behavior:
+  - NO stock change (stock was already reduced when items were added to cart)
+  - Cart items are DELETED after invoice creation
+  - Notifications sent to admin users
+
+--------------------------------------------------------------------------------
+DELETE /api/v1/cart/clear
+--------------------------------------------------------------------------------
+Description: Remove all items from the cart and restore stock
+
+Authentication: Required (Bearer Token)
+
+Request:
+  curl -X DELETE "https://your-domain.com/api/v1/cart/clear" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "items_removed": 3
+    },
+    "message": "Cart cleared and stock restored successfully."
+}
+
+Stock Behavior:
+  - RESTORES stock_quantity for ALL items in cart
+  - Updates in_stock = true for products that were out of stock
+
+
+================================================================================
+                3. SHOPPING CART CONTROLLER (Admin Cart Management)
+================================================================================
+
+These endpoints are for admin management of shopping cart items across all users.
+
+--------------------------------------------------------------------------------
+GET /api/v1/shopping-cart
+--------------------------------------------------------------------------------
+Description: List all shopping cart items (admin view)
+
+Authentication: Required (Bearer Token)
+
+Query Parameters:
+  - page: Page number (optional, default: 1)
+
+Request:
+  curl -X GET "https://your-domain.com/api/v1/shopping-cart?page=1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "current_page": 1,
+        "data": [
+            {
+                "id": 1,
+                "user_id": 5,
+                "product_id": 42,
+                "quantity": 2,
+                "price": "150.00",
+                "user": {
+                    "id": 5,
+                    "name": "John Doe",
+                    "email": "john@example.com"
+                },
+                "product": {
+                    "id": 42,
+                    "name": "Product Name"
+                }
+            }
+        ],
+        "per_page": 15,
+        "total": 25
+    },
+    "message": "Shopping cart items retrieved successfully."
+}
+
+Stock Behavior: None (read-only operation)
+
+--------------------------------------------------------------------------------
+POST /api/v1/shopping-cart
+--------------------------------------------------------------------------------
+Description: Create a new shopping cart item (admin)
+
+Authentication: Required (Bearer Token)
+
+Request Body:
+{
+    "user_id": 5,
+    "product_id": 42,
+    "quantity": 2,
+    "price": 150.00
+}
+
+Request:
+  curl -X POST "https://your-domain.com/api/v1/shopping-cart" \
+    -H "Authorization: Bearer {token}" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{"user_id": 5, "product_id": 42, "quantity": 2, "price": 150.00}'
+
+Response (201 Created):
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "user_id": 5,
+        "product_id": 42,
+        "quantity": 2,
+        "price": "150.00",
+        "user": { ... },
+        "product": { ... }
+    },
+    "message": "Shopping cart item created successfully."
+}
+
+Error Response (400 - Out of Stock):
+{
+    "success": false,
+    "message": "Product is out of stock or insufficient quantity available.",
+    "data": {
+        "available_quantity": 5,
+        "requested_quantity": 10
+    }
+}
+
+Stock Behavior:
+  - REDUCES stock_quantity by the quantity
+  - If item already exists for user, MERGES quantities (reduces only by new quantity)
+  - Sets in_stock = false if stock depleted
+
+--------------------------------------------------------------------------------
+GET /api/v1/shopping-cart/{id}
+--------------------------------------------------------------------------------
+Description: Get a specific shopping cart item
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Cart item ID (integer, required)
+
+Request:
+  curl -X GET "https://your-domain.com/api/v1/shopping-cart/1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "user_id": 5,
+        "product_id": 42,
+        "quantity": 2,
+        "price": "150.00",
+        "user": { ... },
+        "product": { ... }
+    },
+    "message": "Shopping cart item retrieved successfully."
+}
+
+Stock Behavior: None (read-only operation)
+
+--------------------------------------------------------------------------------
+PUT /api/v1/shopping-cart/{id}
+--------------------------------------------------------------------------------
+Description: Update a shopping cart item (admin)
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Cart item ID (integer, required)
+
+Request Body:
+{
+    "user_id": 5,
+    "product_id": 42,
+    "quantity": 3,
+    "price": 150.00
+}
+
+Request:
+  curl -X PUT "https://your-domain.com/api/v1/shopping-cart/1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{"user_id": 5, "product_id": 42, "quantity": 3, "price": 150.00}'
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "user_id": 5,
+        "product_id": 42,
+        "quantity": 3,
+        "price": "150.00",
+        "user": { ... },
+        "product": { ... }
+    },
+    "message": "Shopping cart item updated successfully."
+}
+
+Error Response (400 - Insufficient Stock):
+{
+    "success": false,
+    "message": "Insufficient stock available.",
+    "data": {
+        "available_quantity": 2,
+        "requested_additional": 5
+    }
+}
+
+Stock Behavior:
+  - DELTA-BASED adjustment:
+    - If quantity INCREASES: Reduces stock by the difference
+    - If quantity DECREASES: Restores stock by the difference
+  - Updates in_stock status accordingly
+
+--------------------------------------------------------------------------------
+DELETE /api/v1/shopping-cart/{id}
+--------------------------------------------------------------------------------
+Description: Delete a shopping cart item (admin)
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Cart item ID (integer, required)
+
+Request:
+  curl -X DELETE "https://your-domain.com/api/v1/shopping-cart/1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": null,
+    "message": "Shopping cart item deleted and stock restored successfully."
+}
+
+Stock Behavior:
+  - RESTORES stock_quantity by the item's quantity
+  - Sets in_stock = true if stock becomes > 0
+
+
+================================================================================
+                  4. MY INVOICE CONTROLLER (User's Own Invoices)
+================================================================================
+
+These endpoints manage the authenticated user's proforma invoices.
+
+--------------------------------------------------------------------------------
+GET /api/v1/my-invoices
+--------------------------------------------------------------------------------
+Description: Get the authenticated user's proforma invoices
+
+Authentication: Required (Bearer Token)
+
+Query Parameters:
+  - page: Page number (optional, default: 1)
+  - status: Filter by status - draft, sent, paid, cancelled (optional)
+
+Request:
+  curl -X GET "https://your-domain.com/api/v1/my-invoices?status=draft&page=1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "current_page": 1,
+        "data": [
+            {
+                "id": 1,
+                "invoice_number": "INV-2025-0001",
+                "user_id": 5,
+                "total_amount": "300.00",
+                "status": "Draft",
+                "invoice_data": { ... },
+                "invoice_data_decoded": {
+                    "cart_items": [ ... ],
+                    "total": 300,
+                    "customer": { ... }
+                },
+                "created_at": "2025-01-15T10:30:00.000000Z"
+            }
+        ],
+        "per_page": 15,
+        "total": 5
+    },
+    "message": "Invoices retrieved successfully."
+}
+
+Stock Behavior: None (read-only operation)
+
+--------------------------------------------------------------------------------
+GET /api/v1/my-invoices/{id}
+--------------------------------------------------------------------------------
+Description: Get details of a specific invoice
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Invoice ID (integer, required)
+
+Request:
+  curl -X GET "https://your-domain.com/api/v1/my-invoices/1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "invoice": {
+            "id": 1,
+            "invoice_number": "INV-2025-0001",
+            "user_id": 5,
+            "total_amount": "300.00",
+            "status": "Draft",
+            "created_at": "2025-01-15T10:30:00.000000Z"
+        },
+        "data": {
+            "cart_items": [
+                {
+                    "id": 1,
+                    "product_id": 42,
+                    "product_name": "Product Name",
+                    "quantity": 2,
+                    "price": "150.00",
+                    "total": 300
+                }
+            ],
+            "total": 300,
+            "invoice_date": "2025-01-15",
+            "customer": {
+                "id": 5,
+                "name": "John Doe",
+                "email": "john@example.com"
+            }
+        }
+    },
+    "message": "Invoice retrieved successfully."
+}
+
+Stock Behavior: None (read-only operation)
+
+--------------------------------------------------------------------------------
+GET /api/v1/my-invoices/{id}/download-pdf
+--------------------------------------------------------------------------------
+Description: Download the invoice as a PDF file
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Invoice ID (integer, required)
+
+Request:
+  curl -X GET "https://your-domain.com/api/v1/my-invoices/1/download-pdf" \
+    -H "Authorization: Bearer {token}" \
+    -o "invoice.pdf"
+
+Response: PDF file download (application/pdf)
+
+Stock Behavior: None (read-only operation)
+
+--------------------------------------------------------------------------------
+POST /api/v1/my-invoices/{id}/add-to-cart
+--------------------------------------------------------------------------------
+Description: Add all items from an invoice back to the cart
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Invoice ID (integer, required)
+
+Request:
+  curl -X POST "https://your-domain.com/api/v1/my-invoices/1/add-to-cart" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "added_items": ["Product A", "Product B"],
+        "skipped_items": [],
+        "cart_count": 2
+    },
+    "message": "Products from invoice added to cart successfully."
+}
+
+Response with skipped items:
+{
+    "success": true,
+    "data": {
+        "added_items": ["Product A"],
+        "skipped_items": ["Deleted Product"],
+        "cart_count": 1
+    },
+    "message": "Products from invoice added to cart successfully. Some items were skipped (product no longer available): Deleted Product"
+}
+
+Error Response (400 - Not Draft):
+{
+    "success": false,
+    "message": "Only draft invoices can be added to cart.",
+    "data": {}
+}
+
+Stock Behavior:
+  - NO stock change (stock was already reduced when invoice was created)
+  - Items are TRANSFERRED from invoice to cart
+  - Invoice is DELETED after transfer
+  - If item already in cart, quantities are MERGED
+
+--------------------------------------------------------------------------------
+DELETE /api/v1/my-invoices/{id}/items/{productId}
+--------------------------------------------------------------------------------
+Description: Remove a specific item from an invoice
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Invoice ID (integer, required)
+  - productId: Product ID to remove (integer, required)
+
+Request:
+  curl -X DELETE "https://your-domain.com/api/v1/my-invoices/1/items/42" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK - Item removed, invoice remains):
+{
+    "success": true,
+    "data": {
+        "invoice": {
+            "id": 1,
+            "invoice_number": "INV-2025-0001",
+            "total_amount": "150.00",
+            ...
+        },
+        "removed_item": {
+            "product_id": 42,
+            "product_name": "Product Name",
+            "quantity": 2,
+            "price": "150.00"
+        },
+        "invoice_deleted": false
+    },
+    "message": "Item removed from invoice and stock restored successfully."
+}
+
+Response (200 OK - Last item removed, invoice deleted):
+{
+    "success": true,
+    "data": {
+        "invoice_deleted": true,
+        "removed_item": {
+            "product_id": 42,
+            "product_name": "Product Name",
+            "quantity": 2,
+            "price": "150.00"
+        }
+    },
+    "message": "Last item removed. Invoice has been deleted."
+}
+
+Stock Behavior:
+  - RESTORES stock_quantity by the removed item's quantity
+  - Sets in_stock = true if stock becomes > 0
+  - Invoice total is RECALCULATED
+  - If last item removed, invoice is AUTO-DELETED
+
+--------------------------------------------------------------------------------
+DELETE /api/v1/my-invoices/{id}
+--------------------------------------------------------------------------------
+Description: Delete an invoice and restore all stock
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Invoice ID (integer, required)
+
+Request:
+  curl -X DELETE "https://your-domain.com/api/v1/my-invoices/1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": null,
+    "message": "Invoice deleted and stock restored successfully."
+}
+
+Stock Behavior:
+  - RESTORES stock_quantity for ALL items in the invoice
+  - Sets in_stock = true for products that were out of stock
+
+
+================================================================================
+              5. PROFORMA INVOICE CONTROLLER (Admin Invoice Management)
+================================================================================
+
+These endpoints are for admin management of proforma invoices.
+
+--------------------------------------------------------------------------------
+GET /api/v1/proforma-invoices
+--------------------------------------------------------------------------------
+Description: List all proforma invoices (admin view)
+
+Authentication: Required (Bearer Token)
+
+Query Parameters:
+  - page: Page number (optional, default: 1)
+  - per_page: Items per page (optional, default: 15)
+  - status: Filter by status - Draft, Approved, Dispatch, Out for Delivery, Delivered, Return (optional)
+  - user_id: Filter by user ID (optional)
+  - search: Search by invoice number (optional)
+
+Request:
+  curl -X GET "https://your-domain.com/api/v1/proforma-invoices?status=Draft&page=1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "current_page": 1,
+        "data": [
+            {
+                "id": 1,
+                "invoice_number": "INV-2025-0001",
+                "user_id": 5,
+                "total_amount": "300.00",
+                "status": "Draft",
+                "invoice_data": { ... },
+                "user": {
+                    "id": 5,
+                    "name": "John Doe",
+                    "email": "john@example.com"
+                },
+                "created_at": "2025-01-15T10:30:00.000000Z"
+            }
+        ],
+        "per_page": 15,
+        "total": 50
+    },
+    "message": "Proforma invoices retrieved successfully."
+}
+
+Stock Behavior: None (read-only operation)
+
+--------------------------------------------------------------------------------
+POST /api/v1/proforma-invoices
+--------------------------------------------------------------------------------
+Description: Create a new proforma invoice (admin)
+
+Authentication: Required (Bearer Token)
+
+Request Body:
+{
+    "user_id": 5,                    // Optional
+    "session_id": "abc123",          // Optional (for guest users)
+    "total_amount": 300.00,
+    "status": "Draft",               // Optional, default: Draft
+    "invoice_data": {
+        "cart_items": [
+            {
+                "product_id": 42,
+                "product_name": "Product Name",
+                "quantity": 2,
+                "price": 150.00
+            }
+        ],
+        "subtotal": 300,
+        "total": 300
+    }
+}
+
+Request:
+  curl -X POST "https://your-domain.com/api/v1/proforma-invoices" \
+    -H "Authorization: Bearer {token}" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{"user_id": 5, "total_amount": 300, "invoice_data": {...}}'
+
+Response (201 Created):
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "invoice_number": "INV-2025-0001",
+        "user_id": 5,
+        "total_amount": "300.00",
+        "status": "Draft",
+        "invoice_data": { ... },
+        "user": { ... },
+        "created_at": "2025-01-15T10:30:00.000000Z"
+    },
+    "message": "Proforma invoice created successfully."
+}
+
+Stock Behavior: None (this endpoint creates invoice directly, stock should be managed separately)
+
+--------------------------------------------------------------------------------
+GET /api/v1/proforma-invoices/{id}
+--------------------------------------------------------------------------------
+Description: Get a specific proforma invoice
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Invoice ID (integer, required)
+
+Request:
+  curl -X GET "https://your-domain.com/api/v1/proforma-invoices/1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "invoice_number": "INV-2025-0001",
+        "user_id": 5,
+        "total_amount": "300.00",
+        "status": "Draft",
+        "invoice_data": { ... },
+        "user": { ... }
+    },
+    "message": "Proforma invoice retrieved successfully."
+}
+
+Stock Behavior: None (read-only operation)
+
+--------------------------------------------------------------------------------
+PUT /api/v1/proforma-invoices/{id}
+--------------------------------------------------------------------------------
+Description: Update a proforma invoice (admin)
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Invoice ID (integer, required)
+
+Request Body (all fields optional):
+{
+    "user_id": 5,
+    "session_id": "abc123",
+    "invoice_number": "INV-2025-0001",
+    "total_amount": 350.00,
+    "status": "Approved",
+    "invoice_data": { ... }
+}
+
+Request:
+  curl -X PUT "https://your-domain.com/api/v1/proforma-invoices/1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{"status": "Approved", "total_amount": 350}'
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "invoice_number": "INV-2025-0001",
+        "status": "Approved",
+        ...
+    },
+    "message": "Proforma invoice updated successfully."
+}
+
+Stock Behavior: None (status/metadata update only)
+
+--------------------------------------------------------------------------------
+PATCH /api/v1/proforma-invoices/{id}/status
+--------------------------------------------------------------------------------
+Description: Update only the status of a proforma invoice
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Invoice ID (integer, required)
+
+Request Body:
+{
+    "status": "Approved"
+}
+
+Valid Status Values:
+  - Draft
+  - Approved
+  - Dispatch
+  - Out for Delivery
+  - Delivered
+  - Return
+
+Request:
+  curl -X PATCH "https://your-domain.com/api/v1/proforma-invoices/1/status" \
+    -H "Authorization: Bearer {token}" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{"status": "Approved"}'
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "invoice_number": "INV-2025-0001",
+        "status": "Approved",
+        ...
+    },
+    "message": "Proforma invoice status updated successfully."
+}
+
+Stock Behavior: None (status update only)
+
+--------------------------------------------------------------------------------
+DELETE /api/v1/proforma-invoices/{id}/items/{productId}
+--------------------------------------------------------------------------------
+Description: Remove a specific item from a proforma invoice (admin)
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Invoice ID (integer, required)
+  - productId: Product ID to remove (integer, required)
+
+Request:
+  curl -X DELETE "https://your-domain.com/api/v1/proforma-invoices/1/items/42" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK - Item removed, invoice remains):
+{
+    "success": true,
+    "data": {
+        "invoice": {
+            "id": 1,
+            "invoice_number": "INV-2025-0001",
+            "total_amount": "150.00",
+            "user": { ... }
+        },
+        "removed_item": {
+            "product_id": 42,
+            "product_name": "Product Name",
+            "quantity": 2,
+            "price": "150.00"
+        },
+        "invoice_deleted": false
+    },
+    "message": "Item removed from invoice and stock restored successfully."
+}
+
+Response (200 OK - Last item removed, invoice deleted):
+{
+    "success": true,
+    "data": {
+        "invoice_deleted": true,
+        "removed_item": {
+            "product_id": 42,
+            "product_name": "Product Name",
+            "quantity": 2,
+            "price": "150.00"
+        }
+    },
+    "message": "Last item removed. Invoice has been deleted."
+}
+
+Stock Behavior:
+  - RESTORES stock_quantity by the removed item's quantity
+  - Sets in_stock = true if stock becomes > 0
+  - Invoice total is RECALCULATED
+  - If last item removed, invoice is AUTO-DELETED
+
+--------------------------------------------------------------------------------
+DELETE /api/v1/proforma-invoices/{id}
+--------------------------------------------------------------------------------
+Description: Delete a proforma invoice and restore all stock (admin)
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - id: Invoice ID (integer, required)
+
+Request:
+  curl -X DELETE "https://your-domain.com/api/v1/proforma-invoices/1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": null,
+    "message": "Proforma invoice deleted and stock restored successfully."
+}
+
+Stock Behavior:
+  - RESTORES stock_quantity for ALL items in the invoice
+  - Sets in_stock = true for products that were out of stock
+
+
+================================================================================
+                    6. WISHLIST CONTROLLER (Wishlist Operations)
+================================================================================
+
+These endpoints manage the authenticated user's wishlist.
+
+--------------------------------------------------------------------------------
+GET /api/v1/wishlist
+--------------------------------------------------------------------------------
+Description: Get the authenticated user's wishlist
+
+Authentication: Required (Bearer Token)
+
+Query Parameters:
+  - page: Page number (optional, default: 1)
+  - per_page: Items per page (optional, default: 15, max: 50)
+
+Request:
+  curl -X GET "https://your-domain.com/api/v1/wishlist?page=1" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "items": {
+            "current_page": 1,
+            "data": [
+                {
+                    "id": 1,
+                    "user_id": 5,
+                    "product_id": 42,
+                    "created_at": "2025-01-15T10:30:00.000000Z",
+                    "product": {
+                        "id": 42,
+                        "name": "Product Name",
+                        "mrp": "200.00",
+                        "selling_price": "150.00",
+                        "discounted_price": "135.00",
+                        "is_available": true,
+                        "in_stock": true,
+                        "main_photo": { ... }
+                    }
+                }
+            ],
+            "per_page": 15,
+            "total": 10
+        },
+        "total": 10
+    },
+    "message": "Wishlist retrieved successfully."
+}
+
+Stock Behavior: None (read-only operation)
+
+--------------------------------------------------------------------------------
+POST /api/v1/wishlist/{productId}
+--------------------------------------------------------------------------------
+Description: Add a product to the wishlist
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - productId: Product ID to add (integer, required)
+
+Request:
+  curl -X POST "https://your-domain.com/api/v1/wishlist/42" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (201 Created):
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "user_id": 5,
+        "product_id": 42,
+        "created_at": "2025-01-15T10:30:00.000000Z",
+        "product": { ... }
+    },
+    "message": "Product added to wishlist."
+}
+
+Error Response (400 - Already in Wishlist):
+{
+    "success": false,
+    "message": "Product is already in your wishlist.",
+    "data": {}
+}
+
+Error Response (404 - Product Not Found):
+{
+    "success": false,
+    "message": "Product not found or not available.",
+    "data": {}
+}
+
+Stock Behavior: None (wishlist doesn't affect stock)
+
+--------------------------------------------------------------------------------
+DELETE /api/v1/wishlist/{productId}
+--------------------------------------------------------------------------------
+Description: Remove a product from the wishlist
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - productId: Product ID to remove (integer, required)
+
+Request:
+  curl -X DELETE "https://your-domain.com/api/v1/wishlist/42" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": null,
+    "message": "Product removed from wishlist."
+}
+
+Stock Behavior: None (wishlist doesn't affect stock)
+
+--------------------------------------------------------------------------------
+GET /api/v1/wishlist/check/{productId}
+--------------------------------------------------------------------------------
+Description: Check if a product is in the user's wishlist
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - productId: Product ID to check (integer, required)
+
+Request:
+  curl -X GET "https://your-domain.com/api/v1/wishlist/check/42" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "is_in_wishlist": true,
+        "added_at": "2025-01-15T10:30:00.000000Z"
+    },
+    "message": "Wishlist status retrieved."
+}
+
+Response (Product not in wishlist):
+{
+    "success": true,
+    "data": {
+        "is_in_wishlist": false,
+        "added_at": null
+    },
+    "message": "Wishlist status retrieved."
+}
+
+Stock Behavior: None (read-only operation)
+
+--------------------------------------------------------------------------------
+POST /api/v1/wishlist/{productId}/add-to-cart
+--------------------------------------------------------------------------------
+Description: Move a product from wishlist to cart
+
+Authentication: Required (Bearer Token)
+
+URL Parameters:
+  - productId: Product ID to move (integer, required)
+
+Request Body (optional):
+{
+    "quantity": 2,                    // Optional, default: 1
+    "remove_from_wishlist": true      // Optional, default: true
+}
+
+Request:
+  curl -X POST "https://your-domain.com/api/v1/wishlist/42/add-to-cart" \
+    -H "Authorization: Bearer {token}" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -d '{"quantity": 2, "remove_from_wishlist": true}'
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "cart_item": {
+            "id": 1,
+            "user_id": 5,
+            "product_id": 42,
+            "quantity": 2,
+            "price": "135.00",
+            "product": { ... }
+        },
+        "removed_from_wishlist": true
+    },
+    "message": "Product added to cart."
+}
+
+Error Response (400 - Out of Stock):
+{
+    "success": false,
+    "message": "Product is out of stock or insufficient quantity available.",
+    "data": {
+        "available_quantity": 5,
+        "requested_quantity": 10
+    }
+}
+
+Error Response (400 - Cannot Add More):
+{
+    "success": false,
+    "message": "Cannot add more. Insufficient stock available.",
+    "data": {
+        "available_quantity": 3,
+        "current_cart_quantity": 2,
+        "requested_additional": 5
+    }
+}
+
+Stock Behavior:
+  - REDUCES stock_quantity by the quantity being added
+  - If product already in cart, reduces only by the NEW quantity
+  - Sets in_stock = false if stock depleted
+  - Optionally removes item from wishlist
+
+--------------------------------------------------------------------------------
+DELETE /api/v1/wishlist/clear
+--------------------------------------------------------------------------------
+Description: Clear the entire wishlist
+
+Authentication: Required (Bearer Token)
+
+Request:
+  curl -X DELETE "https://your-domain.com/api/v1/wishlist/clear" \
+    -H "Authorization: Bearer {token}" \
+    -H "Accept: application/json"
+
+Response (200 OK):
+{
+    "success": true,
+    "data": {
+        "items_removed": 5
+    },
+    "message": "Wishlist cleared successfully."
+}
+
+Stock Behavior: None (wishlist doesn't affect stock)
+
+
+================================================================================
+                      7. ERROR CODES & TROUBLESHOOTING
+================================================================================
+
+COMMON ERROR RESPONSES
+----------------------
+
+401 Unauthorized:
+{
+    "message": "Unauthenticated."
+}
+Solution: Ensure you're sending a valid Bearer token in the Authorization header.
+
+404 Not Found:
+{
+    "success": false,
+    "message": "Resource not found.",
+    "data": {}
+}
+Solution: Verify the ID exists and belongs to the authenticated user (for user-specific resources).
+
+422 Validation Error:
+{
+    "message": "The given data was invalid.",
+    "errors": {
+        "product_id": ["The product id field is required."],
+        "quantity": ["The quantity must be at least 1."]
+    }
+}
+Solution: Check the request body matches the required format.
+
+400 Out of Stock:
+{
+    "success": false,
+    "message": "Product is out of stock or insufficient quantity available.",
+    "data": {
+        "available_quantity": 5,
+        "requested_quantity": 10
+    }
+}
+Solution: Reduce the quantity or wait for stock to be replenished.
+
+STOCK MANAGEMENT TROUBLESHOOTING
+--------------------------------
+
+Issue: Stock not reducing when adding to cart
+- Verify the product exists and has stock_quantity > 0
+- Check if in_stock is true
+- Ensure the API call returns success: true
+
+Issue: Stock not restoring when removing from cart
+- Verify the cart item exists
+- Check the API response for the success message
+- Verify the product still exists in the database
+
+Issue: Double stock reduction
+- This should NOT happen with the current implementation
+- Stock is only reduced once when items enter the cart
+- Moving items from invoice to cart does NOT reduce stock again
+
+Issue: in_stock status not updating
+- The system automatically updates in_stock based on stock_quantity
+- in_stock = false when stock_quantity <= 0
+- in_stock = true when stock_quantity > 0
+
+RATE LIMITING
+-------------
+API endpoints may be rate-limited. If you receive a 429 Too Many Requests response,
+wait before making additional requests.
+
+TESTING RECOMMENDATIONS
+-----------------------
+1. Always test in a development environment first
+2. Verify stock quantities before and after operations
+3. Test edge cases: empty cart, last item removal, out of stock
+4. Use the cart/count endpoint to verify cart state
+5. Check in_stock status after stock-affecting operations
+
+
+================================================================================
+                              END OF DOCUMENTATION
+================================================================================
+
+For questions or issues, contact the development team.

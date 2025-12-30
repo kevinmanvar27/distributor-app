@@ -91,7 +91,7 @@ class ProductSearchController extends ApiController
         $sortBy = $request->sort_by ?? 'name';
         $sortOrder = $request->sort_order ?? 'asc';
 
-        $productsQuery = Product::whereIn('status', ['active', 'published'])
+        $productsQuery = Product::where('status', 'published')
             ->with(['mainPhoto']);
 
         // Only apply search filter if query is provided
@@ -214,7 +214,7 @@ class ProductSearchController extends ApiController
         $selectedSubcategoryId = $request->query('subcategory');
 
         // Get products using JSON filtering (same as web flow)
-        $products = Product::whereIn('status', ['active', 'published'])
+        $products = Product::where('status', 'published')
             ->with('mainPhoto')
             ->get()
             ->filter(function ($product) use ($categoryId, $selectedSubcategoryId) {
@@ -282,7 +282,7 @@ class ProductSearchController extends ApiController
 
         // Filter subcategories to only show those with products (same as web flow)
         $subCategories = $category->subCategories->filter(function ($subCategory) use ($categoryId) {
-            $products = Product::whereIn('status', ['active', 'published'])
+            $products = Product::where('status', 'published')
                 ->get()
                 ->filter(function ($product) use ($categoryId, $subCategory) {
                     if (!$product->product_categories) {
@@ -399,7 +399,7 @@ class ProductSearchController extends ApiController
         $categoryId = $subcategory->category_id;
 
         // Get products using JSON filtering (same as web flow)
-        $products = Product::whereIn('status', ['active', 'published'])
+        $products = Product::where('status', 'published')
             ->with('mainPhoto')
             ->get()
             ->filter(function ($product) use ($categoryId, $subcategoryId) {
@@ -512,7 +512,7 @@ class ProductSearchController extends ApiController
             ->get()
             ->filter(function ($subCategory) use ($id) {
                 // Check if this subcategory has any products in this category (same as web flow)
-                $products = Product::whereIn('status', ['active', 'published'])
+                $products = Product::where('status', 'published')
                     ->get()
                     ->filter(function ($product) use ($id, $subCategory) {
                         if (!$product->product_categories) {
@@ -535,7 +535,7 @@ class ProductSearchController extends ApiController
             ->values()
             ->map(function ($subCategory) use ($id) {
                 // Add product count to each subcategory
-                $productCount = Product::whereIn('status', ['active', 'published'])
+                $productCount = Product::where('status', 'published')
                     ->get()
                     ->filter(function ($product) use ($id, $subCategory) {
                         if (!$product->product_categories) {

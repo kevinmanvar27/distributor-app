@@ -82,7 +82,18 @@ class ShoppingCartController extends Controller
         $product = Product::findOrFail($request->product_id);
         $quantity = $request->quantity ?? 1;
 
-        // Check if product is in stock
+        // Check if item already exists in cart to calculate total needed quantity
+        $existingCartItem = ShoppingCartItem::where(
+            Auth::check() ? 
+                ['user_id' => Auth::id(), 'product_id' => $product->id] :
+                ['session_id' => session()->getId(), 'product_id' => $product->id]
+        )->first();
+
+        // Calculate total quantity needed (existing + new)
+        $existingQuantity = $existingCartItem ? $existingCartItem->quantity : 0;
+        $totalQuantityNeeded = $existingQuantity + $quantity;
+
+        // Check if product is in stock for the additional quantity being added
         if (!$product->in_stock || $product->stock_quantity < $quantity) {
             return response()->json([
                 'success' => false,
@@ -105,7 +116,7 @@ class ShoppingCartController extends Controller
         // Prepare data for cart item
         $cartData = [
             'product_id' => $product->id,
-            'quantity' => $quantity,
+            'quantity' => $totalQuantityNeeded,
             'price' => $discountedPrice,
         ];
 
@@ -123,6 +134,14 @@ class ShoppingCartController extends Controller
                 ['session_id' => session()->getId(), 'product_id' => $product->id],
             $cartData
         );
+
+        // REDUCE STOCK QUANTITY by the quantity being added (not total)
+        $product->decrement('stock_quantity', $quantity);
+        
+        // Update in_stock status if stock is depleted
+        if ($product->fresh()->stock_quantity <= 0) {
+            $product->update(['in_stock' => false]);
+        }
 
         // Get updated cart count
         if (Auth::check()) {
@@ -159,17 +178,35 @@ class ShoppingCartController extends Controller
         }
         
         $product = $cartItem->product;
+        $oldQuantity = $cartItem->quantity;
+        $newQuantity = $request->quantity;
+        $quantityDifference = $newQuantity - $oldQuantity;
 
-        // Check if product is in stock
-        if (!$product->in_stock || $product->stock_quantity < $request->quantity) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Product is out of stock or insufficient quantity available.'
-            ]);
+        // If increasing quantity, check if enough stock is available
+        if ($quantityDifference > 0) {
+            if ($product->stock_quantity < $quantityDifference) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product is out of stock or insufficient quantity available. Only ' . $product->stock_quantity . ' more available.'
+                ]);
+            }
+            // Reduce stock by the difference
+            $product->decrement('stock_quantity', $quantityDifference);
+        } elseif ($quantityDifference < 0) {
+            // Restore stock by the difference (absolute value)
+            $product->increment('stock_quantity', abs($quantityDifference));
+        }
+
+        // Update in_stock status based on new stock quantity
+        $product->refresh();
+        if ($product->stock_quantity <= 0) {
+            $product->update(['in_stock' => false]);
+        } elseif ($product->stock_quantity > 0 && !$product->in_stock) {
+            $product->update(['in_stock' => true]);
         }
 
         $cartItem->update([
-            'quantity' => $request->quantity,
+            'quantity' => $newQuantity,
         ]);
 
         // Calculate item total and cart total
@@ -206,6 +243,17 @@ class ShoppingCartController extends Controller
             $cartItem = ShoppingCartItem::where('user_id', Auth::id())->where('id', $id)->firstOrFail();
         } else {
             $cartItem = ShoppingCartItem::where('session_id', session()->getId())->where('id', $id)->firstOrFail();
+        }
+        
+        // RESTORE STOCK QUANTITY before deleting the cart item
+        $product = $cartItem->product;
+        if ($product) {
+            $product->increment('stock_quantity', $cartItem->quantity);
+            
+            // Update in_stock status if stock was restored
+            if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                $product->update(['in_stock' => true]);
+            }
         }
         
         $cartItem->delete();
@@ -715,33 +763,54 @@ class ShoppingCartController extends Controller
         }
         
         // Add each item from the invoice to the cart
+        // NOTE: Stock was already reduced when invoice was created
+        // We need to handle merging with existing cart items carefully
         if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
             foreach ($invoiceData['cart_items'] as $item) {
-                // Prepare data for cart item
-                $cartData = [
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                ];
-                
-                // Add user_id or session_id based on authentication status
-                if (Auth::check()) {
-                    $cartData['user_id'] = Auth::id();
-                } else {
-                    $cartData['session_id'] = session()->getId();
+                // Check if product still exists
+                $product = Product::find($item['product_id']);
+                if (!$product) {
+                    continue; // Skip if product no longer exists
                 }
                 
-                // Add or update cart item
-                $cartItem = ShoppingCartItem::updateOrCreate(
+                // Check if item already exists in cart
+                $existingCartItem = ShoppingCartItem::where(
                     Auth::check() ? 
                         ['user_id' => Auth::id(), 'product_id' => $item['product_id']] :
-                        ['session_id' => session()->getId(), 'product_id' => $item['product_id']],
-                    $cartData
-                );
+                        ['session_id' => session()->getId(), 'product_id' => $item['product_id']]
+                )->first();
+                
+                if ($existingCartItem) {
+                    // Item already in cart - need to merge quantities
+                    // The invoice items' stock was already reduced, so just add quantity
+                    $newQuantity = $existingCartItem->quantity + $item['quantity'];
+                    $existingCartItem->update([
+                        'quantity' => $newQuantity,
+                        'price' => $item['price']
+                    ]);
+                } else {
+                    // Item not in cart - create new cart item
+                    // Stock was already reduced when invoice was created, no need to reduce again
+                    $cartData = [
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                    ];
+                    
+                    // Add user_id or session_id based on authentication status
+                    if (Auth::check()) {
+                        $cartData['user_id'] = Auth::id();
+                    } else {
+                        $cartData['session_id'] = session()->getId();
+                    }
+                    
+                    ShoppingCartItem::create($cartData);
+                }
             }
         }
         
         // Delete the proforma invoice after adding items to cart
+        // NOTE: We don't restore stock here because items are moving to cart (stock stays reduced)
         $proformaInvoice->delete();
         
         return redirect()->route('frontend.cart.index')->with('success', 'Products from proforma invoice added to cart successfully! The proforma invoice has been removed.');
@@ -782,10 +851,33 @@ class ShoppingCartController extends Controller
             return redirect()->route('frontend.cart.proforma.invoices')->with('error', 'Invoice not found.');
         }
         
+        // RESTORE STOCK for all items in the invoice before deleting
+        $invoiceData = $proformaInvoice->invoice_data;
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
+            foreach ($invoiceData['cart_items'] as $item) {
+                $product = Product::find($item['product_id']);
+                if ($product) {
+                    $product->increment('stock_quantity', $item['quantity']);
+                    
+                    // Update in_stock status if stock was restored
+                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                        $product->update(['in_stock' => true]);
+                    }
+                }
+            }
+        }
+        
         // Delete the proforma invoice
         $proformaInvoice->delete();
         
-        return redirect()->route('frontend.cart.proforma.invoices')->with('success', 'Proforma invoice deleted successfully!');
+        return redirect()->route('frontend.cart.proforma.invoices')->with('success', 'Proforma invoice deleted and stock restored successfully!');
     }
     
     /**

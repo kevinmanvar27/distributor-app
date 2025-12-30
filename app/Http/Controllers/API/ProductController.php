@@ -48,8 +48,8 @@ class ProductController extends ApiController
      */
     public function index(Request $request)
     {
-        // Filter by active/published status (same as web flow)
-        $products = Product::whereIn('status', ['active', 'published'])
+        // Filter by published status only (same as web flow)
+        $products = Product::where('status', 'published')
             ->with('mainPhoto')
             ->paginate(15);
 

@@ -113,6 +113,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/my-invoices/{id}', [MyInvoiceController::class, 'show']);
     Route::get('/my-invoices/{id}/download-pdf', [MyInvoiceController::class, 'downloadPdf']);
     Route::post('/my-invoices/{id}/add-to-cart', [MyInvoiceController::class, 'addToCart']);
+    Route::delete('/my-invoices/{id}/items/{productId}', [MyInvoiceController::class, 'removeItem']);
     Route::delete('/my-invoices/{id}', [MyInvoiceController::class, 'destroy']);
     
     // User Notification routes
@@ -148,6 +149,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('shopping-cart', ShoppingCartController::class);
     Route::apiResource('proforma-invoices', ProformaInvoiceController::class);
     Route::patch('/proforma-invoices/{id}/status', [ProformaInvoiceController::class, 'updateStatus']);
+    Route::delete('/proforma-invoices/{id}/items/{productId}', [ProformaInvoiceController::class, 'removeItem']);
     Route::apiResource('pages', PageController::class)->except(['index', 'show']);
     Route::apiResource('user-groups', UserGroupController::class);
     Route::apiResource('user-group-members', UserGroupMemberController::class);

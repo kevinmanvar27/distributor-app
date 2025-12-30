@@ -8,6 +8,7 @@ use App\Models\ProformaInvoice;
 use App\Models\WithoutGstInvoice;
 use App\Models\Setting;
 use App\Models\Notification;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -291,12 +292,30 @@ class ProformaInvoiceController extends Controller
             return redirect()->back()->with('error', 'Invalid item selection.');
         }
         
-        // Remove the item
+        // Remove the item and restore stock
         $removedItem = $invoiceData['cart_items'][$itemIndex];
+        
+        // RESTORE STOCK for the removed item
+        $product = Product::find($removedItem['product_id'] ?? null);
+        if ($product) {
+            $product->increment('stock_quantity', $removedItem['quantity']);
+            
+            // Update in_stock status if stock was restored
+            if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                $product->update(['in_stock' => true]);
+            }
+        }
+        
         unset($invoiceData['cart_items'][$itemIndex]);
         
         // Re-index array to ensure sequential keys
         $invoiceData['cart_items'] = array_values($invoiceData['cart_items']);
+        
+        // If no items left, delete the invoice
+        if (empty($invoiceData['cart_items'])) {
+            $proformaInvoice->delete();
+            return redirect()->route('admin.proforma-invoice.index')->with('success', 'Last item removed. Invoice has been deleted.');
+        }
         
         // Recalculate total
         $newTotal = 0;
@@ -389,8 +408,32 @@ class ProformaInvoiceController extends Controller
     public function destroy($id)
     {
         $proformaInvoice = ProformaInvoice::findOrFail($id);
+        
+        // RESTORE STOCK for all items in the invoice before deleting
+        $invoiceData = $proformaInvoice->invoice_data;
+        if (is_string($invoiceData)) {
+            $invoiceData = json_decode($invoiceData, true);
+            if (is_string($invoiceData)) {
+                $invoiceData = json_decode($invoiceData, true);
+            }
+        }
+        
+        if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
+            foreach ($invoiceData['cart_items'] as $item) {
+                $product = Product::find($item['product_id'] ?? null);
+                if ($product) {
+                    $product->increment('stock_quantity', $item['quantity']);
+                    
+                    // Update in_stock status if stock was restored
+                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                        $product->update(['in_stock' => true]);
+                    }
+                }
+            }
+        }
+        
         $proformaInvoice->delete();
         
-        return redirect()->route('admin.proforma-invoice.index')->with('success', 'Proforma invoice deleted successfully.');
+        return redirect()->route('admin.proforma-invoice.index')->with('success', 'Proforma invoice deleted and stock restored successfully.');
     }
 }
