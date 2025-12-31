@@ -163,7 +163,7 @@
                         <span class="doc-guide-title">Learn About Distributor App</span>
                         <span class="doc-guide-subtitle">Discover powerful features designed for your business success</span>
                     </div>
-                    <a href="{{ url('/client-doc') }}" class="doc-guide-btn" target="_blank">
+                    <a href="{{ route('client.documentation') }}" class="doc-guide-btn" target="_blank">
                         <span>View Guide</span>
                         <i class="fas fa-external-link-alt ms-2"></i>
                     </a>
