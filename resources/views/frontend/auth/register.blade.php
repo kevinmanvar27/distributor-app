@@ -152,6 +152,23 @@
                     &copy; {{ date('Y') }} {{ setting('site_title', 'Frontend App') }}. All rights reserved.
                 </p>
             </div>
+            
+            <!-- Documentation Guide Link -->
+            <div class="doc-guide-banner mt-4">
+                <div class="doc-guide-content">
+                    <div class="doc-guide-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="doc-guide-text">
+                        <span class="doc-guide-title">Learn About Distributor App</span>
+                        <span class="doc-guide-subtitle">Discover powerful features designed for your business success</span>
+                    </div>
+                    <a href="{{ url('/client-doc') }}" class="doc-guide-btn" target="_blank">
+                        <span>View Guide</span>
+                        <i class="fas fa-external-link-alt ms-2"></i>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -241,6 +258,113 @@
     
     .password-match i {
         margin-right: 4px;
+    }
+    
+    /* Documentation Guide Banner */
+    .doc-guide-banner {
+        background: linear-gradient(135deg, #FF6B00 0%, #ff8533 100%);
+        border-radius: 16px;
+        padding: 20px 24px;
+        box-shadow: 0 10px 40px -10px rgba(255, 107, 0, 0.4);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .doc-guide-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    
+    .doc-guide-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .doc-guide-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    
+    .doc-guide-icon i {
+        font-size: 1.5rem;
+        color: #fff;
+    }
+    
+    .doc-guide-text {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .doc-guide-title {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #fff;
+        line-height: 1.3;
+    }
+    
+    .doc-guide-subtitle {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.85);
+        line-height: 1.4;
+    }
+    
+    .doc-guide-btn {
+        display: inline-flex;
+        align-items: center;
+        background: #fff;
+        color: #FF6B00;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .doc-guide-btn:hover {
+        background: #333333;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .doc-guide-btn i {
+        font-size: 0.8rem;
+    }
+    
+    /* Responsive adjustments for doc guide banner */
+    @media (max-width: 576px) {
+        .doc-guide-content {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .doc-guide-text {
+            align-items: center;
+        }
+        
+        .doc-guide-btn {
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 @endsection
