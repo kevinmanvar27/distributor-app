@@ -41,6 +41,11 @@ Route::get('/', function () {
     return redirect()->route('frontend.login');
 });
 
+// Client Documentation Route
+Route::get('client-doc', function () {
+    return response()->file(public_path('client-doc/index.html'));
+})->name('client.documentation');
+
 // Frontend Authentication Routes
 Route::get('login', [FrontendLoginController::class, 'showLoginForm'])->name('frontend.login');
 Route::post('login', [FrontendLoginController::class, 'login'])->name('frontend.login.post');
