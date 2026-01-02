@@ -1003,20 +1003,28 @@
         }
         
         // Function to add item to guest cart
-        function addToGuestCart(productId, quantity) {
+        function addToGuestCart(productId, quantity, variationId) {
             quantity = quantity || 1;
+            variationId = variationId || null;
             var cart = getGuestCart();
             
-            var existingItemIndex = cart.findIndex(function(item) { return item.product_id == productId; });
+            // For variable products, match both product_id and variation_id
+            var existingItemIndex = cart.findIndex(function(item) { 
+                return item.product_id == productId && item.product_variation_id == variationId; 
+            });
             
             if (existingItemIndex !== -1) {
                 cart[existingItemIndex].quantity += quantity;
             } else {
-                cart.push({
+                var cartItem = {
                     product_id: productId,
                     quantity: quantity,
                     added_at: new Date().toISOString()
-                });
+                };
+                if (variationId) {
+                    cartItem.product_variation_id = variationId;
+                }
+                cart.push(cartItem);
             }
             
             saveGuestCart(cart);
@@ -1066,21 +1074,35 @@
             if (e.target.classList.contains('add-to-cart-btn') || e.target.closest('.add-to-cart-btn')) {
                 var button = e.target.classList.contains('add-to-cart-btn') ? e.target : e.target.closest('.add-to-cart-btn');
                 var productId = button.dataset.productId;
+                var variationId = button.dataset.variationId || null;
+                var quantity = parseInt(button.dataset.quantity) || 1;
+                
+                // Validate quantity
+                if (quantity < 1) {
+                    showToast('Quantity must be at least 1', 'error');
+                    return;
+                }
                 
                 button.disabled = true;
                 var originalText = button.innerHTML;
                 button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
                 
                 @auth
+                    var requestData = { 
+                        product_id: productId,
+                        quantity: quantity
+                    };
+                    if (variationId) {
+                        requestData.product_variation_id = variationId;
+                    }
+                    
                     fetch('/cart/add', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                         },
-                        body: JSON.stringify({
-                            product_id: productId
-                        })
+                        body: JSON.stringify(requestData)
                     })
                     .then(function(response) { return response.json(); })
                     .then(function(data) {
@@ -1100,7 +1122,7 @@
                     });
                 @else
                     try {
-                        addToGuestCart(productId);
+                        addToGuestCart(productId, quantity, variationId);
                         updateGuestCartCount();
                         showToast('Product added to cart successfully!', 'success');
                     } catch (error) {
@@ -1116,21 +1138,35 @@
             if (e.target.classList.contains('buy-now-btn') || e.target.closest('.buy-now-btn')) {
                 var button = e.target.classList.contains('buy-now-btn') ? e.target : e.target.closest('.buy-now-btn');
                 var productId = button.dataset.productId;
+                var variationId = button.dataset.variationId || null;
+                var quantity = parseInt(button.dataset.quantity) || 1;
+                
+                // Validate quantity
+                if (quantity < 1) {
+                    showToast('Quantity must be at least 1', 'error');
+                    return;
+                }
                 
                 button.disabled = true;
                 var originalText = button.innerHTML;
                 button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
                 
                 @auth
+                    var requestData = { 
+                        product_id: productId,
+                        quantity: quantity
+                    };
+                    if (variationId) {
+                        requestData.product_variation_id = variationId;
+                    }
+                    
                     fetch('/cart/add', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                         },
-                        body: JSON.stringify({
-                            product_id: productId
-                        })
+                        body: JSON.stringify(requestData)
                     })
                     .then(function(response) { return response.json(); })
                     .then(function(data) {
@@ -1150,7 +1186,7 @@
                     });
                 @else
                     try {
-                        addToGuestCart(productId);
+                        addToGuestCart(productId, quantity, variationId);
                         updateGuestCartCount();
                         window.location.href = '/login';
                     } catch (error) {

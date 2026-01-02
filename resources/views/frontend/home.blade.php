@@ -182,8 +182,13 @@
                             </div>
                             <div class="mt-2">
                                 <small class="text-muted">
-                                    @if($product->in_stock)
-                                        <i class="fas fa-check-circle text-success me-1"></i>In Stock ({{ $product->stock_quantity }})
+                                    @php
+                                        // For variable products, show total stock from all variations
+                                        $displayStock = $product->isVariable() ? $product->total_stock : $product->stock_quantity;
+                                        $isInStock = $displayStock > 0;
+                                    @endphp
+                                    @if($isInStock)
+                                        <i class="fas fa-check-circle text-success me-1"></i>In Stock ({{ $displayStock }})
                                     @else
                                         <i class="fas fa-times-circle text-danger me-1"></i>Out of Stock
                                     @endif
@@ -192,14 +197,22 @@
                         </div>
                     </div>
                     <div class="card-footer bg-transparent border-0">
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-theme buy-now-btn btn-ripple flex-fill" data-product-id="{{ $product->id }}">
-                                <i class="fas fa-bolt me-1"></i>Buy Now
-                            </button>
-                            <button type="button" class="btn btn-outline-theme add-to-cart-btn btn-ripple flex-fill" data-product-id="{{ $product->id }}">
-                                <i class="fas fa-shopping-cart me-1"></i>Add to Cart
-                            </button>
-                        </div>
+                        @if($product->isVariable())
+                            {{-- Variable Product: Show only View Product button --}}
+                            <a href="{{ route('frontend.product.show', $product->slug) }}" class="btn btn-theme w-100 btn-ripple">
+                                <i class="fas fa-eye me-1"></i>View Product
+                            </a>
+                        @else
+                            {{-- Simple Product: Show Buy Now and Add to Cart buttons --}}
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-theme buy-now-btn btn-ripple flex-fill" data-product-id="{{ $product->id }}">
+                                    <i class="fas fa-bolt me-1"></i>Buy Now
+                                </button>
+                                <button type="button" class="btn btn-outline-theme add-to-cart-btn btn-ripple flex-fill" data-product-id="{{ $product->id }}">
+                                    <i class="fas fa-shopping-cart me-1"></i>Add to Cart
+                                </button>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

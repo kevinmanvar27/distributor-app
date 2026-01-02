@@ -19,6 +19,7 @@ class ShoppingCartItem extends Model
         'user_id',
         'session_id',
         'product_id',
+        'product_variation_id',
         'quantity',
         'price',
     ];
@@ -46,6 +47,36 @@ class ShoppingCartItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Get the product variation associated with the cart item.
+     */
+    public function variation()
+    {
+        return $this->belongsTo(ProductVariation::class, 'product_variation_id');
+    }
+
+    /**
+     * Get the effective product name (with variation if applicable)
+     */
+    public function getProductNameAttribute()
+    {
+        if ($this->variation) {
+            return $this->variation->display_name;
+        }
+        return $this->product->name;
+    }
+
+    /**
+     * Get the effective product image
+     */
+    public function getProductImageAttribute()
+    {
+        if ($this->variation && $this->variation->image) {
+            return $this->variation->image;
+        }
+        return $this->product->mainPhoto;
     }
 
     /**

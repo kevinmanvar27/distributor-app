@@ -147,6 +147,19 @@
                                                     <td>
                                                         <div>
                                                             <strong>{{ $item['product_name'] ?? $item['name'] ?? $item['title'] ?? 'Product' }}</strong>
+                                                            @if(!empty($item['product_variation_id']))
+                                                                {{-- Display attributes for variation products --}}
+                                                                @if(!empty($item['variation_attributes']))
+                                                                    <small class="text-muted d-block">
+                                                                        @foreach($item['variation_attributes'] as $attrName => $attrValue)
+                                                                            <strong>{{ $attrName }}:</strong> {{ $attrValue }}@if(!$loop->last), @endif
+                                                                        @endforeach
+                                                                    </small>
+                                                                @endif
+                                                                @if(!empty($item['variation_sku']))
+                                                                    <small class="text-muted d-block"><strong>SKU:</strong> {{ $item['variation_sku'] }}</small>
+                                                                @endif
+                                                            @endif
                                                             @php
                                                                 $description = $item['product_description'] ?? $item['description'] ?? null;
                                                             @endphp

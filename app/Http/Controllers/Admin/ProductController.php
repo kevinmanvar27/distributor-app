@@ -7,10 +7,13 @@ use App\Models\Product;
 use App\Models\Media;
 use App\Models\Category;
 use App\Models\SubCategory;
+use App\Models\ProductAttribute;
+use App\Models\ProductVariation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -41,7 +44,10 @@ class ProductController extends Controller
         // Get all active categories with their subcategories
         $categories = Category::with('subCategories')->where('is_active', true)->get();
         
-        return view('admin.products.create', compact('categories'));
+        // Get all active attributes with their values
+        $attributes = ProductAttribute::with('values')->active()->orderBy('sort_order')->get();
+        
+        return view('admin.products.create', compact('categories', 'attributes'));
     }
 
     /**
@@ -56,10 +62,11 @@ class ProductController extends Controller
         
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'product_type' => 'required|in:simple,variable',
             'description' => 'nullable|string',
-            'mrp' => 'required|numeric|min:0.01',
+            'mrp' => 'required_if:product_type,simple|nullable|numeric|min:0.01',
             'selling_price' => 'nullable|numeric|lt:mrp',
-            'in_stock' => 'required|boolean',
+            'in_stock' => 'required_if:product_type,simple|boolean',
             'stock_quantity' => 'nullable|integer|min:0',
             'low_quantity_threshold' => 'nullable|integer|min:0',
             'status' => 'required|in:draft,published',
@@ -69,6 +76,18 @@ class ProductController extends Controller
             'product_categories.*.category_id' => 'required|exists:categories,id',
             'product_categories.*.subcategory_ids' => 'nullable|array',
             'product_categories.*.subcategory_ids.*' => 'nullable|exists:sub_categories,id',
+            'product_attributes' => 'required_if:product_type,variable|nullable|array',
+            'variations' => 'required_if:product_type,variable|nullable|array|min:1',
+            'variations.*.id' => 'nullable|exists:product_variations,id',
+            'variations.*.sku' => 'nullable|string',
+            'variations.*.mrp' => 'nullable|numeric|min:0',
+            'variations.*.selling_price' => 'nullable|numeric',
+            'variations.*.stock_quantity' => 'required_with:variations|integer|min:0',
+            'variations.*.low_quantity_threshold' => 'nullable|integer|min:0',
+            'variations.*.attribute_values' => 'required_with:variations|array|min:1',
+            'variations.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'variations.*.image_id' => 'nullable|integer|exists:media,id',
+            'variations.*.remove_image' => 'nullable|boolean',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:255',
@@ -78,49 +97,144 @@ class ProductController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
         
-        $data = $request->only([
-            'name', 'description', 'mrp', 'selling_price', 'in_stock', 
-            'status', 'main_photo_id', 'meta_title', 
-            'meta_description', 'meta_keywords'
-        ]);
+        DB::beginTransaction();
         
-        // Log the data that will be saved
-        Log::info('Product data to be saved:', $data);
-        
-        // Handle stock quantity - set to 0 if not in stock or not provided
-        $data['stock_quantity'] = $request->in_stock ? ($request->stock_quantity ?? 0) : 0;
-        
-        // Ensure stock_quantity is never null
-        if (!isset($data['stock_quantity']) || is_null($data['stock_quantity'])) {
-            $data['stock_quantity'] = 0;
+        try {
+            $data = $request->only([
+                'name', 'product_type', 'description', 'mrp', 'selling_price', 'in_stock', 
+                'status', 'main_photo_id', 'meta_title', 
+                'meta_description', 'meta_keywords'
+            ]);
+            
+            // Log the data that will be saved
+            Log::info('Product data to be saved:', $data);
+            
+            // Handle product type - default to simple if not provided
+            $data['product_type'] = $request->product_type ?? 'simple';
+            
+            // For simple products, handle stock quantity
+            if ($data['product_type'] === 'simple') {
+                $data['stock_quantity'] = $request->in_stock ? ($request->stock_quantity ?? 0) : 0;
+                
+                // Ensure stock_quantity is never null
+                if (!isset($data['stock_quantity']) || is_null($data['stock_quantity'])) {
+                    $data['stock_quantity'] = 0;
+                }
+            } else {
+                // For variable products, set default values
+                $data['stock_quantity'] = 0;
+                $data['in_stock'] = true;
+                $data['mrp'] = $data['mrp'] ?? 0;
+            }
+            
+            // Handle low quantity threshold - default to 10 if not provided
+            $data['low_quantity_threshold'] = $request->low_quantity_threshold ?? 10;
+            
+            // Handle product gallery - convert from JSON string to array if needed
+            $productGallery = $request->product_gallery;
+            if (is_string($productGallery)) {
+                $productGallery = json_decode($productGallery, true);
+            }
+            $data['product_gallery'] = is_array($productGallery) ? $productGallery : [];
+            
+            // Handle product categories - convert from JSON string to array if needed
+            $productCategories = $request->product_categories;
+            if (is_string($productCategories)) {
+                $productCategories = json_decode($productCategories, true);
+            }
+            $data['product_categories'] = is_array($productCategories) ? $productCategories : [];
+            
+            // Handle product attributes for variable products
+            $productAttributes = $request->product_attributes;
+            if (is_string($productAttributes)) {
+                $productAttributes = json_decode($productAttributes, true);
+            }
+            $data['product_attributes'] = is_array($productAttributes) ? $productAttributes : [];
+            
+            // Log the final data before creating the product
+            Log::info('Final product data before creation:', $data);
+            
+            $product = Product::create($data);
+            
+            // Handle variations for variable products
+            if ($data['product_type'] === 'variable' && $request->has('variations')) {
+                $variations = $request->variations;
+                if (is_string($variations)) {
+                    $variations = json_decode($variations, true);
+                }
+                
+                if (is_array($variations) && !empty($variations)) {
+                    $seenCombinations = [];
+                    
+                    foreach ($variations as $index => $variationData) {
+                        // Convert attribute_values if it's a string
+                        if (isset($variationData['attribute_values']) && is_string($variationData['attribute_values'])) {
+                            $variationData['attribute_values'] = json_decode($variationData['attribute_values'], true);
+                        }
+                        
+                        // Check for duplicate combinations
+                        if (isset($variationData['attribute_values'])) {
+                            ksort($variationData['attribute_values']);
+                            $combinationKey = json_encode($variationData['attribute_values']);
+                            
+                            if (in_array($combinationKey, $seenCombinations)) {
+                                Log::warning('Skipping duplicate variation combination', ['combination' => $variationData['attribute_values']]);
+                                continue;
+                            }
+                            
+                            $seenCombinations[] = $combinationKey;
+                        }
+                        
+                        // Ensure stock_quantity is set and not null
+                        if (!isset($variationData['stock_quantity']) || $variationData['stock_quantity'] === null || $variationData['stock_quantity'] === '') {
+                            $variationData['stock_quantity'] = 0;
+                        }
+                        
+                        // Set in_stock based on stock_quantity
+                        $variationData['in_stock'] = isset($variationData['stock_quantity']) && $variationData['stock_quantity'] > 0;
+                        
+                        // Handle variation image upload
+                        if ($request->hasFile("variations.{$index}.image")) {
+                            $imageFile = $request->file("variations.{$index}.image");
+                            
+                            // Store the image
+                            $imagePath = $imageFile->store('products/variations', 'public');
+                            
+                            // Create media record
+                            $media = Media::create([
+                                'name' => 'Variation Image - ' . ($variationData['sku'] ?? 'Variation ' . ($index + 1)),
+                                'file_name' => $imageFile->getClientOriginalName(),
+                                'mime_type' => $imageFile->getMimeType(),
+                                'path' => $imagePath,
+                                'size' => $imageFile->getSize(),
+                            ]);
+                            
+                            // Set the image_id
+                            $variationData['image_id'] = $media->id;
+                        }
+                        
+                        // Set first variation as default if not specified
+                        if (!isset($variationData['is_default'])) {
+                            $variationData['is_default'] = ($index === 0);
+                        }
+                        
+                        $product->variations()->create($variationData);
+                    }
+                }
+            }
+            
+            // Log the created product
+            Log::info('Product created:', $product->toArray());
+            
+            DB::commit();
+            
+            return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Product creation failed:', ['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Failed to create product: ' . $e->getMessage()])->withInput();
         }
-        
-        // Handle low quantity threshold - default to 10 if not provided
-        $data['low_quantity_threshold'] = $request->low_quantity_threshold ?? 10;
-        
-        // Handle product gallery - convert from JSON string to array if needed
-        $productGallery = $request->product_gallery;
-        if (is_string($productGallery)) {
-            $productGallery = json_decode($productGallery, true);
-        }
-        $data['product_gallery'] = is_array($productGallery) ? $productGallery : [];
-        
-        // Handle product categories - convert from JSON string to array if needed
-        $productCategories = $request->product_categories;
-        if (is_string($productCategories)) {
-            $productCategories = json_decode($productCategories, true);
-        }
-        $data['product_categories'] = is_array($productCategories) ? $productCategories : [];
-        
-        // Log the final data before creating the product
-        Log::info('Final product data before creation:', $data);
-        
-        $product = Product::create($data);
-        
-        // Log the created product
-        Log::info('Product created:', $product->toArray());
-        
-        return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
     }
 
     /**
@@ -151,13 +265,16 @@ class ProductController extends Controller
     {
         $this->authorize('update', $product);
         
-        // Load the main photo relationship
-        $product->load('mainPhoto');
+        // Load the main photo relationship and variations
+        $product->load('mainPhoto', 'variations.image');
         
         // Get all active categories with their subcategories
         $categories = Category::with('subCategories')->where('is_active', true)->get();
         
-        return view('admin.products.edit', compact('product', 'categories'));
+        // Get all active attributes with their values
+        $attributes = ProductAttribute::with('values')->active()->orderBy('sort_order')->get();
+        
+        return view('admin.products.edit', compact('product', 'categories', 'attributes'));
     }
 
     /**
@@ -172,10 +289,11 @@ class ProductController extends Controller
         
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'product_type' => 'required|in:simple,variable',
             'description' => 'nullable|string',
-            'mrp' => 'required|numeric|min:0.01',
+            'mrp' => 'required_if:product_type,simple|nullable|numeric|min:0.01',
             'selling_price' => 'nullable|numeric|lt:mrp',
-            'in_stock' => 'required|boolean',
+            'in_stock' => 'required_if:product_type,simple|boolean',
             'stock_quantity' => 'nullable|integer|min:0',
             'low_quantity_threshold' => 'nullable|integer|min:0',
             'status' => 'required|in:draft,published',
@@ -185,6 +303,18 @@ class ProductController extends Controller
             'product_categories.*.category_id' => 'required|exists:categories,id',
             'product_categories.*.subcategory_ids' => 'nullable|array',
             'product_categories.*.subcategory_ids.*' => 'nullable|exists:sub_categories,id',
+            'product_attributes' => 'required_if:product_type,variable|nullable|array',
+            'variations' => 'required_if:product_type,variable|nullable|array|min:1',
+            'variations.*.id' => 'nullable|exists:product_variations,id',
+            'variations.*.sku' => 'nullable|string',
+            'variations.*.mrp' => 'nullable|numeric|min:0',
+            'variations.*.selling_price' => 'nullable|numeric',
+            'variations.*.stock_quantity' => 'required_with:variations|integer|min:0',
+            'variations.*.low_quantity_threshold' => 'nullable|integer|min:0',
+            'variations.*.attribute_values' => 'required_with:variations|array|min:1',
+            'variations.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'variations.*.image_id' => 'nullable|integer|exists:media,id',
+            'variations.*.remove_image' => 'nullable|boolean',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'meta_keywords' => 'nullable|string|max:255',
@@ -194,49 +324,228 @@ class ProductController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
         
-        $data = $request->only([
-            'name', 'description', 'mrp', 'selling_price', 'in_stock', 
-            'status', 'main_photo_id', 'meta_title', 
-            'meta_description', 'meta_keywords'
-        ]);
+        DB::beginTransaction();
         
-        // Log the data that will be saved
-        Log::info('Product data to be updated:', $data);
-        
-        // Handle stock quantity - set to 0 if not in stock or not provided
-        $data['stock_quantity'] = $request->in_stock ? ($request->stock_quantity ?? 0) : 0;
-        
-        // Ensure stock_quantity is never null
-        if (!isset($data['stock_quantity']) || is_null($data['stock_quantity'])) {
-            $data['stock_quantity'] = 0;
+        try {
+            $data = $request->only([
+                'name', 'product_type', 'description', 'mrp', 'selling_price', 'in_stock', 
+                'status', 'main_photo_id', 'meta_title', 
+                'meta_description', 'meta_keywords'
+            ]);
+            
+            // Log the data that will be saved
+            Log::info('Product data to be updated:', $data);
+            
+            // Handle product type
+            $data['product_type'] = $request->product_type ?? $product->product_type ?? 'simple';
+            
+            // For simple products, handle stock quantity
+            if ($data['product_type'] === 'simple') {
+                $data['stock_quantity'] = $request->in_stock ? ($request->stock_quantity ?? 0) : 0;
+                
+                // Ensure stock_quantity is never null
+                if (!isset($data['stock_quantity']) || is_null($data['stock_quantity'])) {
+                    $data['stock_quantity'] = 0;
+                }
+            } else {
+                // For variable products, set default values
+                $data['stock_quantity'] = 0;
+                $data['in_stock'] = true;
+                if (!isset($data['mrp']) || is_null($data['mrp'])) {
+                    $data['mrp'] = $product->mrp ?? 0;
+                }
+            }
+            
+            // Handle low quantity threshold - keep existing value if not provided
+            $data['low_quantity_threshold'] = $request->low_quantity_threshold ?? $product->low_quantity_threshold ?? 10;
+            
+            // Handle product gallery - convert from JSON string to array if needed
+            $productGallery = $request->product_gallery;
+            if (is_string($productGallery)) {
+                $productGallery = json_decode($productGallery, true);
+            }
+            $data['product_gallery'] = is_array($productGallery) ? $productGallery : [];
+            
+            // Handle product categories - convert from JSON string to array if needed
+            $productCategories = $request->product_categories;
+            if (is_string($productCategories)) {
+                $productCategories = json_decode($productCategories, true);
+            }
+            $data['product_categories'] = is_array($productCategories) ? $productCategories : [];
+            
+            // Handle product attributes for variable products
+            $productAttributes = $request->product_attributes;
+            if (is_string($productAttributes)) {
+                $productAttributes = json_decode($productAttributes, true);
+            }
+            $data['product_attributes'] = is_array($productAttributes) ? $productAttributes : [];
+            
+            // Log the final data before updating the product
+            Log::info('Final product data before update:', $data);
+            
+            $product->update($data);
+            
+            // Handle variations for variable products
+            if ($data['product_type'] === 'variable' && $request->has('variations')) {
+                $variations = $request->variations;
+                if (is_string($variations)) {
+                    $variations = json_decode($variations, true);
+                }
+                
+                if (is_array($variations)) {
+                    // Get existing variation IDs
+                    $existingVariationIds = $product->variations()->pluck('id')->toArray();
+                    $updatedVariationIds = [];
+                    $seenCombinations = [];
+                    
+                    foreach ($variations as $index => $variationData) {
+                        // Skip variations marked for deletion
+                        if (isset($variationData['_delete']) && $variationData['_delete'] == '1') {
+                            if (isset($variationData['id']) && !empty($variationData['id'])) {
+                                // Add to deletion list
+                                $updatedVariationIds[] = $variationData['id']; // Don't add to updated list
+                                
+                                // Delete the variation and its image
+                                $variation = ProductVariation::find($variationData['id']);
+                                if ($variation && $variation->product_id == $product->id) {
+                                    if ($variation->image_id) {
+                                        $media = Media::find($variation->image_id);
+                                        if ($media) {
+                                            Storage::disk('public')->delete($media->path);
+                                            $media->delete();
+                                        }
+                                    }
+                                    $variation->delete();
+                                }
+                            }
+                            continue;
+                        }
+                        
+                        // Convert attribute_values if it's a string
+                        if (isset($variationData['attribute_values']) && is_string($variationData['attribute_values'])) {
+                            $variationData['attribute_values'] = json_decode($variationData['attribute_values'], true);
+                        }
+                        
+                        // Check for duplicate combinations (skip for existing variations being updated)
+                        if (isset($variationData['attribute_values'])) {
+                            ksort($variationData['attribute_values']);
+                            $combinationKey = json_encode($variationData['attribute_values']);
+                            
+                            // Only check duplicates for new variations
+                            if (!isset($variationData['id']) || empty($variationData['id'])) {
+                                if (in_array($combinationKey, $seenCombinations)) {
+                                    Log::warning('Skipping duplicate variation combination', ['combination' => $variationData['attribute_values']]);
+                                    continue;
+                                }
+                            }
+                            
+                            $seenCombinations[] = $combinationKey;
+                        }
+                        
+                        // Ensure stock_quantity is set and not null
+                        if (!isset($variationData['stock_quantity']) || $variationData['stock_quantity'] === null || $variationData['stock_quantity'] === '') {
+                            $variationData['stock_quantity'] = 0;
+                        }
+                        
+                        // Set in_stock based on stock_quantity
+                        $variationData['in_stock'] = isset($variationData['stock_quantity']) && $variationData['stock_quantity'] > 0;
+                        
+                        // Handle variation image upload
+                        if ($request->hasFile("variations.{$index}.image")) {
+                            $imageFile = $request->file("variations.{$index}.image");
+                            
+                            // Store the image
+                            $imagePath = $imageFile->store('products/variations', 'public');
+                            
+                            // Create media record
+                            $media = Media::create([
+                                'name' => 'Variation Image - ' . ($variationData['sku'] ?? 'Variation ' . ($index + 1)),
+                                'file_name' => $imageFile->getClientOriginalName(),
+                                'mime_type' => $imageFile->getMimeType(),
+                                'path' => $imagePath,
+                                'size' => $imageFile->getSize(),
+                            ]);
+                            
+                            // If there was an old image, delete it
+                            if (isset($variationData['image_id']) && !empty($variationData['image_id'])) {
+                                $oldMedia = Media::find($variationData['image_id']);
+                                if ($oldMedia) {
+                                    Storage::disk('public')->delete($oldMedia->path);
+                                    $oldMedia->delete();
+                                }
+                            }
+                            
+                            // Set the new image_id
+                            $variationData['image_id'] = $media->id;
+                        }
+                        
+                        // Handle image removal
+                        if (isset($variationData['remove_image']) && $variationData['remove_image'] == '1') {
+                            if (isset($variationData['image_id']) && !empty($variationData['image_id'])) {
+                                $oldMedia = Media::find($variationData['image_id']);
+                                if ($oldMedia) {
+                                    Storage::disk('public')->delete($oldMedia->path);
+                                    $oldMedia->delete();
+                                }
+                            }
+                            $variationData['image_id'] = null;
+                        }
+                        
+                        // Remove temporary fields that shouldn't be saved to database
+                        unset($variationData['image'], $variationData['remove_image']);
+                        
+                        if (isset($variationData['id']) && !empty($variationData['id'])) {
+                            // Update existing variation
+                            $variation = ProductVariation::find($variationData['id']);
+                            if ($variation && $variation->product_id == $product->id) {
+                                $variation->update($variationData);
+                                $updatedVariationIds[] = $variation->id;
+                            }
+                        } else {
+                            // Create new variation
+                            // Set first variation as default if no default exists
+                            if (!isset($variationData['is_default'])) {
+                                $variationData['is_default'] = ($index === 0 && empty($existingVariationIds));
+                            }
+                            
+                            $newVariation = $product->variations()->create($variationData);
+                            $updatedVariationIds[] = $newVariation->id;
+                        }
+                    }
+                    
+                    // Delete variations that were removed
+                    $variationsToDelete = array_diff($existingVariationIds, $updatedVariationIds);
+                    if (!empty($variationsToDelete)) {
+                        // Delete associated images first
+                        $variationsToDeleteModels = ProductVariation::whereIn('id', $variationsToDelete)->get();
+                        foreach ($variationsToDeleteModels as $variationToDelete) {
+                            if ($variationToDelete->image_id) {
+                                $media = Media::find($variationToDelete->image_id);
+                                if ($media) {
+                                    Storage::disk('public')->delete($media->path);
+                                    $media->delete();
+                                }
+                            }
+                        }
+                        
+                        // Now delete the variations
+                        ProductVariation::whereIn('id', $variationsToDelete)->delete();
+                    }
+                }
+            }
+            
+            // Log the updated product
+            Log::info('Product updated:', $product->toArray());
+            
+            DB::commit();
+            
+            return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Product update failed:', ['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Failed to update product: ' . $e->getMessage()])->withInput();
         }
-        
-        // Handle low quantity threshold - keep existing value if not provided
-        $data['low_quantity_threshold'] = $request->low_quantity_threshold ?? $product->low_quantity_threshold ?? 10;
-        
-        // Handle product gallery - convert from JSON string to array if needed
-        $productGallery = $request->product_gallery;
-        if (is_string($productGallery)) {
-            $productGallery = json_decode($productGallery, true);
-        }
-        $data['product_gallery'] = is_array($productGallery) ? $productGallery : [];
-        
-        // Handle product categories - convert from JSON string to array if needed
-        $productCategories = $request->product_categories;
-        if (is_string($productCategories)) {
-            $productCategories = json_decode($productCategories, true);
-        }
-        $data['product_categories'] = is_array($productCategories) ? $productCategories : [];
-        
-        // Log the final data before updating the product
-        Log::info('Final product data before update:', $data);
-        
-        $product->update($data);
-        
-        // Log the updated product
-        Log::info('Product updated:', $product->toArray());
-        
-        return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
     }
 
     /**
@@ -258,13 +567,42 @@ class ProductController extends Controller
     {
         $this->authorize('viewAny', Product::class);
         
-        $products = Product::with('mainPhoto')
-            ->where('in_stock', true)
-            ->whereColumn('stock_quantity', '<=', 'low_quantity_threshold')
-            ->latest()
-            ->paginate(10);
+        // Get all products with their variations
+        $allProducts = Product::with(['mainPhoto', 'variations'])->get();
         
-        return view('admin.products.low-stock', compact('products'));
+        // Filter products that have low stock
+        $lowStockProducts = $allProducts->filter(function ($product) {
+            if ($product->isVariable()) {
+                // For variable products, check if any variation has low stock
+                foreach ($product->variations as $variation) {
+                    $threshold = $variation->low_quantity_threshold ?? $product->low_quantity_threshold ?? 10;
+                    // Include variations with 0 stock or stock <= threshold
+                    if ($variation->stock_quantity <= $threshold) {
+                        return true;
+                    }
+                }
+                return false;
+            } else {
+                // For simple products, check if stock <= threshold
+                $threshold = $product->low_quantity_threshold ?? 10;
+                return $product->stock_quantity <= $threshold;
+            }
+        });
+        
+        // Paginate the filtered results
+        $perPage = 10;
+        $currentPage = request()->get('page', 1);
+        $offset = ($currentPage - 1) * $perPage;
+        
+        $paginatedProducts = new \Illuminate\Pagination\LengthAwarePaginator(
+            $lowStockProducts->slice($offset, $perPage)->values(),
+            $lowStockProducts->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+        
+        return view('admin.products.low-stock', compact('paginatedProducts'));
     }
 
     /**

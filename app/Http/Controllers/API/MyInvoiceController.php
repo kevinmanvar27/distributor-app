@@ -364,13 +364,28 @@ class MyInvoiceController extends ApiController
         
         if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
             foreach ($invoiceData['cart_items'] as $item) {
-                $product = Product::find($item['product_id'] ?? null);
-                if ($product) {
-                    $product->increment('stock_quantity', $item['quantity']);
-                    
-                    // Update in_stock status if stock was restored
-                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
-                        $product->update(['in_stock' => true]);
+                // Check if this is a variable product with variation
+                if (!empty($item['product_variation_id'])) {
+                    // Restore variation stock
+                    $variation = \App\Models\ProductVariation::find($item['product_variation_id']);
+                    if ($variation) {
+                        $variation->increment('stock_quantity', $item['quantity']);
+                        
+                        // Update variation in_stock status if stock was restored
+                        if ($variation->fresh()->stock_quantity > 0 && !$variation->in_stock) {
+                            $variation->update(['in_stock' => true]);
+                        }
+                    }
+                } else {
+                    // Restore simple product stock
+                    $product = Product::find($item['product_id'] ?? null);
+                    if ($product) {
+                        $product->increment('stock_quantity', $item['quantity']);
+                        
+                        // Update in_stock status if stock was restored
+                        if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                            $product->update(['in_stock' => true]);
+                        }
                     }
                 }
             }
@@ -455,13 +470,28 @@ class MyInvoiceController extends ApiController
                 $removedItem = $item;
                 
                 // RESTORE STOCK for the removed item
-                $product = Product::find($productId);
-                if ($product) {
-                    $product->increment('stock_quantity', $item['quantity']);
-                    
-                    // Update in_stock status if stock was restored
-                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
-                        $product->update(['in_stock' => true]);
+                // Check if this is a variable product with variation
+                if (!empty($item['product_variation_id'])) {
+                    // Restore variation stock
+                    $variation = \App\Models\ProductVariation::find($item['product_variation_id']);
+                    if ($variation) {
+                        $variation->increment('stock_quantity', $item['quantity']);
+                        
+                        // Update variation in_stock status if stock was restored
+                        if ($variation->fresh()->stock_quantity > 0 && !$variation->in_stock) {
+                            $variation->update(['in_stock' => true]);
+                        }
+                    }
+                } else {
+                    // Restore simple product stock
+                    $product = Product::find($productId);
+                    if ($product) {
+                        $product->increment('stock_quantity', $item['quantity']);
+                        
+                        // Update in_stock status if stock was restored
+                        if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                            $product->update(['in_stock' => true]);
+                        }
                     }
                 }
             } else {

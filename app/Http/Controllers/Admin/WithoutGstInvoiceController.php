@@ -97,13 +97,30 @@ class WithoutGstInvoiceController extends Controller
             foreach ($items as $index => $item) {
                 $originalItem = $invoiceData['cart_items'][$index] ?? [];
                 
-                $cartItems[] = [
+                // Build updated item with price/quantity from request
+                $updatedItem = [
                     'product_name' => $originalItem['product_name'] ?? 'Product',
                     'product_description' => $originalItem['product_description'] ?? '',
                     'price' => (float) $item['price'],
                     'quantity' => (int) $item['quantity'],
                     'total' => (float) $item['total'],
                 ];
+                
+                // Preserve variation data if it exists in original item
+                if (isset($originalItem['product_variation_id'])) {
+                    $updatedItem['product_variation_id'] = $originalItem['product_variation_id'];
+                }
+                if (isset($originalItem['variation_display_name'])) {
+                    $updatedItem['variation_display_name'] = $originalItem['variation_display_name'];
+                }
+                if (isset($originalItem['variation_attributes'])) {
+                    $updatedItem['variation_attributes'] = $originalItem['variation_attributes'];
+                }
+                if (isset($originalItem['variation_sku'])) {
+                    $updatedItem['variation_sku'] = $originalItem['variation_sku'];
+                }
+                
+                $cartItems[] = $updatedItem;
             }
             
             $invoiceData['cart_items'] = $cartItems;
@@ -172,13 +189,29 @@ class WithoutGstInvoiceController extends Controller
         
         // RESTORE STOCK for the removed item
         $removedItem = $invoiceData['cart_items'][$itemIndex];
-        $product = Product::find($removedItem['product_id'] ?? null);
-        if ($product) {
-            $product->increment('stock_quantity', $removedItem['quantity']);
-            
-            // Update in_stock status if stock was restored
-            if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
-                $product->update(['in_stock' => true]);
+        
+        // Check if this is a variable product with variation
+        if (!empty($removedItem['product_variation_id'])) {
+            // Restore variation stock
+            $variation = \App\Models\ProductVariation::find($removedItem['product_variation_id']);
+            if ($variation) {
+                $variation->increment('stock_quantity', $removedItem['quantity']);
+                
+                // Update variation in_stock status if stock was restored
+                if ($variation->fresh()->stock_quantity > 0 && !$variation->in_stock) {
+                    $variation->update(['in_stock' => true]);
+                }
+            }
+        } else {
+            // Restore simple product stock
+            $product = Product::find($removedItem['product_id'] ?? null);
+            if ($product) {
+                $product->increment('stock_quantity', $removedItem['quantity']);
+                
+                // Update in_stock status if stock was restored
+                if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                    $product->update(['in_stock' => true]);
+                }
             }
         }
         

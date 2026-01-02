@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\ProductVariation;
 use App\Models\ShoppingCartItem;
 use App\Models\ProformaInvoice;
 use App\Models\WithoutGstInvoice;
@@ -51,11 +52,11 @@ class ShoppingCartController extends Controller
         }
         
         if (Auth::check()) {
-            $cartItems = Auth::user()->cartItems()->with('product.mainPhoto')->get();
+            $cartItems = Auth::user()->cartItems()->with(['product.mainPhoto', 'variation'])->get();
         } else {
             // For guests, get cart items by session ID
             $sessionId = session()->getId();
-            $cartItems = ShoppingCartItem::forSession($sessionId)->with('product.mainPhoto')->get();
+            $cartItems = ShoppingCartItem::forSession($sessionId)->with(['product.mainPhoto', 'variation'])->get();
         }
         
         $total = $cartItems->sum(function ($item) {
@@ -76,25 +77,60 @@ class ShoppingCartController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
+            'product_variation_id' => 'nullable|exists:product_variations,id',
             'quantity' => 'nullable|integer|min:1',
         ]);
 
         $product = Product::findOrFail($request->product_id);
         $quantity = $request->quantity ?? 1;
+        $variationId = $request->product_variation_id;
+        
+        // For variable products, variation is required
+        if ($product->product_type === 'variable' && !$variationId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please select product options.'
+            ]);
+        }
+        
+        // Validate variation belongs to product
+        $variation = null;
+        if ($variationId) {
+            $variation = ProductVariation::where('id', $variationId)
+                ->where('product_id', $product->id)
+                ->first();
+                
+            if (!$variation) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid product variation selected.'
+                ]);
+            }
+        }
 
+        // Build where clause for checking existing cart item
+        $whereClause = Auth::check() ? 
+            ['user_id' => Auth::id(), 'product_id' => $product->id] :
+            ['session_id' => session()->getId(), 'product_id' => $product->id];
+            
+        // For variable products, also match variation_id
+        if ($variationId) {
+            $whereClause['product_variation_id'] = $variationId;
+        }
+        
         // Check if item already exists in cart to calculate total needed quantity
-        $existingCartItem = ShoppingCartItem::where(
-            Auth::check() ? 
-                ['user_id' => Auth::id(), 'product_id' => $product->id] :
-                ['session_id' => session()->getId(), 'product_id' => $product->id]
-        )->first();
+        $existingCartItem = ShoppingCartItem::where($whereClause)->first();
 
         // Calculate total quantity needed (existing + new)
         $existingQuantity = $existingCartItem ? $existingCartItem->quantity : 0;
         $totalQuantityNeeded = $existingQuantity + $quantity;
 
-        // Check if product is in stock for the additional quantity being added
-        if (!$product->in_stock || $product->stock_quantity < $quantity) {
+        // Check stock - use variation stock if variation exists, otherwise product stock
+        $stockQuantity = $variation ? $variation->stock_quantity : $product->stock_quantity;
+        // For variations, only check stock quantity (status is for admin control)
+        $inStock = $variation ? ($variation->stock_quantity > 0) : $product->in_stock;
+        
+        if (!$inStock || $stockQuantity < $quantity) {
             return response()->json([
                 'success' => false,
                 'message' => 'Product is out of stock or insufficient quantity available.'
@@ -102,9 +138,14 @@ class ShoppingCartController extends Controller
         }
 
         // Calculate discounted price using our helper function
-        // If selling price is null, blank, or not set, use MRP instead
-        $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) ? 
-                      $product->selling_price : $product->mrp;
+        // Use variation price if available, otherwise product price
+        if ($variation) {
+            $priceToUse = (!is_null($variation->selling_price) && $variation->selling_price !== '' && $variation->selling_price >= 0) ? 
+                          $variation->selling_price : $variation->mrp;
+        } else {
+            $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) ? 
+                          $product->selling_price : $product->mrp;
+        }
         
         // For guests, use null user and calculate price without discount
         // For authenticated users, calculate with their discount
@@ -119,6 +160,11 @@ class ShoppingCartController extends Controller
             'quantity' => $totalQuantityNeeded,
             'price' => $discountedPrice,
         ];
+        
+        // Add variation_id if present
+        if ($variationId) {
+            $cartData['product_variation_id'] = $variationId;
+        }
 
         // Add user_id or session_id based on authentication status
         if (Auth::check()) {
@@ -128,19 +174,25 @@ class ShoppingCartController extends Controller
         }
 
         // Add or update cart item with the discounted price
-        $cartItem = ShoppingCartItem::updateOrCreate(
-            Auth::check() ? 
-                ['user_id' => Auth::id(), 'product_id' => $product->id] :
-                ['session_id' => session()->getId(), 'product_id' => $product->id],
-            $cartData
-        );
+        $cartItem = ShoppingCartItem::updateOrCreate($whereClause, $cartData);
 
         // REDUCE STOCK QUANTITY by the quantity being added (not total)
-        $product->decrement('stock_quantity', $quantity);
-        
-        // Update in_stock status if stock is depleted
-        if ($product->fresh()->stock_quantity <= 0) {
-            $product->update(['in_stock' => false]);
+        if ($variation) {
+            // Reduce variation stock
+            $variation->decrement('stock_quantity', $quantity);
+            
+            // Update variation status if stock is depleted
+            if ($variation->fresh()->stock_quantity <= 0) {
+                $variation->update(['in_stock' => false]);
+            }
+        } else {
+            // Reduce product stock
+            $product->decrement('stock_quantity', $quantity);
+            
+            // Update in_stock status if stock is depleted
+            if ($product->fresh()->stock_quantity <= 0) {
+                $product->update(['in_stock' => false]);
+            }
         }
 
         // Get updated cart count
@@ -178,31 +230,51 @@ class ShoppingCartController extends Controller
         }
         
         $product = $cartItem->product;
+        $variation = $cartItem->variation;
         $oldQuantity = $cartItem->quantity;
         $newQuantity = $request->quantity;
         $quantityDifference = $newQuantity - $oldQuantity;
 
+        // Determine which stock to check (variation or product)
+        $stockQuantity = $variation ? $variation->stock_quantity : $product->stock_quantity;
+        
         // If increasing quantity, check if enough stock is available
         if ($quantityDifference > 0) {
-            if ($product->stock_quantity < $quantityDifference) {
+            if ($stockQuantity < $quantityDifference) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Product is out of stock or insufficient quantity available. Only ' . $product->stock_quantity . ' more available.'
+                    'message' => 'Product is out of stock or insufficient quantity available. Only ' . $stockQuantity . ' more available.'
                 ]);
             }
             // Reduce stock by the difference
-            $product->decrement('stock_quantity', $quantityDifference);
+            if ($variation) {
+                $variation->decrement('stock_quantity', $quantityDifference);
+            } else {
+                $product->decrement('stock_quantity', $quantityDifference);
+            }
         } elseif ($quantityDifference < 0) {
             // Restore stock by the difference (absolute value)
-            $product->increment('stock_quantity', abs($quantityDifference));
+            if ($variation) {
+                $variation->increment('stock_quantity', abs($quantityDifference));
+            } else {
+                $product->increment('stock_quantity', abs($quantityDifference));
+            }
         }
 
         // Update in_stock status based on new stock quantity
-        $product->refresh();
-        if ($product->stock_quantity <= 0) {
-            $product->update(['in_stock' => false]);
-        } elseif ($product->stock_quantity > 0 && !$product->in_stock) {
-            $product->update(['in_stock' => true]);
+        if ($variation) {
+            if ($variation->fresh()->stock_quantity <= 0) {
+                $variation->update(['in_stock' => false]);
+            } else {
+                $variation->update(['in_stock' => true]);
+            }
+        } else {
+            $product->refresh();
+            if ($product->stock_quantity <= 0) {
+                $product->update(['in_stock' => false]);
+            } elseif ($product->stock_quantity > 0 && !$product->in_stock) {
+                $product->update(['in_stock' => true]);
+            }
         }
 
         $cartItem->update([
@@ -247,7 +319,18 @@ class ShoppingCartController extends Controller
         
         // RESTORE STOCK QUANTITY before deleting the cart item
         $product = $cartItem->product;
-        if ($product) {
+        $variation = $cartItem->variation;
+        
+        if ($variation) {
+            // Restore variation stock
+            $variation->increment('stock_quantity', $cartItem->quantity);
+            
+            // Update variation status if stock was restored
+            if ($variation->fresh()->stock_quantity > 0 && !$variation->in_stock) {
+                $variation->update(['in_stock' => true]);
+            }
+        } elseif ($product) {
+            // Restore product stock
             $product->increment('stock_quantity', $cartItem->quantity);
             
             // Update in_stock status if stock was restored
@@ -450,11 +533,11 @@ class ShoppingCartController extends Controller
         }
         
         if (Auth::check()) {
-            $cartItems = Auth::user()->cartItems()->with('product.mainPhoto')->get();
+            $cartItems = Auth::user()->cartItems()->with(['product.mainPhoto', 'variation'])->get();
         } else {
             // For guests, get cart items by session ID
             $sessionId = session()->getId();
-            $cartItems = ShoppingCartItem::forSession($sessionId)->with('product.mainPhoto')->get();
+            $cartItems = ShoppingCartItem::forSession($sessionId)->with(['product.mainPhoto', 'variation'])->get();
         }
         
         $subtotal = $cartItems->sum(function ($item) {
@@ -499,7 +582,7 @@ class ShoppingCartController extends Controller
         // Prepare invoice data for storage
         $invoiceData = [
             'cart_items' => $cartItems->map(function ($item) {
-                return [
+                $itemData = [
                     'id' => $item->id,
                     'product_id' => $item->product_id,
                     'product_name' => $item->product->name,
@@ -509,6 +592,16 @@ class ShoppingCartController extends Controller
                     'price' => $item->price,
                     'total' => $item->price * $item->quantity
                 ];
+                
+                // Add variation details if this is a variable product
+                if ($item->product_variation_id && $item->variation) {
+                    $itemData['product_variation_id'] = $item->product_variation_id;
+                    $itemData['variation_display_name'] = $item->variation->display_name;
+                    $itemData['variation_attributes'] = $item->variation->formatted_attributes;
+                    $itemData['variation_sku'] = $item->variation->sku;
+                }
+                
+                return $itemData;
             })->toArray(),
             'subtotal' => $subtotal,
             'coupon' => $couponData,
@@ -773,12 +866,19 @@ class ShoppingCartController extends Controller
                     continue; // Skip if product no longer exists
                 }
                 
+                // Build where clause for checking existing cart item
+                $whereClause = Auth::check() ? 
+                    ['user_id' => Auth::id(), 'product_id' => $item['product_id']] :
+                    ['session_id' => session()->getId(), 'product_id' => $item['product_id']];
+                
+                // For variable products, also match variation_id
+                $variationId = $item['product_variation_id'] ?? null;
+                if ($variationId) {
+                    $whereClause['product_variation_id'] = $variationId;
+                }
+                
                 // Check if item already exists in cart
-                $existingCartItem = ShoppingCartItem::where(
-                    Auth::check() ? 
-                        ['user_id' => Auth::id(), 'product_id' => $item['product_id']] :
-                        ['session_id' => session()->getId(), 'product_id' => $item['product_id']]
-                )->first();
+                $existingCartItem = ShoppingCartItem::where($whereClause)->first();
                 
                 if ($existingCartItem) {
                     // Item already in cart - need to merge quantities
@@ -796,6 +896,11 @@ class ShoppingCartController extends Controller
                         'quantity' => $item['quantity'],
                         'price' => $item['price'],
                     ];
+                    
+                    // Add variation_id if present
+                    if ($variationId) {
+                        $cartData['product_variation_id'] = $variationId;
+                    }
                     
                     // Add user_id or session_id based on authentication status
                     if (Auth::check()) {
@@ -862,13 +967,28 @@ class ShoppingCartController extends Controller
         
         if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
             foreach ($invoiceData['cart_items'] as $item) {
-                $product = Product::find($item['product_id']);
-                if ($product) {
-                    $product->increment('stock_quantity', $item['quantity']);
-                    
-                    // Update in_stock status if stock was restored
-                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
-                        $product->update(['in_stock' => true]);
+                // Check if this is a variable product with variation
+                if (!empty($item['product_variation_id'])) {
+                    // Restore variation stock
+                    $variation = ProductVariation::find($item['product_variation_id']);
+                    if ($variation) {
+                        $variation->increment('stock_quantity', $item['quantity']);
+                        
+                        // Update variation in_stock status if stock was restored
+                        if ($variation->fresh()->stock_quantity > 0 && !$variation->in_stock) {
+                            $variation->update(['in_stock' => true]);
+                        }
+                    }
+                } else {
+                    // Restore simple product stock
+                    $product = Product::find($item['product_id']);
+                    if ($product) {
+                        $product->increment('stock_quantity', $item['quantity']);
+                        
+                        // Update in_stock status if stock was restored
+                        if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                            $product->update(['in_stock' => true]);
+                        }
                     }
                 }
             }
@@ -1112,86 +1232,6 @@ class ShoppingCartController extends Controller
         
         if (!$invoice) {
             return response()->json(['error' => 'Invoice not found'], 404);
-        }
-        
-        // Get the invoice data (handle both array and JSON string for backward compatibility)
-        $invoiceData = $invoice->invoice_data;
-        
-        // Handle case where invoice_data might be a JSON string (double-encoded from old records)
-        if (is_string($invoiceData)) {
-            $invoiceData = json_decode($invoiceData, true);
-            // Check if it's still a string (triple-encoded edge case)
-            if (is_string($invoiceData)) {
-                $invoiceData = json_decode($invoiceData, true);
-            }
-        }
-        
-        // Ensure we have an array
-        if (!is_array($invoiceData)) {
-            $invoiceData = [];
-        }
-        
-        // Automatically remove all notifications for this invoice when viewing directly
-        $unreadCount = 0;
-        if (Auth::check()) {
-            // Get all unread notifications for the current user that are related to this invoice
-            $notifications = \App\Models\Notification::where('user_id', Auth::id())
-                ->where('read', false)
-                ->where('type', 'invoice_converted')
-                ->where('data', 'like', '%"invoice_id":' . $id . '%')
-                ->get();
-            
-            // Delete all matching notifications
-            foreach ($notifications as $notification) {
-                $notification->delete();
-            }
-            
-            // Get updated unread count
-            $unreadCount = \App\Models\Notification::where('user_id', Auth::id())
-                ->where('read', false)
-                ->count();
-        }
-        
-        return response()->json([
-            'invoice' => $invoice,
-            'data' => $invoiceData,
-            'unread_count' => $unreadCount
-        ]);
-    }
-    
-    /**
-     * Generate and download PDF for a without-GST invoice.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function downloadWithoutGstInvoicePDF($id)
-    {
-        // Check if frontend requires authentication and user is not logged in
-        $setting = \App\Models\Setting::first();
-        $accessPermission = $setting->frontend_access_permission ?? 'open_for_all';
-        
-        // For registered_users_only and admin_approval_required modes, 
-        // redirect guests from cart pages to login, unless it's open_for_all
-        if ($accessPermission !== 'open_for_all' && !Auth::check()) {
-            return redirect()->route('frontend.login');
-        }
-        
-        // Find the without-GST invoice
-        if (Auth::check()) {
-            $invoice = WithoutGstInvoice::where('id', $id)
-                ->where('user_id', Auth::id())
-                ->first();
-        } else {
-            // For guests, get invoice by session ID
-            $sessionId = session()->getId();
-            $invoice = WithoutGstInvoice::where('id', $id)
-                ->where('session_id', $sessionId)
-                ->first();
-        }
-        
-        if (!$invoice) {
-            return redirect()->route('frontend.cart.without-gst.invoices')->with('error', 'Invoice not found.');
         }
         
         // Get the invoice data (handle both array and JSON string for backward compatibility)

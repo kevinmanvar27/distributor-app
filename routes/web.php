@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductAttributeController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\UserGroupController;
 use App\Http\Controllers\Admin\MediaController;
@@ -307,6 +308,20 @@ Route::middleware('auth')->group(function () {
         // Additional product routes
         Route::get('/products/{product}/details', [ProductController::class, 'showDetails'])->name('admin.products.details');
         Route::get('/products-low-stock', [ProductController::class, 'lowStock'])->name('admin.products.low-stock');
+        
+        // Product Attributes Routes
+        Route::resource('attributes', ProductAttributeController::class)->names([
+            'index' => 'admin.attributes.index',
+            'create' => 'admin.attributes.create',
+            'store' => 'admin.attributes.store',
+            'edit' => 'admin.attributes.edit',
+            'update' => 'admin.attributes.update',
+            'destroy' => 'admin.attributes.destroy',
+        ]);
+        Route::get('/attributes/get-all', [ProductAttributeController::class, 'getAttributes'])->name('admin.attributes.get-all');
+        Route::post('/attributes/{attribute}/values', [ProductAttributeController::class, 'storeValue'])->name('admin.attributes.values.store');
+        Route::put('/attributes/{attribute}/values/{value}', [ProductAttributeController::class, 'updateValue'])->name('admin.attributes.values.update');
+        Route::delete('/attributes/{attribute}/values/{value}', [ProductAttributeController::class, 'destroyValue'])->name('admin.attributes.values.destroy');
         
         // Media Library Routes
         // Media Management Routes

@@ -79,19 +79,31 @@
                                                     <td>₹{{ number_format($product->mrp, 2) }}</td>
                                                     <td>₹{{ number_format($product->selling_price ?? 0, 2) }}</td>
                                                     <td>
-                                                        @if($product->in_stock)
+                                                        @php
+                                                            // Get total stock (for variable products, sum all variations)
+                                                            $totalStock = $product->isVariable() ? $product->total_stock : $product->stock_quantity;
+                                                            $isInStock = $product->isVariable() 
+                                                                ? $product->variations()->where('in_stock', true)->exists()
+                                                                : $product->in_stock;
+                                                        @endphp
+                                                        
+                                                        @if($isInStock && $totalStock > 0)
                                                             @if($product->isLowStock())
-                                                                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2" title="Low Stock Alert! Threshold: {{ $product->low_quantity_threshold }}">
-                                                                    <i class="fas fa-exclamation-triangle me-1"></i> Low Stock ({{ $product->stock_quantity }})
+                                                                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2" title="Low Stock Alert! Threshold: {{ $product->low_quantity_threshold ?? 10 }}">
+                                                                    <i class="fas fa-exclamation-triangle me-1"></i> Low Stock ({{ $totalStock }})
                                                                 </span>
                                                             @else
                                                                 <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2">
-                                                                    In Stock ({{ $product->stock_quantity }})
+                                                                    <i class="fas fa-check-circle me-1"></i> In Stock ({{ $totalStock }})
                                                                 </span>
                                                             @endif
-                                                        @else
+                                                        @elseif($totalStock == 0)
                                                             <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill px-3 py-2">
-                                                                Out of Stock
+                                                                <i class="fas fa-times-circle me-1"></i> Out of Stock (0)
+                                                            </span>
+                                                        @else
+                                                            <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2">
+                                                                <i class="fas fa-ban me-1"></i> Not Available
                                                             </span>
                                                         @endif
                                                     </td>

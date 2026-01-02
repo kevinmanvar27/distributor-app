@@ -130,31 +130,58 @@ class CartController extends ApiController
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
+            'product_variation_id' => 'nullable|exists:product_variations,id',
             'quantity' => 'nullable|integer|min:1',
         ]);
 
         $user = $request->user();
         $product = Product::findOrFail($request->product_id);
         $quantity = $request->quantity ?? 1;
+        $variation = null;
+
+        // Handle variable products with variations
+        if ($request->has('product_variation_id')) {
+            $variation = ProductVariation::findOrFail($request->product_variation_id);
+            
+            // Validate variation belongs to product
+            if ($variation->product_id !== $product->id) {
+                return $this->sendError('Invalid variation for this product.', [], 400);
+            }
+        }
 
         // Check if item already exists in cart to calculate total needed quantity
         $existingCartItem = ShoppingCartItem::where('user_id', $user->id)
             ->where('product_id', $product->id)
+            ->where('product_variation_id', $variation ? $variation->id : null)
             ->first();
 
         // Calculate total quantity needed (existing + new)
         $existingQuantity = $existingCartItem ? $existingCartItem->quantity : 0;
         $totalQuantityNeeded = $existingQuantity + $quantity;
 
-        // Check if product is in stock for the additional quantity being added
-        if (!$product->in_stock || $product->stock_quantity < $quantity) {
-            return $this->sendError('Product is out of stock or insufficient quantity available.', [], 400);
+        // Check stock based on product type
+        if ($variation) {
+            // Variable product - check variation stock
+            if ($variation->stock_quantity < $quantity) {
+                return $this->sendError('Variation is out of stock or insufficient quantity available.', [], 400);
+            }
+        } else {
+            // Simple product - check product stock
+            if (!$product->in_stock || $product->stock_quantity < $quantity) {
+                return $this->sendError('Product is out of stock or insufficient quantity available.', [], 400);
+            }
         }
 
         // Calculate discounted price
-        $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
-            ? $product->selling_price 
-            : $product->mrp;
+        if ($variation) {
+            $priceToUse = (!is_null($variation->selling_price) && $variation->selling_price !== '' && $variation->selling_price >= 0) 
+                ? $variation->selling_price 
+                : $variation->mrp;
+        } else {
+            $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
+                ? $product->selling_price 
+                : $product->mrp;
+        }
         
         // Apply user discount if available
         $discountedPrice = function_exists('calculateDiscountedPrice') 
@@ -166,6 +193,7 @@ class CartController extends ApiController
             [
                 'user_id' => $user->id,
                 'product_id' => $product->id,
+                'product_variation_id' => $variation ? $variation->id : null,
             ],
             [
                 'quantity' => $totalQuantityNeeded,
@@ -174,18 +202,22 @@ class CartController extends ApiController
         );
 
         // REDUCE STOCK QUANTITY by the quantity being added (not total)
-        $product->decrement('stock_quantity', $quantity);
-        
-        // Update in_stock status if stock is depleted
-        if ($product->fresh()->stock_quantity <= 0) {
-            $product->update(['in_stock' => false]);
+        if ($variation) {
+            $variation->decrement('stock_quantity', $quantity);
+        } else {
+            $product->decrement('stock_quantity', $quantity);
+            
+            // Update in_stock status if stock is depleted
+            if ($product->fresh()->stock_quantity <= 0) {
+                $product->update(['in_stock' => false]);
+            }
         }
 
         // Get updated cart count
         $cartCount = ShoppingCartItem::where('user_id', $user->id)->count();
 
         return $this->sendResponse([
-            'cart_item' => $cartItem->load('product.mainPhoto'),
+            'cart_item' => $cartItem->load('product.mainPhoto', 'variation'),
             'cart_count' => $cartCount,
         ], 'Product added to cart successfully.');
     }
@@ -249,28 +281,45 @@ class CartController extends ApiController
         }
 
         $product = $cartItem->product;
+        $variation = $cartItem->variation;
         $oldQuantity = $cartItem->quantity;
         $newQuantity = $request->quantity;
         $quantityDifference = $newQuantity - $oldQuantity;
 
         // If increasing quantity, check if enough stock is available
         if ($quantityDifference > 0) {
-            if ($product->stock_quantity < $quantityDifference) {
-                return $this->sendError('Product is out of stock or insufficient quantity available. Only ' . $product->stock_quantity . ' more available.', [], 400);
+            if ($variation) {
+                // Check variation stock
+                if ($variation->stock_quantity < $quantityDifference) {
+                    return $this->sendError('Variation is out of stock or insufficient quantity available. Only ' . $variation->stock_quantity . ' more available.', [], 400);
+                }
+                // Reduce variation stock by the difference
+                $variation->decrement('stock_quantity', $quantityDifference);
+            } else {
+                // Check product stock
+                if ($product->stock_quantity < $quantityDifference) {
+                    return $this->sendError('Product is out of stock or insufficient quantity available. Only ' . $product->stock_quantity . ' more available.', [], 400);
+                }
+                // Reduce product stock by the difference
+                $product->decrement('stock_quantity', $quantityDifference);
             }
-            // Reduce stock by the difference
-            $product->decrement('stock_quantity', $quantityDifference);
         } elseif ($quantityDifference < 0) {
             // Restore stock by the difference (absolute value)
-            $product->increment('stock_quantity', abs($quantityDifference));
+            if ($variation) {
+                $variation->increment('stock_quantity', abs($quantityDifference));
+            } else {
+                $product->increment('stock_quantity', abs($quantityDifference));
+            }
         }
 
-        // Update in_stock status based on new stock quantity
-        $product->refresh();
-        if ($product->stock_quantity <= 0) {
-            $product->update(['in_stock' => false]);
-        } elseif ($product->stock_quantity > 0 && !$product->in_stock) {
-            $product->update(['in_stock' => true]);
+        // Update in_stock status based on new stock quantity (for simple products only)
+        if (!$variation) {
+            $product->refresh();
+            if ($product->stock_quantity <= 0) {
+                $product->update(['in_stock' => false]);
+            } elseif ($product->stock_quantity > 0 && !$product->in_stock) {
+                $product->update(['in_stock' => true]);
+            }
         }
 
         $cartItem->update(['quantity' => $newQuantity]);
@@ -283,7 +332,7 @@ class CartController extends ApiController
         });
 
         return $this->sendResponse([
-            'cart_item' => $cartItem->fresh()->load('product.mainPhoto'),
+            'cart_item' => $cartItem->fresh()->load('product.mainPhoto', 'variation'),
             'item_total' => number_format($itemTotal, 2, '.', ''),
             'cart_total' => number_format($cartTotal, 2, '.', ''),
         ], 'Cart item updated successfully.');
@@ -337,7 +386,13 @@ class CartController extends ApiController
 
         // RESTORE STOCK QUANTITY before deleting the cart item
         $product = $cartItem->product;
-        if ($product) {
+        $variation = $cartItem->variation;
+        
+        if ($variation) {
+            // Restore variation stock
+            $variation->increment('stock_quantity', $cartItem->quantity);
+        } elseif ($product) {
+            // Restore product stock
             $product->increment('stock_quantity', $cartItem->quantity);
             
             // Update in_stock status if stock was restored
@@ -423,7 +478,7 @@ class CartController extends ApiController
         $user = $request->user();
         
         $cartItems = ShoppingCartItem::where('user_id', $user->id)
-            ->with('product.mainPhoto')
+            ->with(['product.mainPhoto', 'variation'])
             ->get();
 
         if ($cartItems->isEmpty()) {
@@ -439,7 +494,7 @@ class CartController extends ApiController
         // Prepare invoice data
         $invoiceData = [
             'cart_items' => $cartItems->map(function ($item) {
-                return [
+                $itemData = [
                     'id' => $item->id,
                     'product_id' => $item->product_id,
                     'product_name' => $item->product->name,
@@ -448,6 +503,16 @@ class CartController extends ApiController
                     'price' => $item->price,
                     'total' => $item->price * $item->quantity,
                 ];
+                
+                // Add variation details if this is a variable product
+                if ($item->product_variation_id && $item->variation) {
+                    $itemData['product_variation_id'] = $item->product_variation_id;
+                    $itemData['variation_display_name'] = $item->variation->display_name;
+                    $itemData['variation_attributes'] = $item->variation->formatted_attributes;
+                    $itemData['variation_sku'] = $item->variation->sku;
+                }
+                
+                return $itemData;
             })->toArray(),
             'total' => $total,
             'invoice_date' => $invoiceDate,
@@ -618,17 +683,29 @@ class CartController extends ApiController
         $user = $request->user();
         
         // Get all cart items to restore stock
-        $cartItems = ShoppingCartItem::where('user_id', $user->id)->with('product')->get();
+        $cartItems = ShoppingCartItem::where('user_id', $user->id)->with(['product', 'variation'])->get();
         
         // RESTORE STOCK for all items before clearing
         foreach ($cartItems as $cartItem) {
-            $product = $cartItem->product;
-            if ($product) {
-                $product->increment('stock_quantity', $cartItem->quantity);
+            // Check if this is a variable product with variation
+            if ($cartItem->product_variation_id && $cartItem->variation) {
+                // Restore variation stock
+                $cartItem->variation->increment('stock_quantity', $cartItem->quantity);
                 
-                // Update in_stock status if stock was restored
-                if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
-                    $product->update(['in_stock' => true]);
+                // Update variation in_stock status if stock was restored
+                if ($cartItem->variation->fresh()->stock_quantity > 0 && !$cartItem->variation->in_stock) {
+                    $cartItem->variation->update(['in_stock' => true]);
+                }
+            } else {
+                // Restore simple product stock
+                $product = $cartItem->product;
+                if ($product) {
+                    $product->increment('stock_quantity', $cartItem->quantity);
+                    
+                    // Update in_stock status if stock was restored
+                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                        $product->update(['in_stock' => true]);
+                    }
                 }
             }
         }

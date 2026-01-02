@@ -355,6 +355,57 @@ class ProformaInvoiceController extends ApiController
         ]);
 
         $data = $request->only(['user_id', 'session_id', 'invoice_number', 'total_amount', 'status', 'invoice_data']);
+        
+        // If invoice_data is being updated, preserve variation attributes from original items
+        if (isset($data['invoice_data']) && isset($data['invoice_data']['cart_items'])) {
+            $originalData = $invoice->invoice_data;
+            if (is_string($originalData)) {
+                $originalData = json_decode($originalData, true);
+            }
+            
+            if (isset($originalData['cart_items']) && is_array($originalData['cart_items'])) {
+                $updatedItems = [];
+                
+                foreach ($data['invoice_data']['cart_items'] as $index => $item) {
+                    // Find corresponding original item by index or product_id
+                    $originalItem = $originalData['cart_items'][$index] ?? null;
+                    
+                    // If no match by index, try to find by product_id
+                    if (!$originalItem && isset($item['product_id'])) {
+                        foreach ($originalData['cart_items'] as $origItem) {
+                            if (isset($origItem['product_id']) && $origItem['product_id'] == $item['product_id']) {
+                                $originalItem = $origItem;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Build updated item preserving variation data from original
+                    $updatedItem = $item;
+                    
+                    if ($originalItem) {
+                        // Preserve variation data if it exists in original item
+                        if (isset($originalItem['product_variation_id']) && !isset($updatedItem['product_variation_id'])) {
+                            $updatedItem['product_variation_id'] = $originalItem['product_variation_id'];
+                        }
+                        if (isset($originalItem['variation_display_name']) && !isset($updatedItem['variation_display_name'])) {
+                            $updatedItem['variation_display_name'] = $originalItem['variation_display_name'];
+                        }
+                        if (isset($originalItem['variation_attributes']) && !isset($updatedItem['variation_attributes'])) {
+                            $updatedItem['variation_attributes'] = $originalItem['variation_attributes'];
+                        }
+                        if (isset($originalItem['variation_sku']) && !isset($updatedItem['variation_sku'])) {
+                            $updatedItem['variation_sku'] = $originalItem['variation_sku'];
+                        }
+                    }
+                    
+                    $updatedItems[] = $updatedItem;
+                }
+                
+                $data['invoice_data']['cart_items'] = $updatedItems;
+            }
+        }
+        
         $invoice->update(array_filter($data, fn($value) => !is_null($value)));
 
         return $this->sendResponse($invoice->load('user'), 'Proforma invoice updated successfully.');
@@ -473,13 +524,28 @@ class ProformaInvoiceController extends ApiController
         
         if (isset($invoiceData['cart_items']) && is_array($invoiceData['cart_items'])) {
             foreach ($invoiceData['cart_items'] as $item) {
-                $product = Product::find($item['product_id'] ?? null);
-                if ($product) {
-                    $product->increment('stock_quantity', $item['quantity']);
-                    
-                    // Update in_stock status if stock was restored
-                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
-                        $product->update(['in_stock' => true]);
+                // Check if this is a variable product with variation
+                if (!empty($item['product_variation_id'])) {
+                    // Restore variation stock
+                    $variation = \App\Models\ProductVariation::find($item['product_variation_id']);
+                    if ($variation) {
+                        $variation->increment('stock_quantity', $item['quantity']);
+                        
+                        // Update variation in_stock status if stock was restored
+                        if ($variation->fresh()->stock_quantity > 0 && !$variation->in_stock) {
+                            $variation->update(['in_stock' => true]);
+                        }
+                    }
+                } else {
+                    // Restore simple product stock
+                    $product = Product::find($item['product_id'] ?? null);
+                    if ($product) {
+                        $product->increment('stock_quantity', $item['quantity']);
+                        
+                        // Update in_stock status if stock was restored
+                        if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                            $product->update(['in_stock' => true]);
+                        }
                     }
                 }
             }
@@ -565,13 +631,28 @@ class ProformaInvoiceController extends ApiController
                 $removedItem = $item;
                 
                 // RESTORE STOCK for the removed item
-                $product = Product::find($productId);
-                if ($product) {
-                    $product->increment('stock_quantity', $item['quantity']);
-                    
-                    // Update in_stock status if stock was restored
-                    if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
-                        $product->update(['in_stock' => true]);
+                // Check if this is a variable product with variation
+                if (!empty($item['product_variation_id'])) {
+                    // Restore variation stock
+                    $variation = \App\Models\ProductVariation::find($item['product_variation_id']);
+                    if ($variation) {
+                        $variation->increment('stock_quantity', $item['quantity']);
+                        
+                        // Update variation in_stock status if stock was restored
+                        if ($variation->fresh()->stock_quantity > 0 && !$variation->in_stock) {
+                            $variation->update(['in_stock' => true]);
+                        }
+                    }
+                } else {
+                    // Restore simple product stock
+                    $product = Product::find($productId);
+                    if ($product) {
+                        $product->increment('stock_quantity', $item['quantity']);
+                        
+                        // Update in_stock status if stock was restored
+                        if ($product->fresh()->stock_quantity > 0 && !$product->in_stock) {
+                            $product->update(['in_stock' => true]);
+                        }
                     }
                 }
             } else {

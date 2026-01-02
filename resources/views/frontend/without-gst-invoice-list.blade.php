@@ -931,12 +931,48 @@ document.addEventListener('DOMContentLoaded', function() {
                     ? `<a href="${productLink}" class="product-link text-decoration-none">${productName}</a>`
                     : productName;
                 
+                // Build variation attributes display
+                let variationHtml = '';
+                console.log('Item variation check:', {
+                    product_name: item.product_name,
+                    has_variation_id: !!item.product_variation_id,
+                    variation_id: item.product_variation_id,
+                    has_attributes: !!item.variation_attributes,
+                    attributes: item.variation_attributes,
+                    sku: item.variation_sku
+                });
+                
+                if (item.product_variation_id && item.variation_attributes) {
+                    const attributes = item.variation_attributes;
+                    const attributePairs = [];
+                    
+                    // Handle both object and array formats
+                    if (typeof attributes === 'object' && !Array.isArray(attributes)) {
+                        for (const [key, value] of Object.entries(attributes)) {
+                            attributePairs.push(`<strong>${key}:</strong> ${value}`);
+                        }
+                    }
+                    
+                    console.log('Attribute pairs built:', attributePairs);
+                    
+                    if (attributePairs.length > 0) {
+                        variationHtml = `<br><small class="text-muted" style="font-size: 0.85rem;">${attributePairs.join(', ')}</small>`;
+                    }
+                }
+                
+                // Add SKU if available
+                if (item.product_variation_id && item.variation_sku) {
+                    variationHtml += `<br><small class="text-muted" style="font-size: 0.85rem;"><strong>SKU:</strong> ${item.variation_sku}</small>`;
+                }
+                
+                console.log('Final variation HTML:', variationHtml);
+                
                 cartItemsHtml += `
                     <tr>
                         <td>${index++}</td>
                         <td>
                             <div>
-                                <h6 class="mb-0">${productNameHtml}</h6>
+                                <h6 class="mb-0">${productNameHtml}${variationHtml}</h6>
                                 ${productDesc ? `<small class="text-muted">${productDesc.substring(0, 50)}${productDesc.length > 50 ? '...' : ''}</small>` : ''}
                             </div>
                         </td>

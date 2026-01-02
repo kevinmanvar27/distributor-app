@@ -111,10 +111,10 @@ class FrontendController extends Controller
                 return $category;
             });
             
-        // Fetch only published products with their main photos
+        // Fetch only published products with their main photos and variations (for stock calculation)
         // Note: Not loading galleryMedia due to implementation issues
         $products = Product::where('status', 'published')
-            ->with('mainPhoto')
+            ->with(['mainPhoto', 'variations'])
             ->get();
 
         return view('frontend.home', compact('categories', 'products'));
@@ -181,7 +181,9 @@ class FrontendController extends Controller
         
         // Load products associated with this category (published only)
         // Products store categories in a JSON array in the product_categories field
+        // Load variations for stock calculation
         $products = Product::where('status', 'published')
+            ->with(['mainPhoto', 'variations'])
             ->get()
             ->filter(function ($product) use ($category, $selectedSubcategoryId) {
                 if (!$product->product_categories) {

@@ -54,6 +54,13 @@
                                                         {{ $item->product->name }}
                                                     </a>
                                                 </h6>
+                                                @if($item->variation)
+                                                    <div class="mb-1">
+                                                        <small class="text-muted">
+                                                            <strong>{{ $item->variation->display_name }}</strong>
+                                                        </small>
+                                                    </div>
+                                                @endif
                                                 <small class="text-muted">{{ Str::limit($item->product->description ?? 'No description', 50) }}</small>
                                             </div>
                                         </div>
@@ -62,15 +69,19 @@
                                         <p class="fw-bold text-success mb-0 price-tag">₹{{ number_format($item->price, 2) }}</p>
                                     </td>
                                     <td>
+                                        @php
+                                            // Get actual stock - for variations use variation stock, for simple products use product stock
+                                            $actualStock = $item->variation ? $item->variation->stock_quantity : $item->product->stock_quantity;
+                                        @endphp
                                         <div class="input-group quantity-control" style="width: 120px;">
                                             <button class="btn btn-outline-theme decrement-qty btn-ripple" type="button">-</button>
-                                            <input type="number" class="form-control text-center qty-input" value="{{ $item->quantity }}" min="1" data-max="{{ $item->product->stock_quantity }}">
+                                            <input type="number" class="form-control text-center qty-input" value="{{ $item->quantity }}" min="1" data-max="{{ $actualStock }}">
                                             <button class="btn btn-outline-theme increment-qty btn-ripple" type="button">+</button>
                                         </div>
-                                        @if($item->product->stock_quantity < 10)
+                                        @if($actualStock < 10 && $actualStock > 0)
                                             <small class="text-warning stock-warning">
                                                 <i class="fas fa-exclamation-triangle me-1"></i>
-                                                Only {{ $item->product->stock_quantity }} left in stock
+                                                Only {{ $actualStock }} left in stock
                                             </small>
                                         @endif
                                     </td>

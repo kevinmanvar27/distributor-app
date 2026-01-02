@@ -19,6 +19,7 @@ class Product extends Model
     protected $fillable = [
         'name',
         'slug',
+        'product_type', // simple or variable
         'description',
         'mrp',
         'selling_price',
@@ -29,6 +30,7 @@ class Product extends Model
         'main_photo_id',
         'product_gallery',
         'product_categories',
+        'product_attributes', // For variable products
         'meta_title',
         'meta_description',
         'meta_keywords',
@@ -43,6 +45,7 @@ class Product extends Model
         'in_stock' => 'boolean',
         'product_gallery' => 'array',
         'product_categories' => 'array',
+        'product_attributes' => 'array',
         'mrp' => 'decimal:2',
         'selling_price' => 'decimal:2',
         'low_quantity_threshold' => 'integer',
@@ -69,6 +72,95 @@ class Product extends Model
     }
 
     /**
+     * Check if product is variable type
+     */
+    public function isVariable(): bool
+    {
+        return $this->product_type === 'variable';
+    }
+
+    /**
+     * Check if product is simple type
+     */
+    public function isSimple(): bool
+    {
+        return $this->product_type === 'simple' || empty($this->product_type);
+    }
+
+    /**
+     * Get product variations
+     */
+    public function variations()
+    {
+        return $this->hasMany(ProductVariation::class)->orderBy('is_default', 'desc');
+    }
+
+    /**
+     * Get the default variation
+     */
+    public function defaultVariation()
+    {
+        return $this->hasOne(ProductVariation::class)->where('is_default', true);
+    }
+
+    /**
+     * Get total stock for variable products
+     */
+    public function getTotalStockAttribute()
+    {
+        if ($this->isVariable()) {
+            return $this->variations()->sum('stock_quantity');
+        }
+        return $this->stock_quantity;
+    }
+
+    /**
+     * Get price range for variable products
+     * Returns array with 'min' and 'max' keys for variable products
+     * Returns array with same 'min' and 'max' for simple products
+     */
+    public function getPriceRangeAttribute()
+    {
+        if ($this->isVariable()) {
+            $variations = $this->variations;
+            if ($variations->isEmpty()) {
+                $price = $this->selling_price ?? $this->mrp ?? 0;
+                return [
+                    'min' => $price,
+                    'max' => $price
+                ];
+            }
+            
+            $prices = $variations->map(function($v) {
+                return $v->selling_price ?? $v->mrp;
+            })->filter();
+            
+            if ($prices->isEmpty()) {
+                $price = $this->selling_price ?? $this->mrp ?? 0;
+                return [
+                    'min' => $price,
+                    'max' => $price
+                ];
+            }
+            
+            $minPrice = $prices->min();
+            $maxPrice = $prices->max();
+            
+            return [
+                'min' => $minPrice,
+                'max' => $maxPrice
+            ];
+        }
+        
+        // For simple products, return same min and max
+        $price = $this->selling_price ?? $this->mrp ?? 0;
+        return [
+            'min' => $price,
+            'max' => $price
+        ];
+    }
+
+    /**
      * Check if the product has low stock
      *
      * @return bool
@@ -76,6 +168,14 @@ class Product extends Model
     public function isLowStock(): bool
     {
         $threshold = $this->low_quantity_threshold ?? 10;
+        
+        if ($this->isVariable()) {
+            // Check if any variation has low stock
+            return $this->variations()->where('in_stock', true)
+                ->whereColumn('stock_quantity', '<=', \DB::raw($threshold))
+                ->exists();
+        }
+        
         return $this->in_stock && $this->stock_quantity <= $threshold;
     }
 

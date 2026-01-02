@@ -28,7 +28,7 @@
                             </div>
                             
                             <div class="card-body">
-                                @if($products->isEmpty())
+                                @if($paginatedProducts->isEmpty())
                                     <div class="text-center py-5">
                                         <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
                                         <h5 class="text-muted">All products have sufficient stock!</h5>
@@ -37,7 +37,7 @@
                                 @else
                                     <div class="alert alert-warning rounded-3 mb-4">
                                         <i class="fas fa-bell me-2"></i>
-                                        <strong>{{ $products->total() }} product(s)</strong> have stock levels below their threshold. Consider restocking soon!
+                                        <strong>{{ $paginatedProducts->total() }} product(s)</strong> have stock levels below their threshold. Consider restocking soon!
                                     </div>
                                     
                                     <div class="table-responsive">
@@ -46,6 +46,7 @@
                                                 <tr>
                                                     <th>ID</th>
                                                     <th>Product</th>
+                                                    <th>Type</th>
                                                     <th>Current Stock</th>
                                                     <th>Threshold</th>
                                                     <th>Status</th>
@@ -53,7 +54,36 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach($products as $product)
+                                                @foreach($paginatedProducts as $product)
+                                                    @php
+                                                        // Determine stock and threshold based on product type
+                                                        if ($product->isVariable()) {
+                                                            $totalStock = $product->total_stock;
+                                                            $minThreshold = $product->variations->min('low_quantity_threshold') ?? $product->low_quantity_threshold ?? 10;
+                                                            $productType = 'Variable';
+                                                            $productTypeBadge = 'bg-info-subtle text-info-emphasis';
+                                                        } else {
+                                                            $totalStock = $product->stock_quantity;
+                                                            $minThreshold = $product->low_quantity_threshold ?? 10;
+                                                            $productType = 'Simple';
+                                                            $productTypeBadge = 'bg-primary-subtle text-primary-emphasis';
+                                                        }
+                                                        
+                                                        // Calculate percentage
+                                                        $percentage = $minThreshold > 0 ? ($totalStock / $minThreshold) * 100 : 0;
+                                                        
+                                                        // Determine badge color based on stock level
+                                                        if ($totalStock == 0) {
+                                                            $stockBadgeClass = 'bg-danger text-white';
+                                                            $stockIcon = 'fa-times-circle';
+                                                        } elseif ($totalStock <= $minThreshold) {
+                                                            $stockBadgeClass = 'bg-warning text-dark';
+                                                            $stockIcon = 'fa-exclamation-triangle';
+                                                        } else {
+                                                            $stockBadgeClass = 'bg-success text-white';
+                                                            $stockIcon = 'fa-check-circle';
+                                                        }
+                                                    @endphp
                                                     <tr>
                                                         <td class="fw-bold">{{ $product->id }}</td>
                                                         <td>
@@ -69,32 +99,54 @@
                                                                 @endif
                                                                 <div>
                                                                     <div class="fw-medium">{{ $product->name }}</div>
+                                                                    @if($product->isVariable())
+                                                                        <small class="text-muted">{{ $product->variations->count() }} variations</small>
+                                                                    @endif
                                                                 </div>
                                                             </div>
                                                         </td>
                                                         <td>
-                                                            <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill px-3 py-2 fs-6">
-                                                                {{ $product->stock_quantity }}
+                                                            <span class="badge {{ $productTypeBadge }} rounded-pill px-2 py-1">
+                                                                {{ $productType }}
                                                             </span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge {{ $stockBadgeClass }} rounded-pill px-3 py-2 fs-6">
+                                                                <i class="fas {{ $stockIcon }} me-1"></i>
+                                                                {{ $totalStock }}
+                                                            </span>
+                                                            @if($product->isVariable() && $totalStock == 0)
+                                                                <div class="small text-danger mt-1">
+                                                                    <i class="fas fa-info-circle"></i> All variations out of stock
+                                                                </div>
+                                                            @endif
                                                         </td>
                                                         <td>
                                                             <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2">
-                                                                {{ $product->low_quantity_threshold }}
+                                                                {{ $minThreshold }}
                                                             </span>
+                                                            @if($product->isVariable())
+                                                                <div class="small text-muted mt-1">
+                                                                    <i class="fas fa-info-circle"></i> Min threshold
+                                                                </div>
+                                                            @endif
                                                         </td>
                                                         <td>
-                                                            @php
-                                                                $percentage = $product->low_quantity_threshold > 0 
-                                                                    ? ($product->stock_quantity / $product->low_quantity_threshold) * 100 
-                                                                    : 0;
-                                                            @endphp
                                                             <div class="progress" style="height: 8px; width: 100px;">
-                                                                <div class="progress-bar {{ $percentage < 50 ? 'bg-danger' : 'bg-warning' }}" 
+                                                                <div class="progress-bar {{ $percentage < 50 ? 'bg-danger' : ($percentage < 100 ? 'bg-warning' : 'bg-success') }}" 
                                                                      role="progressbar" 
                                                                      style="width: {{ min($percentage, 100) }}%">
                                                                 </div>
                                                             </div>
                                                             <small class="text-muted">{{ round($percentage) }}% of threshold</small>
+                                                            
+                                                            @if($product->isVariable())
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#variations-{{ $product->id }}">
+                                                                        <i class="fas fa-list"></i> View Variations
+                                                                    </button>
+                                                                </div>
+                                                            @endif
                                                         </td>
                                                         <td>
                                                             @can('update', $product)
@@ -104,13 +156,82 @@
                                                             @endcan
                                                         </td>
                                                     </tr>
+                                                    
+                                                    @if($product->isVariable())
+                                                        <tr class="collapse" id="variations-{{ $product->id }}">
+                                                            <td colspan="7" class="bg-light">
+                                                                <div class="p-3">
+                                                                    <h6 class="mb-3"><i class="fas fa-layer-group me-2"></i>Variation Stock Details</h6>
+                                                                    <div class="table-responsive">
+                                                                        <table class="table table-sm table-bordered mb-0">
+                                                                            <thead class="table-secondary">
+                                                                                <tr>
+                                                                                    <th>Variation</th>
+                                                                                    <th>SKU</th>
+                                                                                    <th>Stock</th>
+                                                                                    <th>Threshold</th>
+                                                                                    <th>Status</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                @foreach($product->variations as $variation)
+                                                                                    @php
+                                                                                        $varThreshold = $variation->low_quantity_threshold ?? $product->low_quantity_threshold ?? 10;
+                                                                                        $varStock = $variation->stock_quantity;
+                                                                                        
+                                                                                        if ($varStock == 0) {
+                                                                                            $varBadge = 'bg-danger text-white';
+                                                                                            $varStatus = 'Out of Stock';
+                                                                                            $varIcon = 'fa-times-circle';
+                                                                                        } elseif ($varStock <= $varThreshold) {
+                                                                                            $varBadge = 'bg-warning text-dark';
+                                                                                            $varStatus = 'Low Stock';
+                                                                                            $varIcon = 'fa-exclamation-triangle';
+                                                                                        } else {
+                                                                                            $varBadge = 'bg-success text-white';
+                                                                                            $varStatus = 'In Stock';
+                                                                                            $varIcon = 'fa-check-circle';
+                                                                                        }
+                                                                                    @endphp
+                                                                                    <tr>
+                                                                                        <td>
+                                                                                            <strong>{{ $variation->name }}</strong>
+                                                                                            @if($variation->formatted_attributes)
+                                                                                                <br>
+                                                                                                @foreach($variation->formatted_attributes as $attr => $value)
+                                                                                                    <span class="badge bg-light text-dark border me-1">{{ $attr }}: {{ $value }}</span>
+                                                                                                @endforeach
+                                                                                            @endif
+                                                                                        </td>
+                                                                                        <td><code>{{ $variation->sku ?? 'N/A' }}</code></td>
+                                                                                        <td>
+                                                                                            <span class="badge {{ $varBadge }} rounded-pill">
+                                                                                                {{ $varStock }}
+                                                                                            </span>
+                                                                                        </td>
+                                                                                        <td>{{ $varThreshold }}</td>
+                                                                                        <td>
+                                                                                            <span class="badge {{ $varBadge }} rounded-pill">
+                                                                                                <i class="fas {{ $varIcon }} me-1"></i>
+                                                                                                {{ $varStatus }}
+                                                                                            </span>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                @endforeach
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    @endif
                                                 @endforeach
                                             </tbody>
                                         </table>
                                     </div>
                                     
                                     <div class="d-flex justify-content-center mt-4">
-                                        {{ $products->links() }}
+                                        {{ $paginatedProducts->links() }}
                                     </div>
                                 @endif
                             </div>

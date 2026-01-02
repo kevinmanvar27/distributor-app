@@ -196,7 +196,26 @@
                 @forelse($invoiceData['cart_items'] ?? [] as $i => $item)
                     <tr>
                         <td>{{ $i + 1 }}</td>
-                        <td>{{ $item['product_name'] }}</td>
+                        <td>
+                            {{ $item['product_name'] }}
+                            @if(!empty($item['product_variation_id']))
+                                {{-- Display attributes for variation products --}}
+                                @if(!empty($item['variation_attributes']))
+                                    <br>
+                                    <small style="color: #666; font-size: 9px;">
+                                        @foreach($item['variation_attributes'] as $attrName => $attrValue)
+                                            <strong>{{ $attrName }}:</strong> {{ $attrValue }}@if(!$loop->last), @endif
+                                        @endforeach
+                                    </small>
+                                @endif
+                                @if(!empty($item['variation_sku']))
+                                    <br>
+                                    <small style="color: #666; font-size: 9px;">
+                                        <strong>SKU:</strong> {{ $item['variation_sku'] }}
+                                    </small>
+                                @endif
+                            @endif
+                        </td>
                         <td>{{ Str::limit($item['product_description'] ?? '', 40) }}</td>
                         <td class="text-end">{{ number_format($item['price'], 2) }}</td>
                         <td class="text-center">{{ $item['quantity'] }}</td>

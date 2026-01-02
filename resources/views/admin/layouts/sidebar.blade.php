@@ -28,9 +28,22 @@
                 auth()->user()->hasPermission('update_product') || 
                 auth()->user()->hasPermission('delete_product'))
                 <li class="nav-item mb-1">
-                    <a class="nav-link {{ request()->routeIs('admin.products*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.products.index') }}">
+                    <a class="nav-link {{ request()->routeIs('admin.products*') && !request()->routeIs('admin.attributes*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.products.index') }}">
                         <i class="fas fa-box me-3"></i>
-                        <span class="sidebar-text">Product</span>
+                        <span class="sidebar-text">Products</span>
+                    </a>
+                </li>
+            @endif
+            
+            <!-- Product Attributes Section -->
+            @if(auth()->user()->hasPermission('viewAny_product') || 
+                auth()->user()->hasPermission('create_product') || 
+                auth()->user()->hasPermission('update_product') || 
+                auth()->user()->hasPermission('delete_product'))
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('admin.attributes*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.attributes.index') }}">
+                        <i class="fas fa-sliders-h me-3"></i>
+                        <span class="sidebar-text">Product Attributes</span>
                     </a>
                 </li>
             @endif
