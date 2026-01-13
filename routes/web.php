@@ -208,6 +208,7 @@ Route::get('/css/dynamic.css', function () {
 // Admin Routes (protected by auth middleware)
 Route::middleware('auth')->group(function () {
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/admin/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
     Route::get('/admin/color-palette', function () {
         return view('admin.color-palette');
     })->name('admin.color-palette');
