@@ -13,30 +13,30 @@
             <div class="pt-4 pb-2 mb-3">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-transparent border-0">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <h4 class="card-title mb-0">All Media</h4>
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 gap-md-0">
+                            <div class="mb-2 mb-md-0">
+                                <h4 class="card-title mb-0 h5 h4-md">All Media</h4>
                             </div>
-                            <div class="col-md-6 text-md-end">
-                                <button type="button" class="btn btn-primary" id="upload-media-btn">
-                                    <i class="fas fa-upload me-1"></i> Upload Media
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-md-normal btn-primary" id="upload-media-btn">
+                                    <i class="fas fa-upload me-1"></i><span class="d-none d-sm-inline">Upload Media</span><span class="d-sm-none">Upload</span>
                                 </button>
-                                <button type="button" class="btn btn-outline-primary" id="refresh-media-btn">
-                                    <i class="fas fa-sync-alt me-1"></i> Refresh
+                                <button type="button" class="btn btn-sm btn-md-normal btn-outline-primary" id="refresh-media-btn">
+                                    <i class="fas fa-sync-alt me-1"></i><span class="d-none d-sm-inline">Refresh</span>
                                 </button>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="input-group">
+                        <div class="row g-2 mb-3">
+                            <div class="col-12 col-md-6">
+                                <div class="input-group input-group-sm">
                                     <span class="input-group-text"><i class="fas fa-search"></i></span>
                                     <input type="text" class="form-control" id="media-search" placeholder="Search media...">
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <select class="form-select" id="media-type-filter">
+                            <div class="col-12 col-md-6">
+                                <select class="form-select form-select-sm" id="media-type-filter">
                                     <option value="all">All Types</option>
                                     <option value="images">Images</option>
                                     <option value="videos">Videos</option>

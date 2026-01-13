@@ -34,6 +34,9 @@
     @yield('styles')
 </head>
 <body class="bg-background text-text">
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    
     <div id="app">
         @yield('content')
     </div>

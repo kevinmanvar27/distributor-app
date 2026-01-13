@@ -13,7 +13,7 @@
             <div class="pt-4 pb-2 mb-3">
                 <!-- Summary Cards -->
                 <div class="row mb-4">
-                    <div class="col-md-3 mb-3">
+                    <div class="col-6 col-md-3 mb-3">
                         <div class="card border-0 shadow-sm bg-primary text-white">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -21,14 +21,14 @@
                                         <h6 class="mb-1 text-white">Total Bills</h6>
                                         <h3 class="mb-0 fw-bold text-white">{{ $totalBills }}</h3>
                                     </div>
-                                    <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                                    <div class="bg-white bg-opacity-25 rounded-circle p-2 p-md-3 d-none d-sm-flex">
                                         <i class="fas fa-file-invoice fa-lg"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-6 col-md-3 mb-3">
                         <div class="card border-0 shadow-sm bg-info text-white">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -36,14 +36,14 @@
                                         <h6 class="mb-1 text-white">Total Amount</h6>
                                         <h3 class="mb-0 fw-bold text-white">₹{{ number_format($totalAmount, 2) }}</h3>
                                     </div>
-                                    <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                                    <div class="bg-white bg-opacity-25 rounded-circle p-2 p-md-3 d-none d-sm-flex">
                                         <i class="fas fa-rupee-sign fa-lg"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-6 col-md-3 mb-3">
                         <div class="card border-0 shadow-sm bg-success text-white">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -51,14 +51,14 @@
                                         <h6 class="mb-1 text-white">Total Paid</h6>
                                         <h3 class="mb-0 fw-bold text-white">₹{{ number_format($totalPaid, 2) }}</h3>
                                     </div>
-                                    <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                                    <div class="bg-white bg-opacity-25 rounded-circle p-2 p-md-3 d-none d-sm-flex">
                                         <i class="fas fa-check-circle fa-lg"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-6 col-md-3 mb-3">
                         <div class="card border-0 shadow-sm bg-danger text-white">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -66,7 +66,7 @@
                                         <h6 class="mb-1 text-white">Total Pending</h6>
                                         <h3 class="mb-0 fw-bold text-white">₹{{ number_format($totalPending, 2) }}</h3>
                                     </div>
-                                    <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                                    <div class="bg-white bg-opacity-25 rounded-circle p-2 p-md-3 d-none d-sm-flex">
                                         <i class="fas fa-clock fa-lg"></i>
                                     </div>
                                 </div>
@@ -77,27 +77,27 @@
 
                 <!-- Status Summary -->
                 <div class="row mb-4">
-                    <div class="col-md-4 mb-3">
+                    <div class="col-4 col-md-4 mb-3">
                         <div class="card border-0 shadow-sm">
-                            <div class="card-body text-center">
-                                <span class="badge bg-secondary fs-5 px-4 py-2">{{ $unpaidBills }}</span>
-                                <p class="mb-0 mt-2 text-muted">Unpaid Bills</p>
+                            <div class="card-body text-center py-2 py-md-3">
+                                <span class="badge bg-secondary fs-6 fs-md-5 px-3 px-md-4 py-2">{{ $unpaidBills }}</span>
+                                <p class="mb-0 mt-2 text-muted small">Unpaid Bills</p>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-4 col-md-4 mb-3">
                         <div class="card border-0 shadow-sm">
-                            <div class="card-body text-center">
-                                <span class="badge bg-warning fs-5 px-4 py-2">{{ $partialBills }}</span>
-                                <p class="mb-0 mt-2 text-muted">Partial Paid</p>
+                            <div class="card-body text-center py-2 py-md-3">
+                                <span class="badge bg-warning fs-6 fs-md-5 px-3 px-md-4 py-2">{{ $partialBills }}</span>
+                                <p class="mb-0 mt-2 text-muted small">Partial Paid</p>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-4 col-md-4 mb-3">
                         <div class="card border-0 shadow-sm">
-                            <div class="card-body text-center">
-                                <span class="badge bg-success fs-5 px-4 py-2">{{ $paidBills }}</span>
-                                <p class="mb-0 mt-2 text-muted">Fully Paid</p>
+                            <div class="card-body text-center py-2 py-md-3">
+                                <span class="badge bg-success fs-6 fs-md-5 px-3 px-md-4 py-2">{{ $paidBills }}</span>
+                                <p class="mb-0 mt-2 text-muted small">Fully Paid</p>
                             </div>
                         </div>
                     </div>
@@ -107,7 +107,7 @@
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body">
                         <form action="{{ route('admin.pending-bills.index') }}" method="GET" class="row g-3">
-                            <div class="col-md-3">
+                            <div class="col-12 col-sm-6 col-md-3">
                                 <label class="form-label">Customer</label>
                                 <select name="user_id" class="form-select">
                                     <option value="">All Customers</option>
@@ -118,7 +118,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-6 col-sm-6 col-md-2">
                                 <label class="form-label">Payment Status</label>
                                 <select name="payment_status" class="form-select">
                                     <option value="">All Status</option>
@@ -127,19 +127,19 @@
                                     <option value="paid" {{ $paymentStatus == 'paid' ? 'selected' : '' }}>Paid</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-6 col-sm-6 col-md-2">
                                 <label class="form-label">From Date</label>
                                 <input type="date" name="date_from" class="form-control" value="{{ $dateFrom }}">
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-6 col-sm-6 col-md-2">
                                 <label class="form-label">To Date</label>
                                 <input type="date" name="date_to" class="form-control" value="{{ $dateTo }}">
                             </div>
-                            <div class="col-md-3 d-flex align-items-end gap-2">
-                                <button type="submit" class="btn btn-primary rounded-pill px-4">
+                            <div class="col-12 col-sm-12 col-md-3 d-flex align-items-end gap-2 flex-wrap">
+                                <button type="submit" class="btn btn-primary rounded-pill px-4 flex-grow-1 flex-md-grow-0">
                                     <i class="fas fa-filter me-1"></i> Filter
                                 </button>
-                                <a href="{{ route('admin.pending-bills.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                                <a href="{{ route('admin.pending-bills.index') }}" class="btn btn-outline-secondary rounded-pill px-4 flex-grow-1 flex-md-grow-0">
                                     <i class="fas fa-times me-1"></i> Clear
                                 </a>
                             </div>
@@ -149,12 +149,12 @@
 
                 <!-- Bills Table -->
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                    <div class="card-header bg-white border-0 py-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
                         <div>
                             <h4 class="card-title mb-0 fw-bold">All Bills</h4>
-                            <p class="mb-0 text-muted">Manage bill payments</p>
+                            <p class="mb-0 text-muted small">Manage bill payments</p>
                         </div>
-                        <a href="{{ route('admin.pending-bills.user-summary') }}" class="btn btn-outline-primary rounded-pill">
+                        <a href="{{ route('admin.pending-bills.user-summary') }}" class="btn btn-outline-primary rounded-pill btn-sm">
                             <i class="fas fa-users me-1"></i> User Summary
                         </a>
                     </div>
@@ -181,11 +181,11 @@
                                         <tr>
                                             <th>#</th>
                                             <th>Invoice #</th>
-                                            <th>Customer</th>
-                                            <th>Date</th>
-                                            <th>Total Amount</th>
-                                            <th>Paid Amount</th>
-                                            <th>Pending Amount</th>
+                                            <th class="d-none d-md-table-cell">Customer</th>
+                                            <th class="d-none d-lg-table-cell">Date</th>
+                                            <th>Total</th>
+                                            <th class="d-none d-sm-table-cell">Paid</th>
+                                            <th>Pending</th>
                                             <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
@@ -202,7 +202,7 @@
                                                     {{ $invoice->invoice_number }}
                                                 </a>
                                             </td>
-                                            <td>
+                                            <td class="d-none d-md-table-cell">
                                                 @if($invoice->user)
                                                     <a href="{{ route('admin.pending-bills.user', $invoice->user_id) }}" class="text-decoration-none">
                                                         {{ $invoice->user->name }}
@@ -211,9 +211,9 @@
                                                     Guest
                                                 @endif
                                             </td>
-                                            <td>{{ $invoice->created_at->format('d M Y') }}</td>
+                                            <td class="d-none d-lg-table-cell">{{ $invoice->created_at->format('d M Y') }}</td>
                                             <td class="fw-bold">₹{{ number_format($invoice->total_amount, 2) }}</td>
-                                            <td class="text-success">₹{{ number_format($invoice->paid_amount, 2) }}</td>
+                                            <td class="text-success d-none d-sm-table-cell">₹{{ number_format($invoice->paid_amount, 2) }}</td>
                                             <td class="text-danger fw-bold">₹{{ number_format($pendingAmount, 2) }}</td>
                                             <td>
                                                 @switch($invoice->payment_status)
@@ -230,14 +230,14 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm" role="group">
-                                                    <button type="button" class="btn btn-outline-success rounded-start-pill px-3" 
+                                                    <button type="button" class="btn btn-outline-success rounded-start-pill px-2 px-md-3" 
                                                             data-bs-toggle="modal" 
                                                             data-bs-target="#paymentModal{{ $invoice->id }}"
                                                             {{ $pendingAmount <= 0 ? 'disabled' : '' }}>
-                                                        <i class="fas fa-plus"></i> Pay
+                                                        <i class="fas fa-plus"></i><span class="d-none d-md-inline ms-1">Pay</span>
                                                     </button>
                                                     <a href="{{ route('admin.proforma-invoice.show', $invoice->id) }}" 
-                                                       class="btn btn-outline-primary rounded-end-pill px-3">
+                                                       class="btn btn-outline-primary rounded-end-pill px-2 px-md-3">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
                                                 </div>

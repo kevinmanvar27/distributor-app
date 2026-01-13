@@ -3,7 +3,12 @@
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
-                <button id="sidebar-toggle" class="btn btn-outline-secondary me-3 d-md-none rounded-circle" type="button">
+                <!-- Mobile sidebar toggle (visible only on small screens) -->
+                <button id="sidebar-toggle" class="btn btn-outline-secondary me-3 rounded-circle d-md-none" type="button" style="width: 40px; height: 40px;">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <!-- Desktop sidebar toggle (visible only on medium+ screens) -->
+                <button id="desktop-sidebar-toggle" class="btn btn-outline-secondary me-3 rounded-circle" type="button" title="Toggle sidebar">
                     <i class="fas fa-bars"></i>
                 </button>
                 

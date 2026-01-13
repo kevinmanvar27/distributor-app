@@ -15,22 +15,22 @@
                     <div class="col-12">
                         <div class="card border-0 shadow-sm">
                             <div class="card-header bg-white border-0 py-3">
-                                <div class="row align-items-center">
-                                    <div class="col-md-6">
-                                        <h4 class="card-title mb-0 fw-bold">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 gap-md-0">
+                                    <div class="mb-2 mb-md-0">
+                                        <h4 class="card-title mb-0 fw-bold h5 h4-md">
                                             <i class="fas fa-money-bill-wave me-2 text-theme"></i>Salary Management
                                         </h4>
-                                        <p class="text-muted mb-0 mt-1">Manage staff salaries and rates</p>
+                                        <p class="text-muted mb-0 mt-1 small">Manage staff salaries and rates</p>
                                     </div>
-                                    <div class="col-md-6 text-end">
+                                    <div class="d-flex flex-wrap gap-2">
                                         @if(auth()->user()->hasPermission('create_salary') || auth()->user()->isSuperAdmin())
-                                        <a href="{{ route('admin.salary.create') }}" class="btn btn-theme rounded-pill px-4">
-                                            <i class="fas fa-plus me-2"></i> Set/Update Salary
+                                        <a href="{{ route('admin.salary.create') }}" class="btn btn-sm btn-md-normal btn-theme rounded-pill px-3 px-md-4">
+                                            <i class="fas fa-plus me-1 me-md-2"></i><span class="d-none d-sm-inline">Set/Update Salary</span><span class="d-sm-none">Set</span>
                                         </a>
                                         @endif
                                         @if(auth()->user()->hasPermission('viewAny_salary') || auth()->user()->isSuperAdmin())
-                                        <a href="{{ route('admin.salary.payments') }}" class="btn btn-outline-primary rounded-pill px-4 ms-2">
-                                            <i class="fas fa-file-invoice-dollar me-2"></i> Payroll
+                                        <a href="{{ route('admin.salary.payments') }}" class="btn btn-sm btn-md-normal btn-outline-primary rounded-pill px-3 px-md-4">
+                                            <i class="fas fa-file-invoice-dollar me-1 me-md-2"></i><span class="d-none d-sm-inline">Payroll</span>
                                         </a>
                                         @endif
                                     </div>

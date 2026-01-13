@@ -15,6 +15,147 @@
     // Initialize when jQuery is ready
     waitForjQuery(function() {
         $(document).ready(function() {
+            
+            // ========================================
+            // MOBILE SIDEBAR TOGGLE FUNCTIONALITY
+            // ========================================
+            
+            const $sidebar = $('#sidebar');
+            const $sidebarOverlay = $('#sidebar-overlay');
+            const $sidebarToggle = $('#sidebar-toggle');
+            const $sidebarClose = $('#sidebar-close');
+            
+            // Function to open sidebar
+            function openSidebar() {
+                $sidebar.addClass('show');
+                $sidebarOverlay.addClass('show');
+                $('body').css('overflow', 'hidden'); // Prevent body scroll when sidebar is open
+            }
+            
+            // Function to close sidebar
+            function closeSidebar() {
+                $sidebar.removeClass('show');
+                $sidebarOverlay.removeClass('show');
+                $('body').css('overflow', ''); // Restore body scroll
+            }
+            
+            // Toggle sidebar on hamburger button click
+            $sidebarToggle.on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if ($sidebar.hasClass('show')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            });
+            
+            // Close sidebar on close button click
+            $sidebarClose.on('click', function(e) {
+                e.preventDefault();
+                closeSidebar();
+            });
+            
+            // Close sidebar on overlay click
+            $sidebarOverlay.on('click', function() {
+                closeSidebar();
+            });
+            
+            // Close sidebar on nav link click (mobile only)
+            $sidebar.find('.nav-link').on('click', function() {
+                if ($(window).width() < 768) {
+                    closeSidebar();
+                }
+            });
+            
+            // Close sidebar on escape key
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape' && $sidebar.hasClass('show')) {
+                    closeSidebar();
+                }
+            });
+            
+            // Handle window resize - close sidebar if resizing to desktop
+            $(window).on('resize', function() {
+                if ($(window).width() >= 768) {
+                    closeSidebar();
+                }
+            });
+            
+            // Handle swipe gestures for mobile
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            document.addEventListener('touchstart', function(e) {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            
+            document.addEventListener('touchend', function(e) {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+            
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                const swipeDistance = touchEndX - touchStartX;
+                
+                // Swipe right from left edge to open sidebar
+                if (touchStartX < 30 && swipeDistance > swipeThreshold && !$sidebar.hasClass('show')) {
+                    openSidebar();
+                }
+                
+                // Swipe left to close sidebar
+                if (swipeDistance < -swipeThreshold && $sidebar.hasClass('show')) {
+                    closeSidebar();
+                }
+            }
+            
+            // ========================================
+            // END MOBILE SIDEBAR TOGGLE FUNCTIONALITY
+            // ========================================
+            
+            // ========================================
+            // DESKTOP SIDEBAR TOGGLE FUNCTIONALITY
+            // ========================================
+            
+            const $desktopSidebarToggle = $('#desktop-sidebar-toggle');
+            const $mainContent = $('main.main-content');
+            
+            // Check localStorage for saved sidebar state
+            const savedSidebarState = localStorage.getItem('sidebarCollapsed');
+            
+            if (savedSidebarState === 'true' && $(window).width() >= 768) {
+                $sidebar.addClass('collapsed');
+                $mainContent.addClass('sidebar-collapsed');
+                $desktopSidebarToggle.find('i').removeClass('fa-bars').addClass('fa-angles-right');
+            }
+            
+            // Desktop sidebar toggle click handler
+            $desktopSidebarToggle.on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const isCollapsed = $sidebar.hasClass('collapsed');
+                
+                if (isCollapsed) {
+                    // Expand sidebar
+                    $sidebar.removeClass('collapsed');
+                    $mainContent.removeClass('sidebar-collapsed');
+                    $(this).find('i').removeClass('fa-angles-right').addClass('fa-bars');
+                    localStorage.setItem('sidebarCollapsed', 'false');
+                } else {
+                    // Collapse sidebar
+                    $sidebar.addClass('collapsed');
+                    $mainContent.addClass('sidebar-collapsed');
+                    $(this).find('i').removeClass('fa-bars').addClass('fa-angles-right');
+                    localStorage.setItem('sidebarCollapsed', 'true');
+                }
+            });
+            
+            // ========================================
+            // END DESKTOP SIDEBAR TOGGLE FUNCTIONALITY
+            // ========================================
+            
             // Handle stock status toggle
             function handleStockStatusToggle() {
                 const $inStockCheckbox = $('#in_stock');

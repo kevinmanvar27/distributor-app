@@ -12,14 +12,16 @@
             
             <div class="pt-4 pb-2 mb-3">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                        <h2 class="card-title mb-0 fw-semibold">Settings</h2>
-                        <form action="{{ route('admin.settings.reset') }}" method="POST" id="resetForm">
-                            @csrf
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" id="resetButton">
-                                <i class="fas fa-sync-alt me-1"></i> Reset to Default
-                            </button>
-                        </form>
+                    <div class="card-header bg-transparent border-0">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 gap-md-0">
+                            <h2 class="card-title mb-0 fw-semibold h5 h4-md">Settings</h2>
+                            <form action="{{ route('admin.settings.reset') }}" method="POST" id="resetForm">
+                                @csrf
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" id="resetButton">
+                                    <i class="fas fa-sync-alt me-1"></i><span class="d-none d-sm-inline">Reset to Default</span><span class="d-sm-none">Reset</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                     <div class="card-body">
                         @if(session('success'))
@@ -44,35 +46,35 @@
                             <input type="hidden" name="active_tab" id="activeTabInput" value="general">
                             
                             <!-- Tabs Navigation -->
-                            <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+                            <ul class="nav nav-tabs mb-4 flex-nowrap overflow-auto" id="settingsTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">
-                                        <i class="fas fa-cog me-1"></i> General
+                                    <button class="nav-link active text-nowrap" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">
+                                        <i class="fas fa-cog me-1"></i><span class="d-none d-sm-inline">General</span>
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="social-tab" data-bs-toggle="tab" data-bs-target="#social" type="button" role="tab">
-                                        <i class="fas fa-hashtag me-1"></i> Social Media
+                                    <button class="nav-link text-nowrap" id="social-tab" data-bs-toggle="tab" data-bs-target="#social" type="button" role="tab">
+                                        <i class="fas fa-hashtag me-1"></i><span class="d-none d-sm-inline">Social Media</span>
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="appearance-tab" data-bs-toggle="tab" data-bs-target="#appearance" type="button" role="tab">
-                                        <i class="fas fa-palette me-1"></i> Appearance
+                                    <button class="nav-link text-nowrap" id="appearance-tab" data-bs-toggle="tab" data-bs-target="#appearance" type="button" role="tab">
+                                        <i class="fas fa-palette me-1"></i><span class="d-none d-sm-inline">Appearance</span>
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="site-management-tab" data-bs-toggle="tab" data-bs-target="#site-management" type="button" role="tab">
-                                        <i class="fas fa-server me-1"></i> Site Management
+                                    <button class="nav-link text-nowrap" id="site-management-tab" data-bs-toggle="tab" data-bs-target="#site-management" type="button" role="tab">
+                                        <i class="fas fa-server me-1"></i><span class="d-none d-sm-inline">Site</span>
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="payment-tab" data-bs-toggle="tab" data-bs-target="#payment" type="button" role="tab">
-                                        <i class="fas fa-credit-card me-1"></i> Payment
+                                    <button class="nav-link text-nowrap" id="payment-tab" data-bs-toggle="tab" data-bs-target="#payment" type="button" role="tab">
+                                        <i class="fas fa-credit-card me-1"></i><span class="d-none d-sm-inline">Payment</span>
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab">
-                                        <i class="fas fa-bell me-1"></i> Notifications
+                                    <button class="nav-link text-nowrap" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab">
+                                        <i class="fas fa-bell me-1"></i><span class="d-none d-sm-inline">Notifications</span>
                                     </button>
                                 </li>
                                 <!-- <li class="nav-item" role="presentation">

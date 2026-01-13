@@ -14,10 +14,10 @@
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">Product Attributes</h1>
-                <a href="{{ route('admin.attributes.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add New Attribute
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 gap-md-0">
+                <h1 class="h4 h3-md mb-2 mb-md-0">Product Attributes</h1>
+                <a href="{{ route('admin.attributes.create') }}" class="btn btn-sm btn-md-normal btn-primary">
+                    <i class="fas fa-plus me-1"></i><span class="d-none d-sm-inline">Add New Attribute</span><span class="d-sm-none">Add</span>
                 </a>
             </div>
         </div>

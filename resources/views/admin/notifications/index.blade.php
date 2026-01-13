@@ -19,14 +19,14 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h4 class="card-title mb-0 fw-bold">Notifications</h4>
-                                    <p class="mb-0 text-muted">Manage your notifications</p>
-                                </div>
-                                <div>
-                                    <button id="markAllAsRead" class="btn btn-theme rounded-pill px-4">
-                                        <i class="fas fa-check-double me-2"></i>Mark All as Read
+                            <div class="card-header bg-white border-0 py-3">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 gap-md-0">
+                                    <div class="mb-2 mb-md-0">
+                                        <h4 class="card-title mb-0 fw-bold h5 h4-md">Notifications</h4>
+                                        <p class="mb-0 text-muted small">Manage your notifications</p>
+                                    </div>
+                                    <button id="markAllAsRead" class="btn btn-sm btn-md-normal btn-theme rounded-pill px-3 px-md-4">
+                                        <i class="fas fa-check-double me-1 me-md-2"></i><span class="d-none d-sm-inline">Mark All as Read</span><span class="d-sm-none">Mark All</span>
                                     </button>
                                 </div>
                             </div>

@@ -15,25 +15,23 @@
                     <div class="col-12">
                         <div class="card border-0 shadow-sm">
                             <div class="card-header bg-white border-0 py-3">
-                                <div class="row align-items-center">
-                                    <div class="col-md-4">
-                                        <h4 class="card-title mb-0 fw-bold">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 gap-md-0">
+                                    <div class="mb-2 mb-md-0">
+                                        <h4 class="card-title mb-0 fw-bold h5 h4-md">
                                             <i class="fas fa-calendar-check me-2 text-theme"></i>Attendance
                                         </h4>
                                     </div>
-                                    <div class="col-md-8">
-                                        <div class="d-flex justify-content-end gap-2 flex-wrap">
-                                            @if(auth()->user()->hasPermission('create_attendance') || auth()->user()->isSuperAdmin())
-                                            <a href="{{ route('admin.attendance.bulk', ['date' => \Carbon\Carbon::today()->format('Y-m-d')]) }}" class="btn btn-theme rounded-pill px-4">
-                                                <i class="fas fa-users me-2"></i> Mark Bulk Attendance
-                                            </a>
-                                            @endif
-                                            @if(auth()->user()->hasPermission('viewAny_attendance') || auth()->user()->isSuperAdmin())
-                                            <a href="{{ route('admin.attendance.report', ['month' => $month, 'year' => $year]) }}" class="btn btn-outline-primary rounded-pill px-4">
-                                                <i class="fas fa-chart-bar me-2"></i> View Report
-                                            </a>
-                                            @endif
-                                        </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @if(auth()->user()->hasPermission('create_attendance') || auth()->user()->isSuperAdmin())
+                                        <a href="{{ route('admin.attendance.bulk', ['date' => \Carbon\Carbon::today()->format('Y-m-d')]) }}" class="btn btn-sm btn-md-normal btn-theme rounded-pill px-3 px-md-4">
+                                            <i class="fas fa-users me-1 me-md-2"></i><span class="d-none d-sm-inline">Mark Bulk Attendance</span><span class="d-sm-none">Bulk</span>
+                                        </a>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('viewAny_attendance') || auth()->user()->isSuperAdmin())
+                                        <a href="{{ route('admin.attendance.report', ['month' => $month, 'year' => $year]) }}" class="btn btn-sm btn-md-normal btn-outline-primary rounded-pill px-3 px-md-4">
+                                            <i class="fas fa-chart-bar me-1 me-md-2"></i><span class="d-none d-sm-inline">View Report</span><span class="d-sm-none">Report</span>
+                                        </a>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

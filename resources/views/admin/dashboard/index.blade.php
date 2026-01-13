@@ -74,128 +74,130 @@
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body">
                         <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <h2 class="card-title mb-2">Welcome back, {{ Auth::user()->name }}!</h2>
-                                <p class="text-secondary mb-3">Here's what's happening with your store today.</p>
-                                <div class="d-flex gap-4">
+                            <div class="col-12 col-lg-6">
+                                <h2 class="card-title mb-2 h4 h2-md">Welcome back, {{ Auth::user()->name }}!</h2>
+                                <p class="text-secondary mb-3 small">Here's what's happening with your store today.</p>
+                                <div class="d-flex flex-wrap gap-3 gap-md-4">
                                     @if($canViewOrders)
-                                    <div>
-                                        <span class="text-secondary small">Today's Orders</span>
-                                        <h4 class="mb-0 text-primary">{{ $todayOrders }}</h4>
+                                    <div class="text-center text-md-start">
+                                        <span class="text-secondary small d-block">Today's Orders</span>
+                                        <h4 class="mb-0 text-primary h5 h4-md">{{ $todayOrders }}</h4>
                                     </div>
-                                    <div>
-                                        <span class="text-secondary small">Today's Revenue</span>
-                                        <h4 class="mb-0 text-success">₹{{ number_format($todayRevenue, 2) }}</h4>
+                                    <div class="text-center text-md-start">
+                                        <span class="text-secondary small d-block">Today's Revenue</span>
+                                        <h4 class="mb-0 text-success h5 h4-md">₹{{ number_format($todayRevenue, 2) }}</h4>
                                     </div>
-                                    <div>
-                                        <span class="text-secondary small">Pending Orders</span>
-                                        <h4 class="mb-0 text-warning">{{ $pendingOrders }}</h4>
+                                    <div class="text-center text-md-start">
+                                        <span class="text-secondary small d-block">Pending Orders</span>
+                                        <h4 class="mb-0 text-warning h5 h4-md">{{ $pendingOrders }}</h4>
                                     </div>
                                     @endif
                                 </div>
                             </div>
-                            <div class="col-lg-6 text-lg-end mt-3 mt-lg-0">
-                                @if($canViewOrders)
-                                <a href="{{ route('admin.proforma-invoice.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill me-2">
-                                    <i class="fas fa-file-invoice me-1"></i> View Orders
-                                </a>
-                                @endif
-                                @if($canViewProducts)
-                                <a href="{{ route('admin.products.low-stock') }}" class="btn btn-sm btn-outline-warning rounded-pill me-2">
-                                    <i class="fas fa-exclamation-triangle me-1"></i> Low Stock ({{ $lowStockProducts->count() }})
-                                </a>
-                                @endif
-                                @if($canCreateProduct)
-                                <a href="{{ route('admin.products.create') }}" class="btn btn-sm btn-theme rounded-pill">
-                                    <i class="fas fa-plus me-1"></i> Add Product
-                                </a>
-                                @endif
+                            <div class="col-12 col-lg-6 text-lg-end mt-3 mt-lg-0">
+                                <div class="d-flex flex-wrap gap-2 justify-content-start justify-content-lg-end">
+                                    @if($canViewOrders)
+                                    <a href="{{ route('admin.proforma-invoice.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill">
+                                        <i class="fas fa-file-invoice me-1"></i><span class="d-none d-sm-inline">View Orders</span>
+                                    </a>
+                                    @endif
+                                    @if($canViewProducts)
+                                    <a href="{{ route('admin.products.low-stock') }}" class="btn btn-sm btn-outline-warning rounded-pill">
+                                        <i class="fas fa-exclamation-triangle me-1"></i><span class="d-none d-sm-inline">Low Stock</span> ({{ $lowStockProducts->count() }})
+                                    </a>
+                                    @endif
+                                    @if($canCreateProduct)
+                                    <a href="{{ route('admin.products.create') }}" class="btn btn-sm btn-theme rounded-pill">
+                                        <i class="fas fa-plus me-1"></i><span class="d-none d-sm-inline">Add Product</span>
+                                    </a>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Revenue Stats Cards -->
-                <div class="row g-4 mb-4">
+                <div class="row g-3 g-md-4 mb-4">
                     @if($canViewOrders)
-                    <div class="col-md-6 col-lg-3">
+                    <div class="col-6 col-md-6 col-lg-3">
                         <div class="card border-0 shadow-sm h-100 stat-card">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div class="stat-icon bg-success rounded-circle">
+                            <div class="card-body p-2 p-md-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2 mb-md-3">
+                                    <div class="stat-icon bg-success rounded-circle" style="width: 36px; height: 36px; font-size: 0.9rem;">
                                         <i class="fas fa-indian-rupee-sign text-white"></i>
                                     </div>
-                                    <span class="badge {{ $revenueGrowth >= 0 ? 'bg-success' : 'bg-danger' }} text-white">
+                                    <span class="badge {{ $revenueGrowth >= 0 ? 'bg-success' : 'bg-danger' }} text-white" style="font-size: 0.65rem;">
                                         <i class="fas fa-arrow-{{ $revenueGrowth >= 0 ? 'up' : 'down' }} me-1"></i>{{ abs($revenueGrowth) }}%
                                     </span>
                                 </div>
-                                <h3 class="h6 text-secondary mb-1">Total Revenue</h3>
-                                <p class="h4 mb-0 fw-bold">₹{{ number_format($totalRevenue, 2) }}</p>
-                                <small class="text-muted">This month: ₹{{ number_format($monthlyRevenue, 2) }}</small>
+                                <h3 class="h6 text-secondary mb-1" style="font-size: 0.75rem;">Total Revenue</h3>
+                                <p class="h5 mb-0 fw-bold">₹{{ number_format($totalRevenue, 2) }}</p>
+                                <small class="text-muted d-none d-md-block">This month: ₹{{ number_format($monthlyRevenue, 2) }}</small>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="col-md-6 col-lg-3">
+                    <div class="col-6 col-md-6 col-lg-3">
                         <div class="card border-0 shadow-sm h-100 stat-card">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div class="stat-icon bg-primary rounded-circle">
+                            <div class="card-body p-2 p-md-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2 mb-md-3">
+                                    <div class="stat-icon bg-primary rounded-circle" style="width: 36px; height: 36px; font-size: 0.9rem;">
                                         <i class="fas fa-shopping-cart text-white"></i>
                                     </div>
-                                    <span class="badge bg-primary text-white">
+                                    <span class="badge bg-primary text-white" style="font-size: 0.65rem;">
                                         {{ $pendingOrders }} pending
                                     </span>
                                 </div>
-                                <h3 class="h6 text-secondary mb-1">Total Orders</h3>
-                                <p class="h4 mb-0 fw-bold">{{ $totalOrders }}</p>
-                                <small class="text-muted">Delivered: {{ $deliveredOrders }}</small>
+                                <h3 class="h6 text-secondary mb-1" style="font-size: 0.75rem;">Total Orders</h3>
+                                <p class="h5 mb-0 fw-bold">{{ $totalOrders }}</p>
+                                <small class="text-muted d-none d-md-block">Delivered: {{ $deliveredOrders }}</small>
                             </div>
                         </div>
                     </div>
                     @endif
                     
                     @if($canViewUsers)
-                    <div class="col-md-6 col-lg-3">
+                    <div class="col-6 col-md-6 col-lg-3">
                         <div class="card border-0 shadow-sm h-100 stat-card">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div class="stat-icon bg-info rounded-circle">
+                            <div class="card-body p-2 p-md-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2 mb-md-3">
+                                    <div class="stat-icon bg-info rounded-circle" style="width: 36px; height: 36px; font-size: 0.9rem;">
                                         <i class="fas fa-users text-white"></i>
                                     </div>
-                                    <span class="badge bg-info text-white">
+                                    <span class="badge bg-info text-white" style="font-size: 0.65rem;">
                                         {{ $userGroupCount }} groups
                                     </span>
                                 </div>
-                                <h3 class="h6 text-secondary mb-1">Total Users</h3>
-                                <p class="h4 mb-0 fw-bold">{{ $userCount }}</p>
-                                <small class="text-muted">Active customers</small>
+                                <h3 class="h6 text-secondary mb-1" style="font-size: 0.75rem;">Total Users</h3>
+                                <p class="h5 mb-0 fw-bold">{{ $userCount }}</p>
+                                <small class="text-muted d-none d-md-block">Active customers</small>
                             </div>
                         </div>
                     </div>
                     @endif
                     
                     @if($canViewProducts)
-                    <div class="col-md-6 col-lg-3">
+                    <div class="col-6 col-md-6 col-lg-3">
                         <div class="card border-0 shadow-sm h-100 stat-card">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div class="stat-icon bg-warning rounded-circle">
+                            <div class="card-body p-2 p-md-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2 mb-md-3">
+                                    <div class="stat-icon bg-warning rounded-circle" style="width: 36px; height: 36px; font-size: 0.9rem;">
                                         <i class="fas fa-boxes text-white"></i>
                                     </div>
                                     @if($outOfStockCount > 0)
-                                    <span class="badge bg-danger text-white">
-                                        {{ $outOfStockCount }} out of stock
+                                    <span class="badge bg-danger text-white" style="font-size: 0.65rem;">
+                                        {{ $outOfStockCount }} out
                                     </span>
                                     @else
-                                    <span class="badge bg-success text-white">
-                                        All in stock
+                                    <span class="badge bg-success text-white" style="font-size: 0.65rem;">
+                                        In stock
                                     </span>
                                     @endif
                                 </div>
-                                <h3 class="h6 text-secondary mb-1">Products</h3>
-                                <p class="h4 mb-0 fw-bold">{{ $productCount }}</p>
-                                <small class="text-muted">{{ $categoryCount }} categories</small>
+                                <h3 class="h6 text-secondary mb-1" style="font-size: 0.75rem;">Products</h3>
+                                <p class="h5 mb-0 fw-bold">{{ $productCount }}</p>
+                                <small class="text-muted d-none d-md-block">{{ $categoryCount }} categories</small>
                             </div>
                         </div>
                     </div>
@@ -204,19 +206,19 @@
                 
                 <!-- Charts Row -->
                 @if($canViewOrders)
-                <div class="row g-4 mb-4">
+                <div class="row g-3 g-md-4 mb-4">
                     <!-- Revenue Chart -->
-                    <div class="col-lg-8">
+                    <div class="col-12 col-lg-8">
                         <div class="card border-0 shadow-sm h-100">
-                            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                                <h3 class="h5 mb-0 fw-semibold">Revenue Overview</h3>
+                            <div class="card-header bg-transparent border-0 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+                                <h3 class="h6 h5-md mb-0 fw-semibold">Revenue Overview</h3>
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button type="button" class="btn btn-outline-secondary active" id="weeklyBtn" onclick="switchChart('weekly')">Weekly</button>
                                     <button type="button" class="btn btn-outline-secondary" id="monthlyBtn" onclick="switchChart('monthly')">Monthly</button>
                                 </div>
                             </div>
-                            <div class="card-body">
-                                <div class="chart-container">
+                            <div class="card-body p-2 p-md-3">
+                                <div class="chart-container" style="height: 250px;">
                                     <canvas id="revenueChart"></canvas>
                                 </div>
                             </div>
@@ -224,24 +226,24 @@
                     </div>
                     
                     <!-- Order Status Distribution -->
-                    <div class="col-lg-4">
+                    <div class="col-12 col-lg-4">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-header bg-transparent border-0">
-                                <h3 class="h5 mb-0 fw-semibold">Order Status</h3>
+                                <h3 class="h6 h5-md mb-0 fw-semibold">Order Status</h3>
                             </div>
-                            <div class="card-body">
-                                <div class="chart-container" style="height: 200px;">
+                            <div class="card-body p-2 p-md-3">
+                                <div class="chart-container" style="height: 180px;">
                                     <canvas id="orderStatusChart"></canvas>
                                 </div>
-                                <div class="mt-3">
+                                <div class="mt-2 mt-md-3">
                                     @foreach($orderStatusData as $status)
                                     @if($status['count'] > 0)
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1 mb-md-2">
                                         <div class="d-flex align-items-center">
-                                            <span class="rounded-circle me-2" style="width: 10px; height: 10px; background-color: {{ $status['color'] }}; display: inline-block;"></span>
+                                            <span class="rounded-circle me-2" style="width: 8px; height: 8px; background-color: {{ $status['color'] }}; display: inline-block;"></span>
                                             <span class="small">{{ $status['status'] }}</span>
                                         </div>
-                                        <span class="badge bg-light text-dark">{{ $status['count'] }}</span>
+                                        <span class="badge bg-light text-dark" style="font-size: 0.7rem;">{{ $status['count'] }}</span>
                                     </div>
                                     @endif
                                     @endforeach
@@ -253,13 +255,13 @@
                 @endif
                 
                 <!-- Second Row: Recent Orders, Top Products, Leads -->
-                <div class="row g-4 mb-4">
+                <div class="row g-3 g-md-4 mb-4">
                     <!-- Recent Orders -->
                     @if($canViewOrders)
-                    <div class="col-lg-6">
+                    <div class="col-12 col-lg-6">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                                <h3 class="h5 mb-0 fw-semibold">Recent Orders</h3>
+                                <h3 class="h6 h5-md mb-0 fw-semibold">Recent Orders</h3>
                                 <a href="{{ route('admin.proforma-invoice.index') }}" class="btn btn-sm btn-link text-decoration-none">View All</a>
                             </div>
                             <div class="card-body p-0">
@@ -268,7 +270,7 @@
                                         <thead class="table-light">
                                             <tr>
                                                 <th class="border-0 ps-3">Invoice</th>
-                                                <th class="border-0">Customer</th>
+                                                <th class="border-0 d-none d-md-table-cell">Customer</th>
                                                 <th class="border-0">Amount</th>
                                                 <th class="border-0">Status</th>
                                             </tr>
@@ -277,14 +279,14 @@
                                             @forelse($recentOrders as $order)
                                             <tr>
                                                 <td class="ps-3">
-                                                    <a href="{{ route('admin.proforma-invoice.show', $order->id) }}" class="text-decoration-none fw-medium">
+                                                    <a href="{{ route('admin.proforma-invoice.show', $order->id) }}" class="text-decoration-none fw-medium small">
                                                         {{ $order->invoice_number }}
                                                     </a>
                                                     <br>
-                                                    <small class="text-muted">{{ $order->created_at->format('M d, Y') }}</small>
+                                                    <small class="text-muted d-none d-sm-inline">{{ $order->created_at->format('M d, Y') }}</small>
                                                 </td>
-                                                <td>{{ $order->user->name ?? 'Guest' }}</td>
-                                                <td class="fw-medium">₹{{ number_format($order->total_amount, 2) }}</td>
+                                                <td class="d-none d-md-table-cell small">{{ $order->user->name ?? 'Guest' }}</td>
+                                                <td class="fw-medium small">₹{{ number_format($order->total_amount, 2) }}</td>
                                                 <td>
                                                     @php
                                                         $statusColors = [
@@ -297,7 +299,7 @@
                                                         ];
                                                         $color = $statusColors[$order->status] ?? 'secondary';
                                                     @endphp
-                                                    <span class="badge bg-{{ $color }} status-badge">{{ $order->status }}</span>
+                                                    <span class="badge bg-{{ $color }} status-badge" style="font-size: 0.65rem;">{{ $order->status }}</span>
                                                 </td>
                                             </tr>
                                             @empty
@@ -318,26 +320,26 @@
                     
                     <!-- Top Selling Products -->
                     @if($canViewProducts)
-                    <div class="col-lg-6">
+                    <div class="col-12 col-lg-6">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                                <h3 class="h5 mb-0 fw-semibold">Top Selling Products</h3>
+                                <h3 class="h6 h5-md mb-0 fw-semibold">Top Selling Products</h3>
                                 <a href="{{ route('admin.products.index') }}" class="btn btn-sm btn-link text-decoration-none">View All</a>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body p-2 p-md-3">
                                 @forelse($topProducts as $index => $product)
-                                <div class="d-flex justify-content-between align-items-center {{ !$loop->last ? 'mb-3 pb-3 border-bottom' : '' }}">
+                                <div class="d-flex justify-content-between align-items-center {{ !$loop->last ? 'mb-2 mb-md-3 pb-2 pb-md-3 border-bottom' : '' }}">
                                     <div class="d-flex align-items-center">
-                                        <span class="badge bg-{{ $index < 3 ? 'primary' : 'secondary' }} rounded-circle me-3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
+                                        <span class="badge bg-{{ $index < 3 ? 'primary' : 'secondary' }} rounded-circle me-2 me-md-3" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem;">
                                             {{ $index + 1 }}
                                         </span>
                                         <div>
-                                            <h6 class="mb-0">{{ Str::limit($product['name'], 30) }}</h6>
-                                            <small class="text-muted">{{ $product['quantity'] }} units sold</small>
+                                            <h6 class="mb-0 small">{{ Str::limit($product['name'], 25) }}</h6>
+                                            <small class="text-muted" style="font-size: 0.7rem;">{{ $product['quantity'] }} units sold</small>
                                         </div>
                                     </div>
                                     <div class="text-end">
-                                        <span class="fw-bold text-success">₹{{ number_format($product['revenue'], 2) }}</span>
+                                        <span class="fw-bold text-success small">₹{{ number_format($product['revenue'], 2) }}</span>
                                     </div>
                                 </div>
                                 @empty
@@ -353,23 +355,23 @@
                 </div>
                 
                 <!-- Third Row: Low Stock & Leads -->
-                <div class="row g-4 mb-4">
+                <div class="row g-3 g-md-4 mb-4">
                     <!-- Low Stock Alert -->
                     @if($canViewProducts)
-                    <div class="col-lg-6">
+                    <div class="col-12 col-lg-6">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                                <h3 class="h5 mb-0 fw-semibold">
+                                <h3 class="h6 h5-md mb-0 fw-semibold">
                                     <i class="fas fa-exclamation-triangle text-warning me-2"></i>Low Stock Alert
                                 </h3>
                                 <a href="{{ route('admin.products.low-stock') }}" class="btn btn-sm btn-link text-decoration-none">View All</a>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body p-2 p-md-3">
                                 @forelse($lowStockProducts as $product)
-                                <div class="d-flex justify-content-between align-items-center {{ !$loop->last ? 'mb-3 pb-3 border-bottom' : '' }}">
+                                <div class="d-flex justify-content-between align-items-center {{ !$loop->last ? 'mb-2 mb-md-3 pb-2 pb-md-3 border-bottom' : '' }}">
                                     <div>
-                                        <h6 class="mb-1">{{ Str::limit($product->name, 35) }}</h6>
-                                        <div class="progress progress-thin" style="width: 150px;">
+                                        <h6 class="mb-1 small">{{ Str::limit($product->name, 30) }}</h6>
+                                        <div class="progress progress-thin" style="width: 100px; height: 4px;">
                                             @php
                                                 $percentage = $product->low_quantity_threshold > 0 
                                                     ? min(100, ($product->stock_quantity / $product->low_quantity_threshold) * 100)
@@ -380,11 +382,11 @@
                                         </div>
                                     </div>
                                     <div class="text-end">
-                                        <span class="badge bg-{{ $product->stock_quantity <= 5 ? 'danger' : 'warning' }}">
+                                        <span class="badge bg-{{ $product->stock_quantity <= 5 ? 'danger' : 'warning' }}" style="font-size: 0.7rem;">
                                             {{ $product->stock_quantity }} left
                                         </span>
                                         <br>
-                                        <small class="text-muted">Min: {{ $product->low_quantity_threshold }}</small>
+                                        <small class="text-muted" style="font-size: 0.65rem;">Min: {{ $product->low_quantity_threshold }}</small>
                                     </div>
                                 </div>
                                 @empty
@@ -400,51 +402,51 @@
                     
                     <!-- Lead Statistics -->
                     @if($canViewLeads)
-                    <div class="col-lg-6">
+                    <div class="col-12 col-lg-6">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                                <h3 class="h5 mb-0 fw-semibold">
+                                <h3 class="h6 h5-md mb-0 fw-semibold">
                                     <i class="fas fa-user-plus text-primary me-2"></i>Lead Statistics
                                 </h3>
                                 <a href="{{ route('admin.leads.index') }}" class="btn btn-sm btn-link text-decoration-none">View All</a>
                             </div>
-                            <div class="card-body">
-                                <div class="row g-3">
+                            <div class="card-body p-2 p-md-3">
+                                <div class="row g-2 g-md-3">
                                     <div class="col-6">
-                                        <div class="lead-stat-item text-center p-3 bg-light rounded">
-                                            <h3 class="mb-1 text-primary">{{ $leadStats['total'] }}</h3>
-                                            <small class="text-muted">Total Leads</small>
+                                        <div class="lead-stat-item text-center p-2 p-md-3 bg-light rounded">
+                                            <h3 class="mb-1 text-primary h5 h3-md">{{ $leadStats['total'] }}</h3>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Total Leads</small>
                                         </div>
                                     </div>
                                     <div class="col-6">
-                                        <div class="lead-stat-item text-center p-3 bg-light rounded">
-                                            <h3 class="mb-1 text-info">{{ $leadStats['new'] }}</h3>
-                                            <small class="text-muted">New Leads</small>
+                                        <div class="lead-stat-item text-center p-2 p-md-3 bg-light rounded">
+                                            <h3 class="mb-1 text-info h5 h3-md">{{ $leadStats['new'] }}</h3>
+                                            <small class="text-muted" style="font-size: 0.7rem;">New Leads</small>
                                         </div>
                                     </div>
                                     <div class="col-4">
-                                        <div class="lead-stat-item text-center p-2 rounded border">
-                                            <h5 class="mb-0 text-warning">{{ $leadStats['contacted'] }}</h5>
-                                            <small class="text-muted" style="font-size: 0.7rem;">Contacted</small>
+                                        <div class="lead-stat-item text-center p-1 p-md-2 rounded border">
+                                            <h5 class="mb-0 text-warning h6 h5-md">{{ $leadStats['contacted'] }}</h5>
+                                            <small class="text-muted" style="font-size: 0.6rem;">Contacted</small>
                                         </div>
                                     </div>
                                     <div class="col-4">
-                                        <div class="lead-stat-item text-center p-2 rounded border">
-                                            <h5 class="mb-0 text-success">{{ $leadStats['converted'] }}</h5>
-                                            <small class="text-muted" style="font-size: 0.7rem;">Converted</small>
+                                        <div class="lead-stat-item text-center p-1 p-md-2 rounded border">
+                                            <h5 class="mb-0 text-success h6 h5-md">{{ $leadStats['converted'] }}</h5>
+                                            <small class="text-muted" style="font-size: 0.6rem;">Converted</small>
                                         </div>
                                     </div>
                                     <div class="col-4">
-                                        <div class="lead-stat-item text-center p-2 rounded border">
-                                            <h5 class="mb-0 text-danger">{{ $leadStats['lost'] }}</h5>
-                                            <small class="text-muted" style="font-size: 0.7rem;">Lost</small>
+                                        <div class="lead-stat-item text-center p-1 p-md-2 rounded border">
+                                            <h5 class="mb-0 text-danger h6 h5-md">{{ $leadStats['lost'] }}</h5>
+                                            <small class="text-muted" style="font-size: 0.6rem;">Lost</small>
                                         </div>
                                     </div>
                                 </div>
                                 @if($leadStats['total'] > 0)
-                                <div class="mt-3">
+                                <div class="mt-2 mt-md-3">
                                     <small class="text-muted">Conversion Rate</small>
-                                    <div class="progress progress-thin mt-1">
+                                    <div class="progress progress-thin mt-1" style="height: 4px;">
                                         @php
                                             $conversionRate = $leadStats['total'] > 0 
                                                 ? round(($leadStats['converted'] / $leadStats['total']) * 100, 1) 

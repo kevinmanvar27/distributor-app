@@ -14,22 +14,24 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h4 class="card-title mb-0 fw-bold">Leads</h4>
-                                    <p class="mb-0 text-muted">Manage all leads</p>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    @if(auth()->user()->hasPermission('view_lead'))
-                                        <a href="{{ route('admin.leads.trashed') }}" class="btn btn-outline-secondary rounded-pill px-4">
-                                            <i class="fas fa-trash-alt me-2"></i>Trashed
-                                        </a>
-                                    @endif
-                                    @if(auth()->user()->hasPermission('create_lead'))
-                                        <a href="{{ route('admin.leads.create') }}" class="btn btn-theme rounded-pill px-4">
-                                            <i class="fas fa-plus me-2"></i>Add New Lead
-                                        </a>
-                                    @endif
+                            <div class="card-header bg-white border-0 py-3">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 gap-md-0">
+                                    <div class="mb-2 mb-md-0">
+                                        <h4 class="card-title mb-0 fw-bold h5 h4-md">Leads</h4>
+                                        <p class="mb-0 text-muted small">Manage all leads</p>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @if(auth()->user()->hasPermission('view_lead'))
+                                            <a href="{{ route('admin.leads.trashed') }}" class="btn btn-sm btn-md-normal btn-outline-secondary rounded-pill px-3 px-md-4">
+                                                <i class="fas fa-trash-alt me-1 me-md-2"></i><span class="d-none d-sm-inline">Trashed</span>
+                                            </a>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('create_lead'))
+                                            <a href="{{ route('admin.leads.create') }}" class="btn btn-sm btn-md-normal btn-theme rounded-pill px-3 px-md-4">
+                                                <i class="fas fa-plus me-1 me-md-2"></i><span class="d-none d-sm-inline">Add New Lead</span><span class="d-sm-none">Add</span>
+                                            </a>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                             <div class="card-body">
@@ -44,31 +46,31 @@
                                 <div class="card border mb-4">
                                     <div class="card-body py-3">
                                         <form action="{{ route('admin.leads.index') }}" method="GET" id="filter-form">
-                                            <div class="row g-3 align-items-end">
-                                                <div class="col-md-3">
-                                                    <label for="status" class="form-label fw-medium mb-1">Status</label>
-                                                    <select name="status" id="status" class="form-select rounded-pill">
+                                            <div class="row g-2 g-md-3 align-items-end">
+                                                <div class="col-6 col-md-3">
+                                                    <label for="status" class="form-label fw-medium mb-1 small">Status</label>
+                                                    <select name="status" id="status" class="form-select form-select-sm rounded-pill">
                                                         <option value="">All Statuses</option>
                                                         @foreach($statuses as $value => $label)
                                                             <option value="{{ $value }}" {{ request('status') == $value ? 'selected' : '' }}>{{ $label }}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>
-                                                <div class="col-md-3">
-                                                    <label for="from_date" class="form-label fw-medium mb-1">From Date</label>
-                                                    <input type="date" name="from_date" id="from_date" class="form-control rounded-pill" value="{{ request('from_date') }}">
+                                                <div class="col-6 col-md-3">
+                                                    <label for="from_date" class="form-label fw-medium mb-1 small">From Date</label>
+                                                    <input type="date" name="from_date" id="from_date" class="form-control form-control-sm rounded-pill" value="{{ request('from_date') }}">
                                                 </div>
-                                                <div class="col-md-3">
-                                                    <label for="to_date" class="form-label fw-medium mb-1">To Date</label>
-                                                    <input type="date" name="to_date" id="to_date" class="form-control rounded-pill" value="{{ request('to_date') }}">
+                                                <div class="col-6 col-md-3">
+                                                    <label for="to_date" class="form-label fw-medium mb-1 small">To Date</label>
+                                                    <input type="date" name="to_date" id="to_date" class="form-control form-control-sm rounded-pill" value="{{ request('to_date') }}">
                                                 </div>
-                                                <div class="col-md-3">
+                                                <div class="col-6 col-md-3">
                                                     <div class="d-flex gap-2">
-                                                        <button type="submit" class="btn btn-theme rounded-pill px-4">
-                                                            <i class="fas fa-filter me-2"></i>Filter
+                                                        <button type="submit" class="btn btn-sm btn-theme rounded-pill px-3">
+                                                            <i class="fas fa-filter me-1"></i><span class="d-none d-sm-inline">Filter</span>
                                                         </button>
-                                                        <a href="{{ route('admin.leads.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
-                                                            <i class="fas fa-times me-2"></i>Reset
+                                                        <a href="{{ route('admin.leads.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                                            <i class="fas fa-times me-1"></i><span class="d-none d-sm-inline">Reset</span>
                                                         </a>
                                                     </div>
                                                 </div>
