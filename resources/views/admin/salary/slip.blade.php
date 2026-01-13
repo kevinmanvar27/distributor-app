@@ -115,9 +115,9 @@
                                 
                                 <!-- Salary Breakdown (for mid-month changes) -->
                                 @if(isset($salaryBreakdown) && count($salaryBreakdown) > 1)
-                                <div class="card border-info border-0 bg-info bg-opacity-10 mb-4">
+                                <div class="card border-info border-0 bg-info text-white mb-4">
                                     <div class="card-header bg-transparent border-0">
-                                        <h6 class="fw-bold text-info mb-0">
+                                        <h6 class="fw-bold text-white mb-0">
                                             <i class="fas fa-info-circle me-2"></i>Salary Rate Changes This Month
                                         </h6>
                                     </div>

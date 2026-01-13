@@ -196,11 +196,11 @@
                     
                     <!-- Applied Coupon Display -->
                     <div id="applied-coupon-section" class="d-none">
-                        <div class="d-flex justify-content-between align-items-center bg-success bg-opacity-10 rounded p-3">
+                        <div class="d-flex justify-content-between align-items-center bg-success text-white rounded p-3">
                             <div>
-                                <span class="badge bg-success me-2"><i class="fas fa-check-circle me-1"></i>Applied</span>
+                                <span class="badge bg-white text-success me-2"><i class="fas fa-check-circle me-1"></i>Applied</span>
                                 <span class="fw-bold coupon-code-display"></span>
-                                <div class="small text-muted coupon-discount-display"></div>
+                                <div class="small text-white coupon-discount-display"></div>
                             </div>
                             <button class="btn btn-sm btn-outline-danger btn-ripple" type="button" id="remove-coupon-btn">
                                 <i class="fas fa-times"></i>

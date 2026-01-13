@@ -122,10 +122,10 @@
                         <div class="card border-0 shadow-sm h-100 stat-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div class="stat-icon bg-success bg-opacity-10 rounded-circle">
-                                        <i class="fas fa-indian-rupee-sign text-success"></i>
+                                    <div class="stat-icon bg-success rounded-circle">
+                                        <i class="fas fa-indian-rupee-sign text-white"></i>
                                     </div>
-                                    <span class="badge {{ $revenueGrowth >= 0 ? 'bg-success' : 'bg-danger' }} bg-opacity-10 {{ $revenueGrowth >= 0 ? 'text-success' : 'text-danger' }}">
+                                    <span class="badge {{ $revenueGrowth >= 0 ? 'bg-success' : 'bg-danger' }} text-white">
                                         <i class="fas fa-arrow-{{ $revenueGrowth >= 0 ? 'up' : 'down' }} me-1"></i>{{ abs($revenueGrowth) }}%
                                     </span>
                                 </div>
@@ -140,10 +140,10 @@
                         <div class="card border-0 shadow-sm h-100 stat-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div class="stat-icon bg-primary bg-opacity-10 rounded-circle">
-                                        <i class="fas fa-shopping-cart text-primary"></i>
+                                    <div class="stat-icon bg-primary rounded-circle">
+                                        <i class="fas fa-shopping-cart text-white"></i>
                                     </div>
-                                    <span class="badge bg-primary bg-opacity-10 text-primary">
+                                    <span class="badge bg-primary text-white">
                                         {{ $pendingOrders }} pending
                                     </span>
                                 </div>
@@ -160,10 +160,10 @@
                         <div class="card border-0 shadow-sm h-100 stat-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div class="stat-icon bg-info bg-opacity-10 rounded-circle">
-                                        <i class="fas fa-users text-info"></i>
+                                    <div class="stat-icon bg-info rounded-circle">
+                                        <i class="fas fa-users text-white"></i>
                                     </div>
-                                    <span class="badge bg-info bg-opacity-10 text-info">
+                                    <span class="badge bg-info text-white">
                                         {{ $userGroupCount }} groups
                                     </span>
                                 </div>
@@ -180,15 +180,15 @@
                         <div class="card border-0 shadow-sm h-100 stat-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div class="stat-icon bg-warning bg-opacity-10 rounded-circle">
-                                        <i class="fas fa-boxes text-warning"></i>
+                                    <div class="stat-icon bg-warning rounded-circle">
+                                        <i class="fas fa-boxes text-white"></i>
                                     </div>
                                     @if($outOfStockCount > 0)
-                                    <span class="badge bg-danger bg-opacity-10 text-danger">
+                                    <span class="badge bg-danger text-white">
                                         {{ $outOfStockCount }} out of stock
                                     </span>
                                     @else
-                                    <span class="badge bg-success bg-opacity-10 text-success">
+                                    <span class="badge bg-success text-white">
                                         All in stock
                                     </span>
                                     @endif

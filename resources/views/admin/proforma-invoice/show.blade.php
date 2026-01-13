@@ -30,15 +30,15 @@
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <div class="p-3 bg-success bg-opacity-10 rounded">
-                                            <small class="text-muted d-block">Paid Amount</small>
-                                            <h5 class="mb-0 fw-bold text-success">₹{{ number_format($proformaInvoice->paid_amount, 2) }}</h5>
+                                        <div class="p-3 bg-success rounded">
+                                            <small class="text-white d-block">Paid Amount</small>
+                                            <h5 class="mb-0 fw-bold text-white">₹{{ number_format($proformaInvoice->paid_amount, 2) }}</h5>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <div class="p-3 bg-danger bg-opacity-10 rounded">
-                                            <small class="text-muted d-block">Pending Amount</small>
-                                            <h5 class="mb-0 fw-bold text-danger">₹{{ number_format($pendingAmount, 2) }}</h5>
+                                        <div class="p-3 bg-danger rounded">
+                                            <small class="text-white d-block">Pending Amount</small>
+                                            <h5 class="mb-0 fw-bold text-white">₹{{ number_format($pendingAmount, 2) }}</h5>
                                         </div>
                                     </div>
                                     <div class="col-md-3">

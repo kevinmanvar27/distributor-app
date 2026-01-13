@@ -280,7 +280,7 @@
             if (response.summary) {
                 html += `<div class="row mt-3">
                             <div class="col-md-4">
-                                <div class="card border-0 bg-primary bg-opacity-10 text-primary">
+                                <div class="card border-0 bg-primary text-white">
                                     <div class="card-body text-center">
                                         <h5 class="card-title mb-0">${response.summary.total_users}</h5>
                                         <p class="card-text mb-0">Total Users</p>
@@ -288,7 +288,7 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="card border-0 bg-success bg-opacity-10 text-success">
+                                <div class="card border-0 bg-success text-white">
                                     <div class="card-body text-center">
                                         <h5 class="card-title mb-0">${response.summary.successful}</h5>
                                         <p class="card-text mb-0">Successful</p>
@@ -296,7 +296,7 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="card border-0 bg-danger bg-opacity-10 text-danger">
+                                <div class="card border-0 bg-danger text-white">
                                     <div class="card-body text-center">
                                         <h5 class="card-title mb-0">${response.summary.failed}</h5>
                                         <p class="card-text mb-0">Failed</p>

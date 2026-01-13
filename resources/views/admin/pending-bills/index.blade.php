@@ -18,8 +18,8 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h6 class="mb-1 opacity-75">Total Bills</h6>
-                                        <h3 class="mb-0 fw-bold">{{ $totalBills }}</h3>
+                                        <h6 class="mb-1 text-white">Total Bills</h6>
+                                        <h3 class="mb-0 fw-bold text-white">{{ $totalBills }}</h3>
                                     </div>
                                     <div class="bg-white bg-opacity-25 rounded-circle p-3">
                                         <i class="fas fa-file-invoice fa-lg"></i>
@@ -33,8 +33,8 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h6 class="mb-1 opacity-75">Total Amount</h6>
-                                        <h3 class="mb-0 fw-bold">₹{{ number_format($totalAmount, 2) }}</h3>
+                                        <h6 class="mb-1 text-white">Total Amount</h6>
+                                        <h3 class="mb-0 fw-bold text-white">₹{{ number_format($totalAmount, 2) }}</h3>
                                     </div>
                                     <div class="bg-white bg-opacity-25 rounded-circle p-3">
                                         <i class="fas fa-rupee-sign fa-lg"></i>
@@ -48,8 +48,8 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h6 class="mb-1 opacity-75">Total Paid</h6>
-                                        <h3 class="mb-0 fw-bold">₹{{ number_format($totalPaid, 2) }}</h3>
+                                        <h6 class="mb-1 text-white">Total Paid</h6>
+                                        <h3 class="mb-0 fw-bold text-white">₹{{ number_format($totalPaid, 2) }}</h3>
                                     </div>
                                     <div class="bg-white bg-opacity-25 rounded-circle p-3">
                                         <i class="fas fa-check-circle fa-lg"></i>
@@ -63,8 +63,8 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h6 class="mb-1 opacity-75">Total Pending</h6>
-                                        <h3 class="mb-0 fw-bold">₹{{ number_format($totalPending, 2) }}</h3>
+                                        <h6 class="mb-1 text-white">Total Pending</h6>
+                                        <h3 class="mb-0 fw-bold text-white">₹{{ number_format($totalPending, 2) }}</h3>
                                     </div>
                                     <div class="bg-white bg-opacity-25 rounded-circle p-3">
                                         <i class="fas fa-clock fa-lg"></i>
