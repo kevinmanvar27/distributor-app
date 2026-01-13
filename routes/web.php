@@ -26,6 +26,8 @@ use App\Http\Controllers\Frontend\RegisterController;
 use App\Http\Controllers\Frontend\ShoppingCartController;
 use App\Http\Controllers\Frontend\PageController as FrontendPageController;
 use App\Http\Controllers\Frontend\AccountDeletionController;
+use App\Http\Controllers\Admin\AttendanceController;
+use App\Http\Controllers\Admin\SalaryController;
 
 // Redirect root URL based on frontend access settings
 Route::get('/', function () {
@@ -449,6 +451,34 @@ Route::middleware('auth')->group(function () {
             'destroy' => 'admin.coupons.destroy',
         ]);
         Route::post('/coupons/{coupon}/toggle-status', [CouponController::class, 'toggleStatus'])->name('admin.coupons.toggle-status');
+    });
+
+    // Attendance Management Routes
+    Route::prefix('admin')->group(function () {
+        Route::get('/attendance', [AttendanceController::class, 'index'])->name('admin.attendance.index');
+        Route::get('/attendance/bulk', [AttendanceController::class, 'bulk'])->name('admin.attendance.bulk');
+        Route::post('/attendance/bulk', [AttendanceController::class, 'storeBulk'])->name('admin.attendance.store-bulk');
+        Route::post('/attendance', [AttendanceController::class, 'store'])->name('admin.attendance.store');
+        Route::get('/attendance/report', [AttendanceController::class, 'report'])->name('admin.attendance.report');
+        Route::get('/attendance/data', [AttendanceController::class, 'getAttendance'])->name('admin.attendance.data');
+        Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy'])->name('admin.attendance.destroy');
+    });
+
+    // Salary Management Routes
+    Route::prefix('admin')->group(function () {
+        Route::get('/salary', [SalaryController::class, 'index'])->name('admin.salary.index');
+        Route::get('/salary/create', [SalaryController::class, 'create'])->name('admin.salary.create');
+        Route::post('/salary', [SalaryController::class, 'store'])->name('admin.salary.store');
+        Route::get('/salary/user/{userId}', [SalaryController::class, 'show'])->name('admin.salary.show');
+        Route::delete('/salary/{id}', [SalaryController::class, 'destroy'])->name('admin.salary.destroy');
+        
+        // Salary Payments/Payroll
+        Route::get('/salary/payments', [SalaryController::class, 'payments'])->name('admin.salary.payments');
+        Route::post('/salary/payments/{id}/process', [SalaryController::class, 'processPayment'])->name('admin.salary.process-payment');
+        Route::post('/salary/payments/{id}/adjustments', [SalaryController::class, 'updateAdjustments'])->name('admin.salary.update-adjustments');
+        Route::post('/salary/payments/{id}/recalculate', [SalaryController::class, 'recalculate'])->name('admin.salary.recalculate');
+        Route::get('/salary/slip/{id}', [SalaryController::class, 'slip'])->name('admin.salary.slip');
+        Route::get('/salary/slip/{id}/download', [SalaryController::class, 'downloadSlip'])->name('admin.salary.download-slip');
     });
 
 });

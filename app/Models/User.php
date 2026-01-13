@@ -253,4 +253,36 @@ class User extends Authenticatable
     {
         return $this->hasMany(ProformaInvoice::class);
     }
+    
+    /**
+     * Get the attendance records for the user.
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+    
+    /**
+     * Get the salary records for the user.
+     */
+    public function salaries()
+    {
+        return $this->hasMany(Salary::class);
+    }
+    
+    /**
+     * Get the active salary for the user.
+     */
+    public function activeSalary()
+    {
+        return $this->hasOne(Salary::class)->where('is_active', true)->latestOfMany('effective_from');
+    }
+    
+    /**
+     * Get the salary payments for the user.
+     */
+    public function salaryPayments()
+    {
+        return $this->hasMany(SalaryPayment::class);
+    }
 }

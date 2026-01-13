@@ -206,6 +206,40 @@
                 </li>
                 @endif
 
+                <!-- Attendance Section -->
+                @php 
+                    $hasAttendancePermission = auth()->user()->hasPermission('viewAny_attendance') ||
+                                        auth()->user()->hasPermission('create_attendance') || 
+                                        auth()->user()->hasPermission('update_attendance') || 
+                                        auth()->user()->hasPermission('delete_attendance') ||
+                                        auth()->user()->isSuperAdmin(); 
+                @endphp
+                @if($hasAttendancePermission)
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('admin.attendance*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.attendance.index') }}">
+                        <i class="fas fa-calendar-check me-3"></i>
+                        <span class="sidebar-text">Attendance</span>
+                    </a>
+                </li>
+                @endif
+
+                <!-- Salary Section -->
+                @php 
+                    $hasSalaryPermission = auth()->user()->hasPermission('viewAny_salary') ||
+                                        auth()->user()->hasPermission('create_salary') || 
+                                        auth()->user()->hasPermission('update_salary') || 
+                                        auth()->user()->hasPermission('delete_salary') ||
+                                        auth()->user()->isSuperAdmin(); 
+                @endphp
+                @if($hasSalaryPermission)
+                <li class="nav-item mb-1">
+                    <a class="nav-link {{ request()->routeIs('admin.salary*') ? 'active bg-theme text-white' : 'hover-bg' }} rounded-pill d-flex align-items-center py-2 px-3" href="{{ route('admin.salary.index') }}">
+                        <i class="fas fa-money-bill-wave me-3"></i>
+                        <span class="sidebar-text">Salary</span>
+                    </a>
+                </li>
+                @endif
+
             </ul>
             
             <div class="px-3 py-3 border-top border-default mt-auto">
