@@ -109,14 +109,18 @@ class ShoppingCartController extends Controller
         }
 
         // Build where clause for checking existing cart item
+        // Always include product_variation_id (even if null) to properly match cart items
         $whereClause = Auth::check() ? 
-            ['user_id' => Auth::id(), 'product_id' => $product->id] :
-            ['session_id' => session()->getId(), 'product_id' => $product->id];
-            
-        // For variable products, also match variation_id
-        if ($variationId) {
-            $whereClause['product_variation_id'] = $variationId;
-        }
+            [
+                'user_id' => Auth::id(), 
+                'product_id' => $product->id,
+                'product_variation_id' => $variationId
+            ] :
+            [
+                'session_id' => session()->getId(), 
+                'product_id' => $product->id,
+                'product_variation_id' => $variationId
+            ];
         
         // Check if item already exists in cart to calculate total needed quantity
         $existingCartItem = ShoppingCartItem::where($whereClause)->first();
@@ -154,17 +158,11 @@ class ShoppingCartController extends Controller
             $discountedPrice = calculateDiscountedPrice($priceToUse, Auth::user());
         }
 
-        // Prepare data for cart item
+        // Prepare data for cart item - only include values that should be updated
         $cartData = [
-            'product_id' => $product->id,
             'quantity' => $totalQuantityNeeded,
             'price' => $discountedPrice,
         ];
-        
-        // Add variation_id if present
-        if ($variationId) {
-            $cartData['product_variation_id'] = $variationId;
-        }
 
         // Add user_id or session_id based on authentication status
         if (Auth::check()) {
@@ -416,16 +414,19 @@ class ShoppingCartController extends Controller
         
         // Migrate each guest cart item to user's cart
         foreach ($guestCartItems as $guestCartItem) {
-            // Check if user already has this product in their cart
+            // Check if user already has this product (with same variation) in their cart
             $existingCartItem = ShoppingCartItem::where('user_id', $userId)
                 ->where('product_id', $guestCartItem->product_id)
+                ->where('product_variation_id', $guestCartItem->product_variation_id)
                 ->first();
                 
             if ($existingCartItem) {
-                // If user already has this product, update quantity (combine quantities)
+                // If user already has this product/variation, update quantity (combine quantities)
                 // Make sure we don't exceed stock quantity
-                $product = $guestCartItem->product;
-                $newQuantity = min($existingCartItem->quantity + $guestCartItem->quantity, $product->stock_quantity);
+                $stockQuantity = $guestCartItem->variation 
+                    ? $guestCartItem->variation->stock_quantity 
+                    : $guestCartItem->product->stock_quantity;
+                $newQuantity = min($existingCartItem->quantity + $guestCartItem->quantity, $stockQuantity);
                 $existingCartItem->update([
                     'quantity' => $newQuantity
                 ]);
@@ -433,10 +434,12 @@ class ShoppingCartController extends Controller
                 // Delete the guest cart item
                 $guestCartItem->delete();
             } else {
-                // If user doesn't have this product, transfer the guest cart item to user
+                // If user doesn't have this product/variation, transfer the guest cart item to user
                 // Make sure we don't exceed stock quantity
-                $product = $guestCartItem->product;
-                $newQuantity = min($guestCartItem->quantity, $product->stock_quantity);
+                $stockQuantity = $guestCartItem->variation 
+                    ? $guestCartItem->variation->stock_quantity 
+                    : $guestCartItem->product->stock_quantity;
+                $newQuantity = min($guestCartItem->quantity, $stockQuantity);
                 $guestCartItem->update([
                     'user_id' => $userId,
                     'session_id' => null,
@@ -475,39 +478,65 @@ class ShoppingCartController extends Controller
             
             $productId = $guestCartItem['product_id'];
             $quantity = (int) $guestCartItem['quantity'];
+            $variationId = $guestCartItem['product_variation_id'] ?? null;
             
-            // Validate product exists and is available
+            // Validate product exists
             $product = Product::find($productId);
-            if (!$product || !$product->in_stock || $product->stock_quantity < $quantity) {
+            if (!$product) {
                 continue;
             }
             
-            // Calculate the price for this product
-            $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) ? 
-                          $product->selling_price : $product->mrp;
+            // Check variation if specified
+            $variation = null;
+            if ($variationId) {
+                $variation = ProductVariation::where('id', $variationId)
+                    ->where('product_id', $productId)
+                    ->first();
+                if (!$variation) {
+                    continue; // Skip if variation doesn't exist
+                }
+            }
             
-            // For guests (when userId is passed but user might not be authenticated),
-            // calculate price without discount
-            $user = \Illuminate\Support\Facades\Auth::find($userId);
+            // Check stock availability
+            $stockQuantity = $variation ? $variation->stock_quantity : $product->stock_quantity;
+            $inStock = $variation ? ($variation->stock_quantity > 0) : $product->in_stock;
+            
+            if (!$inStock || $stockQuantity < $quantity) {
+                continue;
+            }
+            
+            // Calculate the price for this product/variation
+            if ($variation) {
+                $priceToUse = (!is_null($variation->selling_price) && $variation->selling_price !== '' && $variation->selling_price >= 0) ? 
+                              $variation->selling_price : $variation->mrp;
+            } else {
+                $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) ? 
+                              $product->selling_price : $product->mrp;
+            }
+            
+            // Calculate price with user discount
+            $user = User::find($userId);
             $discountedPrice = $user ? calculateDiscountedPrice($priceToUse, $user) : $priceToUse;
             
-            // Check if user already has this product in their cart
+            // Check if user already has this product/variation in their cart
             $existingCartItem = ShoppingCartItem::where('user_id', $userId)
                 ->where('product_id', $productId)
+                ->where('product_variation_id', $variationId)
                 ->first();
                 
             if ($existingCartItem) {
-                // If user already has this product, update quantity (combine quantities)
-                $newQuantity = min($existingCartItem->quantity + $quantity, $product->stock_quantity);
+                // If user already has this product/variation, update quantity (combine quantities)
+                $newQuantity = min($existingCartItem->quantity + $quantity, $stockQuantity);
                 $existingCartItem->update([
                     'quantity' => $newQuantity
                 ]);
             } else {
-                // If user doesn't have this product, create a new cart item
-                $newQuantity = min($quantity, $product->stock_quantity);
+                // If user doesn't have this product/variation, create a new cart item
+                $newQuantity = min($quantity, $stockQuantity);
                 ShoppingCartItem::create([
                     'user_id' => $userId,
                     'product_id' => $productId,
+                    'product_variation_id' => $variationId,
                     'quantity' => $newQuantity,
                     'price' => $discountedPrice
                 ]);
@@ -867,15 +896,19 @@ class ShoppingCartController extends Controller
                 }
                 
                 // Build where clause for checking existing cart item
-                $whereClause = Auth::check() ? 
-                    ['user_id' => Auth::id(), 'product_id' => $item['product_id']] :
-                    ['session_id' => session()->getId(), 'product_id' => $item['product_id']];
-                
-                // For variable products, also match variation_id
+                // Always include product_variation_id (even if null) to properly match cart items
                 $variationId = $item['product_variation_id'] ?? null;
-                if ($variationId) {
-                    $whereClause['product_variation_id'] = $variationId;
-                }
+                $whereClause = Auth::check() ? 
+                    [
+                        'user_id' => Auth::id(), 
+                        'product_id' => $item['product_id'],
+                        'product_variation_id' => $variationId
+                    ] :
+                    [
+                        'session_id' => session()->getId(), 
+                        'product_id' => $item['product_id'],
+                        'product_variation_id' => $variationId
+                    ];
                 
                 // Check if item already exists in cart
                 $existingCartItem = ShoppingCartItem::where($whereClause)->first();
