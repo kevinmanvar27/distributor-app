@@ -132,6 +132,38 @@ Complete business oversight:
 - **Settings Control**: Configure business settings, access permissions, and more
 - **Lead Management**: Track and manage potential customers
 
+### 10. Salary Management
+
+Comprehensive staff salary and payroll system:
+
+- **Salary Structure Setup**: Define base salary and working days per month for each staff member
+- **Auto-Calculated Rates**: Daily rate and half-day rate automatically calculated from base salary
+- **Effective Date Management**: Set salary effective dates with support for mid-month salary changes
+- **Salary History**: Complete salary revision history for each employee
+- **Monthly Payroll Processing**: Generate and manage monthly salary payments
+- **Attendance-Based Calculation**: Salary automatically calculated based on attendance records
+- **Deductions & Bonus**: Add deductions and bonus amounts to monthly salary
+- **Payment Tracking**: Track paid amount, pending amount, and payment status (Pending/Partial/Paid)
+- **Payment Processing**: Record payment method, transaction ID, and payment date
+- **Salary Slip Generation**: View and download professional PDF salary slips
+- **Salary Breakdown**: Detailed breakdown showing how salary was calculated (supports mid-month rate changes)
+- **Bulk Recalculation**: Recalculate salaries when attendance or salary structure changes
+
+### 11. Attendance Management
+
+Complete staff attendance tracking system:
+
+- **Calendar View**: Visual monthly calendar showing attendance status for each day
+- **Daily Attendance Marking**: Mark attendance as Present, Absent, Half Day, Leave, or Holiday
+- **Check-in/Check-out Times**: Record arrival and departure times
+- **Working Hours Calculation**: Automatic calculation of working hours from check-in/check-out
+- **Bulk Attendance**: Mark attendance for all staff members on a single date
+- **Attendance Summary**: View monthly summary with counts for each attendance status
+- **Attendance Reports**: Generate attendance reports for all staff by month
+- **Staff-wise View**: Filter and view attendance for individual staff members
+- **Notes Support**: Add notes/remarks for each attendance entry
+- **Salary Integration**: Attendance directly integrates with salary calculation
+
 ---
 
 ## Ease of Use
