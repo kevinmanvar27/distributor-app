@@ -53,6 +53,20 @@
                 </li>
             @endif
             
+            <!-- 3.5 Product Analytics Section -->
+            @if(auth()->user()->hasPermission('viewAny_product') || 
+                auth()->user()->hasPermission('create_product') || 
+                auth()->user()->hasPermission('update_product') || 
+                auth()->user()->hasPermission('delete_product') ||
+                auth()->user()->isSuperAdmin())
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.analytics.products*') ? 'active' : '' }}" href="{{ route('admin.analytics.products') }}" data-title="Product Analytics">
+                        <i class="fas fa-chart-line me-3"></i>
+                        <span class="sidebar-text">Product Analytics</span>
+                    </a>
+                </li>
+            @endif
+            
             <!-- 4. Category Section -->
             @if(auth()->user()->hasPermission('viewAny_category') || 
                 auth()->user()->hasPermission('create_category') || 

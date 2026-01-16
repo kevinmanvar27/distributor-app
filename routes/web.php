@@ -28,6 +28,7 @@ use App\Http\Controllers\Frontend\PageController as FrontendPageController;
 use App\Http\Controllers\Frontend\AccountDeletionController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\SalaryController;
+use App\Http\Controllers\Admin\ProductAnalyticsController;
 
 // Redirect root URL based on frontend access settings
 Route::get('/', function () {
@@ -311,6 +312,12 @@ Route::middleware('auth')->group(function () {
         // Additional product routes
         Route::get('/products/{product}/details', [ProductController::class, 'showDetails'])->name('admin.products.details');
         Route::get('/products-low-stock', [ProductController::class, 'lowStock'])->name('admin.products.low-stock');
+        
+        // Product Analytics Routes
+        Route::get('/analytics/products', [ProductAnalyticsController::class, 'index'])->name('admin.analytics.products');
+        Route::get('/analytics/products/export', [ProductAnalyticsController::class, 'export'])->name('admin.analytics.products.export');
+        Route::get('/analytics/products/chart-data', [ProductAnalyticsController::class, 'getChartData'])->name('admin.analytics.products.chart-data');
+        Route::get('/analytics/products/{product}', [ProductAnalyticsController::class, 'show'])->name('admin.analytics.products.show');
         
         // Product Attributes Routes
         Route::resource('attributes', ProductAttributeController::class)->names([

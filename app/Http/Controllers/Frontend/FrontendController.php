@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
+use App\Models\ProductView;
+use App\Services\GeoLocationService;
 
 class FrontendController extends Controller
 {
@@ -255,11 +257,61 @@ class FrontendController extends Controller
         // Load main photo and gallery media
         $product->load('mainPhoto', 'galleryMedia');
         
+        // Track product view
+        $this->trackProductView($product);
+        
         // SEO meta tags
         $metaTitle = $product->name . ' - ' . setting('site_title', 'Frontend App');
         $metaDescription = $product->meta_description ?? Str::limit($product->description, 160);
         
         return view('frontend.product', compact('product', 'metaTitle', 'metaDescription'));
+    }
+    
+    /**
+     * Track product view for analytics
+     *
+     * @param  \App\Models\Product  $product
+     * @return void
+     */
+    protected function trackProductView(Product $product)
+    {
+        try {
+            $request = request();
+            $sessionId = session()->getId();
+            $userAgent = $request->userAgent();
+            $ipAddress = $request->ip();
+            
+            // Prevent duplicate views from same session within 30 minutes
+            $recentView = ProductView::where('product_id', $product->id)
+                ->where('session_id', $sessionId)
+                ->where('created_at', '>=', now()->subMinutes(30))
+                ->exists();
+            
+            if (!$recentView) {
+                // Get location data from IP
+                $location = GeoLocationService::getLocation($ipAddress);
+                
+                ProductView::create([
+                    'product_id' => $product->id,
+                    'user_id' => Auth::id(),
+                    'session_id' => $sessionId,
+                    'ip_address' => $ipAddress,
+                    'user_agent' => $userAgent,
+                    'referrer' => $request->header('referer'),
+                    'device_type' => ProductView::detectDeviceType($userAgent),
+                    'browser' => ProductView::detectBrowser($userAgent),
+                    'country' => $location['country'],
+                    'country_code' => $location['country_code'],
+                    'region' => $location['region'],
+                    'city' => $location['city'],
+                    'latitude' => $location['latitude'],
+                    'longitude' => $location['longitude'],
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silently fail - don't break product page if tracking fails
+            Log::error('Product view tracking failed: ' . $e->getMessage());
+        }
     }
     
     /**

@@ -252,4 +252,28 @@ class Product extends Model
 
         return SubCategory::whereIn('id', $subcategoryIds)->get();
     }
+
+    /**
+     * Get the product views for analytics.
+     */
+    public function views()
+    {
+        return $this->hasMany(ProductView::class);
+    }
+
+    /**
+     * Get total view count for this product.
+     */
+    public function getViewCountAttribute()
+    {
+        return $this->views()->count();
+    }
+
+    /**
+     * Get unique visitor count for this product.
+     */
+    public function getUniqueViewCountAttribute()
+    {
+        return $this->views()->distinct('session_id')->count('session_id');
+    }
 }
