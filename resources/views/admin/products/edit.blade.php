@@ -1319,6 +1319,8 @@
             console.log('Form action:', $(this).attr('action'));
             console.log('Form method:', $(this).attr('method'));
             
+            let hasIssues = false;
+            
             // Check all variation image_id inputs
             $('.variation-image-id').each(function(index) {
                 const $input = $(this);
@@ -1326,8 +1328,10 @@
                 const domValue = this.value;
                 const name = $input.attr('name');
                 const attrValue = $input.attr('value');
+                const jsSet = $input.attr('data-js-set');
+                const jsValue = $input.attr('data-js-value');
                 
-                console.log(`Variation ${index}:`, {
+                const logData = {
                     name: name,
                     jqueryVal: value,
                     domValue: domValue,
@@ -1335,14 +1339,24 @@
                     isEmpty: !value || value === '' || value === 'null',
                     isDisabled: $input.prop('disabled'),
                     isVisible: $input.is(':visible'),
+                    wasSetByJS: jsSet === 'true',
+                    jsValueMarker: jsValue,
                     element: this
-                });
+                };
+                
+                console.log(`Variation ${index}:`, logData);
                 
                 // If value is empty or null string, log warning
                 if (!value || value === '' || value === 'null') {
-                    console.warn(`WARNING: Variation ${index} has no image_id set`);
+                    console.warn(`⚠️ WARNING: Variation ${index} has no image_id set`);
+                    if (jsSet === 'true') {
+                        console.error(`🔴 CRITICAL: Variation ${index} was set by JS (marker present) but value is now empty!`);
+                        console.error(`   JS tried to set: ${jsValue}`);
+                        console.error(`   Current value: ${value}`);
+                        hasIssues = true;
+                    }
                 } else {
-                    console.log(`✓ Variation ${index} has image_id: ${value}`);
+                    console.log(`✅ Variation ${index} has image_id: ${value}`);
                 }
             });
             
@@ -1355,6 +1369,11 @@
                     domValue: this.value
                 });
             });
+            
+            if (hasIssues) {
+                console.error('🔴 ISSUES DETECTED: Some values were set by JavaScript but are now empty!');
+                console.error('This suggests the values are being cleared between selection and submission.');
+            }
             
             console.log('=== END FORM SUBMISSION DEBUG ===');
             

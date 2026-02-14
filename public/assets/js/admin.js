@@ -1233,6 +1233,13 @@
                             
                             // Set the hidden image_id field - THIS IS CRITICAL
                             // Try multiple methods to ensure the value is set
+                            console.log('🔵 BEFORE setting value:', {
+                                currentVal: $imageIdInput.val(),
+                                currentDomValue: $imageIdInput[0] ? $imageIdInput[0].value : 'N/A',
+                                mediaIdToSet: mediaId,
+                                mediaIdType: typeof mediaId
+                            });
+                            
                             $imageIdInput.val(mediaId);
                             $imageIdInput.attr('value', mediaId);
                             $imageIdInput.prop('value', mediaId);
@@ -1243,7 +1250,11 @@
                                 $imageIdInput[0].setAttribute('value', mediaId);
                             }
                             
-                            console.log('Set image_id input (multiple methods):', {
+                            // Mark that this was set by JavaScript
+                            $imageIdInput.attr('data-js-set', 'true');
+                            $imageIdInput.attr('data-js-value', mediaId);
+                            
+                            console.log('🟢 AFTER setting value:', {
                                 jqueryVal: $imageIdInput.val(),
                                 jqueryAttr: $imageIdInput.attr('value'),
                                 jqueryProp: $imageIdInput.prop('value'),
@@ -1251,6 +1262,7 @@
                                 domAttr: $imageIdInput[0] ? $imageIdInput[0].getAttribute('value') : 'N/A',
                                 name: $imageIdInput.attr('name'),
                                 mediaId: mediaId,
+                                jsSetMarker: $imageIdInput.attr('data-js-set'),
                                 inputElement: $imageIdInput[0]
                             });
                             
@@ -1258,14 +1270,18 @@
                             setTimeout(function() {
                                 const verifyValue = $imageIdInput.val();
                                 const verifyDomValue = $imageIdInput[0] ? $imageIdInput[0].value : null;
-                                console.log('Verified image_id after 100ms:', {
+                                console.log('🟡 VERIFIED after 100ms:', {
                                     jqueryVal: verifyValue,
-                                    domValue: verifyDomValue
+                                    domValue: verifyDomValue,
+                                    stillHasJsMarker: $imageIdInput.attr('data-js-set') === 'true'
                                 });
                                 if (!verifyValue || verifyValue === '' || verifyValue === 'null') {
-                                    console.error('WARNING: image_id was not properly set!');
+                                    console.error('❌ WARNING: image_id was not properly set!');
                                     console.error('Input element:', $imageIdInput[0]);
+                                    console.error('Parent elements:', $imageIdInput.parents().map(function() { return this.tagName + '.' + this.className; }).get());
                                     alert('Warning: Image ID may not have been set properly. Please save and check if the image persists.');
+                                } else {
+                                    console.log('✅ SUCCESS: image_id is set to:', verifyValue);
                                 }
                             }, 100);
                             

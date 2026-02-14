@@ -222,11 +222,15 @@ class ProductController extends Controller
                 if (is_array($variations)) {
                     foreach ($variations as $index => $varData) {
                         Log::info("Variation {$index} raw data:", [
-                            'image_id' => $varData['image_id'] ?? 'NOT SET',
-                            'image_id_type' => isset($varData['image_id']) ? gettype($varData['image_id']) : 'N/A',
-                            'image_id_empty' => isset($varData['image_id']) ? empty($varData['image_id']) : 'N/A',
+                            'image_id_value' => array_key_exists('image_id', $varData) ? $varData['image_id'] : 'KEY_NOT_EXISTS',
+                            'image_id_isset' => isset($varData['image_id']),
+                            'image_id_array_key_exists' => array_key_exists('image_id', $varData),
+                            'image_id_type' => array_key_exists('image_id', $varData) ? gettype($varData['image_id']) : 'N/A',
+                            'image_id_is_null' => array_key_exists('image_id', $varData) ? ($varData['image_id'] === null) : 'N/A',
+                            'image_id_empty' => array_key_exists('image_id', $varData) ? empty($varData['image_id']) : 'N/A',
                             'has_image_file' => $request->hasFile("variations.{$index}.image"),
-                            'all_keys' => array_keys($varData)
+                            'all_keys' => array_keys($varData),
+                            'raw_dump' => print_r($varData, true)
                         ]);
                     }
                 }
@@ -522,11 +526,15 @@ class ProductController extends Controller
                 if (is_array($variations)) {
                     foreach ($variations as $index => $varData) {
                         Log::info("Variation {$index} raw data:", [
-                            'image_id' => $varData['image_id'] ?? 'NOT SET',
-                            'image_id_type' => isset($varData['image_id']) ? gettype($varData['image_id']) : 'N/A',
-                            'image_id_empty' => isset($varData['image_id']) ? empty($varData['image_id']) : 'N/A',
+                            'image_id_value' => array_key_exists('image_id', $varData) ? $varData['image_id'] : 'KEY_NOT_EXISTS',
+                            'image_id_isset' => isset($varData['image_id']),
+                            'image_id_array_key_exists' => array_key_exists('image_id', $varData),
+                            'image_id_type' => array_key_exists('image_id', $varData) ? gettype($varData['image_id']) : 'N/A',
+                            'image_id_is_null' => array_key_exists('image_id', $varData) ? ($varData['image_id'] === null) : 'N/A',
+                            'image_id_empty' => array_key_exists('image_id', $varData) ? empty($varData['image_id']) : 'N/A',
                             'has_image_file' => $request->hasFile("variations.{$index}.image"),
-                            'all_keys' => array_keys($varData)
+                            'all_keys' => array_keys($varData),
+                            'raw_dump' => print_r($varData, true)
                         ]);
                     }
                 }
