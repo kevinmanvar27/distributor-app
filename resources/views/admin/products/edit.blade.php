@@ -539,6 +539,9 @@
                                     </div>
                                     
                                     <div class="d-flex justify-content-end gap-2 mt-4">
+                                        <button type="button" class="btn btn-info rounded-pill px-4 py-2" id="debug-check-btn" style="margin-right: auto;">
+                                            <i class="fas fa-bug me-2"></i> Debug Check (Console)
+                                        </button>
                                         <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2">
                                             <i class="fas fa-times me-2"></i> Cancel
                                         </a>
@@ -1315,11 +1318,17 @@
         
         // Form submission handler - verify image_id values before submit
         $('#product-form').on('submit', function(e) {
+            // TEMPORARY: Prevent submission to see console output
+            // Remove this after debugging
+            e.preventDefault();
+            
             console.log('=== FORM SUBMISSION DEBUG ===');
+            console.log('⚠️ FORM SUBMISSION PREVENTED FOR DEBUGGING');
             console.log('Form action:', $(this).attr('action'));
             console.log('Form method:', $(this).attr('method'));
             
             let hasIssues = false;
+            let debugReport = [];
             
             // Check all variation image_id inputs
             $('.variation-image-id').each(function(index) {
@@ -1346,6 +1355,20 @@
                 
                 console.log(`Variation ${index}:`, logData);
                 
+                // Build debug report
+                let status = '';
+                if (!value || value === '' || value === 'null') {
+                    status = '❌ EMPTY';
+                    if (jsSet === 'true') {
+                        status = '🔴 CRITICAL - WAS SET BY JS BUT NOW EMPTY';
+                        hasIssues = true;
+                    }
+                } else {
+                    status = `✅ HAS VALUE: ${value}`;
+                }
+                
+                debugReport.push(`Variation ${index}: ${status}`);
+                
                 // If value is empty or null string, log warning
                 if (!value || value === '' || value === 'null') {
                     console.warn(`⚠️ WARNING: Variation ${index} has no image_id set`);
@@ -1353,7 +1376,6 @@
                         console.error(`🔴 CRITICAL: Variation ${index} was set by JS (marker present) but value is now empty!`);
                         console.error(`   JS tried to set: ${jsValue}`);
                         console.error(`   Current value: ${value}`);
-                        hasIssues = true;
                     }
                 } else {
                     console.log(`✅ Variation ${index} has image_id: ${value}`);
@@ -1376,9 +1398,64 @@
             }
             
             console.log('=== END FORM SUBMISSION DEBUG ===');
+            console.log('\n📋 SUMMARY:\n' + debugReport.join('\n'));
             
-            // Let the form submit normally
-            return true;
+            // Show alert with summary
+            alert('FORM SUBMISSION PREVENTED FOR DEBUGGING\n\nCheck browser console for details.\n\n' + debugReport.join('\n') + '\n\nTo actually submit, comment out e.preventDefault() in the code.');
+            
+            // UNCOMMENT THIS LINE TO ALLOW ACTUAL SUBMISSION:
+            // return true;
+            
+            return false; // Prevent submission for now
+        });
+        
+        // Debug Check Button - Check variation image_id values without submitting
+        $('#debug-check-btn').on('click', function() {
+            console.log('\n\n=== MANUAL DEBUG CHECK ===');
+            console.log('Timestamp:', new Date().toISOString());
+            
+            let debugReport = [];
+            
+            // Check all variation image_id inputs
+            $('.variation-image-id').each(function(index) {
+                const $input = $(this);
+                const value = $input.val();
+                const domValue = this.value;
+                const name = $input.attr('name');
+                const jsSet = $input.attr('data-js-set');
+                const jsValue = $input.attr('data-js-value');
+                
+                console.log(`\nVariation ${index}:`, {
+                    name: name,
+                    jqueryVal: value,
+                    domValue: domValue,
+                    attrValue: $input.attr('value'),
+                    propValue: $input.prop('value'),
+                    isEmpty: !value || value === '' || value === 'null',
+                    wasSetByJS: jsSet === 'true',
+                    jsValueMarker: jsValue,
+                    element: this
+                });
+                
+                let status = '';
+                if (!value || value === '' || value === 'null') {
+                    if (jsSet === 'true') {
+                        status = `🔴 CRITICAL - JS set ${jsValue} but now EMPTY`;
+                    } else {
+                        status = '❌ EMPTY (never set by JS)';
+                    }
+                } else {
+                    status = `✅ HAS VALUE: ${value}`;
+                }
+                
+                debugReport.push(`Variation ${index}: ${status}`);
+            });
+            
+            console.log('\n📋 SUMMARY:\n' + debugReport.join('\n'));
+            console.log('=== END MANUAL DEBUG CHECK ===\n\n');
+            
+            // Show alert
+            alert('Debug check complete!\n\nCheck browser console for details.\n\n' + debugReport.join('\n'));
         });
     });
     @endif
