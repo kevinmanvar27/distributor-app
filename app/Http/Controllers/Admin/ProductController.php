@@ -215,6 +215,23 @@ class ProductController extends Controller
             // Handle variations for variable products
             if ($data['product_type'] === 'variable' && $request->has('variations')) {
                 $variations = $request->variations;
+                
+                // Log the raw variations data
+                Log::info('=== RAW VARIATIONS DATA ===');
+                Log::info('Type: ' . gettype($variations));
+                if (is_array($variations)) {
+                    foreach ($variations as $index => $varData) {
+                        Log::info("Variation {$index} raw data:", [
+                            'image_id' => $varData['image_id'] ?? 'NOT SET',
+                            'image_id_type' => isset($varData['image_id']) ? gettype($varData['image_id']) : 'N/A',
+                            'image_id_empty' => isset($varData['image_id']) ? empty($varData['image_id']) : 'N/A',
+                            'has_image_file' => $request->hasFile("variations.{$index}.image"),
+                            'all_keys' => array_keys($varData)
+                        ]);
+                    }
+                }
+                Log::info('=== END RAW VARIATIONS DATA ===');
+                
                 if (is_string($variations)) {
                     $variations = json_decode($variations, true);
                 }
@@ -498,6 +515,23 @@ class ProductController extends Controller
             // Handle variations for variable products
             if ($data['product_type'] === 'variable' && $request->has('variations')) {
                 $variations = $request->variations;
+                
+                // Log the raw variations data
+                Log::info('=== RAW VARIATIONS DATA ===');
+                Log::info('Type: ' . gettype($variations));
+                if (is_array($variations)) {
+                    foreach ($variations as $index => $varData) {
+                        Log::info("Variation {$index} raw data:", [
+                            'image_id' => $varData['image_id'] ?? 'NOT SET',
+                            'image_id_type' => isset($varData['image_id']) ? gettype($varData['image_id']) : 'N/A',
+                            'image_id_empty' => isset($varData['image_id']) ? empty($varData['image_id']) : 'N/A',
+                            'has_image_file' => $request->hasFile("variations.{$index}.image"),
+                            'all_keys' => array_keys($varData)
+                        ]);
+                    }
+                }
+                Log::info('=== END RAW VARIATIONS DATA ===');
+                
                 if (is_string($variations)) {
                     $variations = json_decode($variations, true);
                 }

@@ -1,102 +1,131 @@
-/**
- * Variation Image Debug Helper
- * 
- * Paste this into your browser console (F12) to debug variation image issues
- */
+// Debug helper for variation image upload issue
+// Paste this into browser console on the product edit page
 
-(function() {
-    console.log('=== VARIATION IMAGE DEBUG HELPER ===\n');
+console.log('=== VARIATION IMAGE DEBUG HELPER LOADED ===');
+
+// Function to check all variation image_id inputs
+window.debugVariationImages = function() {
+    console.log('\n=== CHECKING ALL VARIATION IMAGE_ID INPUTS ===\n');
     
-    // Check if we're on the product edit page
-    if (!$('#product-form').length) {
-        console.error('Not on product edit page!');
-        return;
-    }
+    // Method 1: Find by class
+    const byClass = $('.variation-image-id');
+    console.log(`Found ${byClass.length} inputs by class "variation-image-id"`);
     
-    // Check variation cards
-    const $variations = $('.variation-card');
-    console.log(`Found ${$variations.length} variation card(s)\n`);
-    
-    if ($variations.length === 0) {
-        console.warn('No variations found!');
-        return;
-    }
-    
-    // Check each variation
-    $variations.each(function(index) {
-        const $card = $(this);
-        const variationIndex = $card.data('variation-index');
-        const variationId = $card.data('variation-id');
-        
-        console.log(`--- Variation ${index} ---`);
-        console.log('  Card Index:', variationIndex);
-        console.log('  Variation ID:', variationId);
-        
-        // Check image_id input
-        const $imageIdInput = $card.find('.variation-image-id');
-        if ($imageIdInput.length) {
-            console.log('  ✓ Image ID input found');
-            console.log('    Name:', $imageIdInput.attr('name'));
-            console.log('    Value:', $imageIdInput.val() || '(empty)');
-            console.log('    Class:', $imageIdInput.attr('class'));
-        } else {
-            console.error('  ✗ Image ID input NOT found!');
-        }
-        
-        // Check file input
-        const $fileInput = $card.find('.variation-image-input');
-        if ($fileInput.length) {
-            console.log('  ✓ File input found');
-            console.log('    Has file:', $fileInput[0].files.length > 0);
-        } else {
-            console.error('  ✗ File input NOT found!');
-        }
-        
-        // Check remove flag
-        const $removeFlag = $card.find('.remove-image-flag');
-        if ($removeFlag.length) {
-            console.log('  ✓ Remove flag found');
-            console.log('    Value:', $removeFlag.val());
-        }
-        
-        // Check if image is displayed
-        const $preview = $card.find('.variation-image-preview');
-        if ($preview.length) {
-            console.log('  ✓ Image preview displayed');
-            console.log('    Source:', $preview.attr('src'));
-        } else {
-            console.log('  - No image preview');
-        }
-        
-        console.log('');
+    byClass.each(function(index) {
+        const $input = $(this);
+        console.log(`\nVariation ${index} (by class):`, {
+            name: $input.attr('name'),
+            jqueryVal: $input.val(),
+            domValue: this.value,
+            attrValue: $input.attr('value'),
+            propValue: $input.prop('value'),
+            isEmpty: !$input.val() || $input.val() === '' || $input.val() === 'null',
+            isDisabled: $input.prop('disabled'),
+            isVisible: $input.is(':visible'),
+            hasParent: $input.parent().length > 0,
+            element: this
+        });
     });
     
-    // Check media library modal
-    console.log('--- Media Library Modal ---');
-    if ($('#mediaLibraryModal').length) {
-        console.log('✓ Modal exists');
-    } else {
-        console.error('✗ Modal NOT found!');
-    }
+    // Method 2: Find by name attribute
+    console.log('\n--- Method 2: By name attribute ---\n');
+    const byName = $('input[name^="variations["][name$="][image_id]"]');
+    console.log(`Found ${byName.length} inputs by name pattern`);
     
-    // Check select buttons
-    const $selectButtons = $('.select-variation-image-btn');
-    console.log(`Found ${$selectButtons.length} "Select from Library" button(s)`);
-    
-    if ($selectButtons.length > 0) {
-        $selectButtons.each(function(index) {
-            const $btn = $(this);
-            console.log(`  Button ${index}:`);
-            console.log('    Target:', $btn.data('target'));
-            console.log('    Variation Index:', $btn.data('variation-index'));
+    byName.each(function(index) {
+        console.log(`\nVariation ${index} (by name):`, {
+            name: $(this).attr('name'),
+            jqueryVal: $(this).val(),
+            domValue: this.value,
+            attrValue: $(this).attr('value')
         });
+    });
+    
+    // Method 3: Check variation cards
+    console.log('\n--- Method 3: By variation cards ---\n');
+    const cards = $('.variation-card');
+    console.log(`Found ${cards.length} variation cards`);
+    
+    cards.each(function(index) {
+        const $card = $(this);
+        const varIndex = $card.data('variation-index');
+        const $imageIdInput = $card.find('.variation-image-id');
+        const $imageIdByName = $card.find('input[name*="[image_id]"]');
+        
+        console.log(`\nCard ${index} (variation-index: ${varIndex}):`, {
+            hasImageIdByClass: $imageIdInput.length > 0,
+            hasImageIdByName: $imageIdByName.length > 0,
+            imageIdValue: $imageIdInput.length > 0 ? $imageIdInput.val() : 'NOT FOUND',
+            imageIdByNameValue: $imageIdByName.length > 0 ? $imageIdByName.val() : 'NOT FOUND',
+            cardElement: this
+        });
+    });
+    
+    console.log('\n=== END DEBUG CHECK ===\n');
+};
+
+// Function to manually set a variation image_id for testing
+window.setVariationImageId = function(variationIndex, imageId) {
+    console.log(`\nAttempting to set variation ${variationIndex} image_id to ${imageId}...`);
+    
+    const $card = $(`.variation-card[data-variation-index="${variationIndex}"]`);
+    if ($card.length === 0) {
+        console.error(`Could not find variation card with index ${variationIndex}`);
+        return false;
     }
     
-    console.log('\n=== END DEBUG ===');
-    console.log('\nTo test image selection:');
-    console.log('1. Click "Select from Library" on any variation');
-    console.log('2. Select an image');
-    console.log('3. Check console for new messages');
-    console.log('4. Run this script again to see updated values');
+    const $imageIdInput = $card.find('.variation-image-id');
+    if ($imageIdInput.length === 0) {
+        console.error(`Could not find image_id input in variation ${variationIndex}`);
+        return false;
+    }
     
-})();
+    // Set using multiple methods
+    $imageIdInput.val(imageId);
+    $imageIdInput.attr('value', imageId);
+    $imageIdInput.prop('value', imageId);
+    
+    if ($imageIdInput[0]) {
+        $imageIdInput[0].value = imageId;
+        $imageIdInput[0].setAttribute('value', imageId);
+    }
+    
+    console.log('Set complete. Verifying...');
+    setTimeout(function() {
+        console.log('Verification:', {
+            jqueryVal: $imageIdInput.val(),
+            domValue: $imageIdInput[0] ? $imageIdInput[0].value : 'N/A',
+            attrValue: $imageIdInput.attr('value')
+        });
+    }, 100);
+    
+    return true;
+};
+
+// Function to check form data before submission
+window.checkFormData = function() {
+    console.log('\n=== FORM DATA CHECK ===\n');
+    
+    const form = document.getElementById('product-form');
+    if (!form) {
+        console.error('Form not found!');
+        return;
+    }
+    
+    const formData = new FormData(form);
+    
+    console.log('All form entries:');
+    for (let [key, value] of formData.entries()) {
+        if (key.includes('image_id')) {
+            console.log(`${key}: ${value}`);
+        }
+    }
+    
+    console.log('\n=== END FORM DATA CHECK ===\n');
+};
+
+console.log('\nAvailable commands:');
+console.log('  debugVariationImages() - Check all variation image_id inputs');
+console.log('  setVariationImageId(index, imageId) - Manually set a variation image_id');
+console.log('  checkFormData() - Check what will be submitted in the form');
+console.log('\nExample: setVariationImageId(0, 123)');

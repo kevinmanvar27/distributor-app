@@ -1316,24 +1316,44 @@
         // Form submission handler - verify image_id values before submit
         $('#product-form').on('submit', function(e) {
             console.log('=== FORM SUBMISSION DEBUG ===');
+            console.log('Form action:', $(this).attr('action'));
+            console.log('Form method:', $(this).attr('method'));
             
             // Check all variation image_id inputs
             $('.variation-image-id').each(function(index) {
                 const $input = $(this);
                 const value = $input.val();
+                const domValue = this.value;
                 const name = $input.attr('name');
+                const attrValue = $input.attr('value');
                 
                 console.log(`Variation ${index}:`, {
                     name: name,
-                    value: value,
+                    jqueryVal: value,
+                    domValue: domValue,
+                    attrValue: attrValue,
                     isEmpty: !value || value === '' || value === 'null',
-                    element: $input[0]
+                    isDisabled: $input.prop('disabled'),
+                    isVisible: $input.is(':visible'),
+                    element: this
                 });
                 
                 // If value is empty or null string, log warning
                 if (!value || value === '' || value === 'null') {
                     console.warn(`WARNING: Variation ${index} has no image_id set`);
+                } else {
+                    console.log(`✓ Variation ${index} has image_id: ${value}`);
                 }
+            });
+            
+            // Also check by name attribute directly
+            console.log('--- Checking by name attribute ---');
+            $('input[name^="variations["][name$="][image_id]"]').each(function(index) {
+                console.log(`Found input ${index}:`, {
+                    name: $(this).attr('name'),
+                    value: $(this).val(),
+                    domValue: this.value
+                });
             });
             
             console.log('=== END FORM SUBMISSION DEBUG ===');

@@ -1232,24 +1232,39 @@
                             }
                             
                             // Set the hidden image_id field - THIS IS CRITICAL
+                            // Try multiple methods to ensure the value is set
                             $imageIdInput.val(mediaId);
-                            
-                            // Force the attribute to be set as well (for extra safety)
                             $imageIdInput.attr('value', mediaId);
+                            $imageIdInput.prop('value', mediaId);
                             
-                            console.log('Set image_id input:', {
-                                value: $imageIdInput.val(),
-                                attrValue: $imageIdInput.attr('value'),
+                            // Also set it directly on the DOM element
+                            if ($imageIdInput[0]) {
+                                $imageIdInput[0].value = mediaId;
+                                $imageIdInput[0].setAttribute('value', mediaId);
+                            }
+                            
+                            console.log('Set image_id input (multiple methods):', {
+                                jqueryVal: $imageIdInput.val(),
+                                jqueryAttr: $imageIdInput.attr('value'),
+                                jqueryProp: $imageIdInput.prop('value'),
+                                domValue: $imageIdInput[0] ? $imageIdInput[0].value : 'N/A',
+                                domAttr: $imageIdInput[0] ? $imageIdInput[0].getAttribute('value') : 'N/A',
                                 name: $imageIdInput.attr('name'),
-                                mediaId: mediaId
+                                mediaId: mediaId,
+                                inputElement: $imageIdInput[0]
                             });
                             
                             // Verify it was set
                             setTimeout(function() {
                                 const verifyValue = $imageIdInput.val();
-                                console.log('Verified image_id after 100ms:', verifyValue);
+                                const verifyDomValue = $imageIdInput[0] ? $imageIdInput[0].value : null;
+                                console.log('Verified image_id after 100ms:', {
+                                    jqueryVal: verifyValue,
+                                    domValue: verifyDomValue
+                                });
                                 if (!verifyValue || verifyValue === '' || verifyValue === 'null') {
                                     console.error('WARNING: image_id was not properly set!');
+                                    console.error('Input element:', $imageIdInput[0]);
                                     alert('Warning: Image ID may not have been set properly. Please save and check if the image persists.');
                                 }
                             }, 100);
