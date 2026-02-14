@@ -1145,7 +1145,7 @@
                         targetVariationIndex: targetVariationIndex
                     });
                     
-                    if (selectedMedia.length > 0 && targetVariationIndex !== null) {
+                    if (selectedMedia.length > 0 && targetVariationIndex !== null && targetVariationIndex !== undefined) {
                         const mediaId = selectedMedia[0];
                         
                         // Get the media URL from the selected item
@@ -1178,7 +1178,21 @@
                         const $variationUpload = $variationCard.find('.variation-image-upload');
                         const $preview = $variationUpload.find('.image-preview-container');
                         
+                        // Find the image_id input - try multiple selectors
+                        let $imageIdInput = $variationUpload.find('.variation-image-id');
+                        if ($imageIdInput.length === 0) {
+                            // Fallback: find by name attribute
+                            $imageIdInput = $variationCard.find(`input[name="variations[${targetVariationIndex}][image_id]"]`);
+                        }
+                        
                         console.log('Variation upload container found:', $variationUpload.length);
+                        console.log('Image ID input found:', $imageIdInput.length, 'Current value:', $imageIdInput.val());
+                        
+                        if ($imageIdInput.length === 0) {
+                            console.error('Could not find image_id input field');
+                            alert('Error: Could not find the image input field. Please refresh and try again.');
+                            return;
+                        }
                         
                         // Show loading state
                         $preview.html(`
@@ -1217,10 +1231,28 @@
                                 `);
                             }
                             
-                            // Set the hidden image_id field
-                            const $imageIdInput = $variationUpload.find('.variation-image-id');
+                            // Set the hidden image_id field - THIS IS CRITICAL
                             $imageIdInput.val(mediaId);
-                            console.log('Set image_id input value:', $imageIdInput.val(), 'Input name:', $imageIdInput.attr('name'));
+                            
+                            // Force the attribute to be set as well (for extra safety)
+                            $imageIdInput.attr('value', mediaId);
+                            
+                            console.log('Set image_id input:', {
+                                value: $imageIdInput.val(),
+                                attrValue: $imageIdInput.attr('value'),
+                                name: $imageIdInput.attr('name'),
+                                mediaId: mediaId
+                            });
+                            
+                            // Verify it was set
+                            setTimeout(function() {
+                                const verifyValue = $imageIdInput.val();
+                                console.log('Verified image_id after 100ms:', verifyValue);
+                                if (!verifyValue || verifyValue === '' || verifyValue === 'null') {
+                                    console.error('WARNING: image_id was not properly set!');
+                                    alert('Warning: Image ID may not have been set properly. Please save and check if the image persists.');
+                                }
+                            }, 100);
                             
                             // Clear the file input
                             $variationUpload.find('.variation-image-input').val('');
@@ -1240,8 +1272,10 @@
                     } else {
                         console.warn('Missing required data:', {
                             hasSelectedMedia: selectedMedia.length > 0,
-                            hasTargetIndex: targetVariationIndex !== null
+                            hasTargetIndex: targetVariationIndex !== null && targetVariationIndex !== undefined,
+                            targetVariationIndex: targetVariationIndex
                         });
+                        alert('Error: Missing required data. Please try again.');
                     }
                 }
                 

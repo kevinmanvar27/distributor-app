@@ -1312,6 +1312,35 @@
                 </div>
             `);
         });
+        
+        // Form submission handler - verify image_id values before submit
+        $('#product-form').on('submit', function(e) {
+            console.log('=== FORM SUBMISSION DEBUG ===');
+            
+            // Check all variation image_id inputs
+            $('.variation-image-id').each(function(index) {
+                const $input = $(this);
+                const value = $input.val();
+                const name = $input.attr('name');
+                
+                console.log(`Variation ${index}:`, {
+                    name: name,
+                    value: value,
+                    isEmpty: !value || value === '' || value === 'null',
+                    element: $input[0]
+                });
+                
+                // If value is empty or null string, log warning
+                if (!value || value === '' || value === 'null') {
+                    console.warn(`WARNING: Variation ${index} has no image_id set`);
+                }
+            });
+            
+            console.log('=== END FORM SUBMISSION DEBUG ===');
+            
+            // Let the form submit normally
+            return true;
+        });
     });
     @endif
 </script>
