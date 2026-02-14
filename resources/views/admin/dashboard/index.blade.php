@@ -368,25 +368,37 @@
                             </div>
                             <div class="card-body p-2 p-md-3">
                                 @forelse($lowStockProducts as $product)
+                                @php
+                                    // Handle both simple and variable products
+                                    if ($product->isVariable()) {
+                                        // For variable products, get the lowest stock from variations
+                                        $lowestVariation = $product->variations->sortBy('stock_quantity')->first();
+                                        $stockQuantity = $lowestVariation ? $lowestVariation->stock_quantity : 0;
+                                        $threshold = $lowestVariation->low_quantity_threshold ?? $product->low_quantity_threshold ?? 10;
+                                    } else {
+                                        // For simple products
+                                        $stockQuantity = $product->stock_quantity ?? 0;
+                                        $threshold = $product->low_quantity_threshold ?? 10;
+                                    }
+                                    
+                                    $percentage = $threshold > 0 
+                                        ? min(100, ($stockQuantity / $threshold) * 100)
+                                        : 0;
+                                    $progressColor = $percentage <= 25 ? 'danger' : ($percentage <= 50 ? 'warning' : 'success');
+                                @endphp
                                 <div class="d-flex justify-content-between align-items-center {{ !$loop->last ? 'mb-2 mb-md-3 pb-2 pb-md-3 border-bottom' : '' }}">
                                     <div>
                                         <h6 class="mb-1 small">{{ Str::limit($product->name, 30) }}</h6>
                                         <div class="progress progress-thin" style="width: 100px; height: 4px;">
-                                            @php
-                                                $percentage = $product->low_quantity_threshold > 0 
-                                                    ? min(100, ($product->stock_quantity / $product->low_quantity_threshold) * 100)
-                                                    : 0;
-                                                $progressColor = $percentage <= 25 ? 'danger' : ($percentage <= 50 ? 'warning' : 'success');
-                                            @endphp
                                             <div class="progress-bar bg-{{ $progressColor }}" style="width: {{ $percentage }}%"></div>
                                         </div>
                                     </div>
                                     <div class="text-end">
-                                        <span class="badge bg-{{ $product->stock_quantity <= 5 ? 'danger' : 'warning' }}" style="font-size: 0.7rem;">
-                                            {{ $product->stock_quantity }} left
+                                        <span class="badge bg-{{ $stockQuantity <= 5 ? 'danger' : 'warning' }}" style="font-size: 0.7rem;">
+                                            {{ $stockQuantity }} left
                                         </span>
                                         <br>
-                                        <small class="text-muted" style="font-size: 0.65rem;">Min: {{ $product->low_quantity_threshold }}</small>
+                                        <small class="text-muted" style="font-size: 0.65rem;">Min: {{ $threshold }}</small>
                                     </div>
                                 </div>
                                 @empty
