@@ -549,11 +549,12 @@
                 targetVariationIndex = $trigger.data('variation-index');
                 
                 // Log for debugging
-                console.log('Media Library Modal Opened:', {
-                    targetField: targetField,
-                    targetVariationIndex: targetVariationIndex,
-                    trigger: $trigger
-                });
+                console.log('🔶 MEDIA LIBRARY MODAL OPENED');
+                console.log('   Target Field:', targetField);
+                console.log('   Variation Index:', targetVariationIndex);
+                console.log('   Trigger Element:', $trigger[0]);
+                console.log('   Trigger data-target:', $trigger.attr('data-target'));
+                console.log('   Trigger data-variation-index:', $trigger.attr('data-variation-index'));
                 
                 selectedMedia = [];
                 $('#select-media-btn').prop('disabled', true);
@@ -1056,6 +1057,11 @@
             
             // Select media button
             $('#select-media-btn').on('click', function() {
+                console.log('🔷 SELECT MEDIA BUTTON CLICKED!');
+                console.log('   targetField:', targetField);
+                console.log('   selectedMedia:', selectedMedia);
+                console.log('   targetVariationIndex:', targetVariationIndex);
+                
                 if (targetField === 'main_photo') {
                     // Handle main photo selection
                     if (selectedMedia.length > 0) {
