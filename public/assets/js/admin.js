@@ -544,8 +544,17 @@
 
             // Handle media library modal show event
             $('#mediaLibraryModal').on('show.bs.modal', function(event) {
-                targetField = $(event.relatedTarget).data('target');
-                targetVariationIndex = $(event.relatedTarget).data('variation-index');
+                const $trigger = $(event.relatedTarget);
+                targetField = $trigger.data('target');
+                targetVariationIndex = $trigger.data('variation-index');
+                
+                // Log for debugging
+                console.log('Media Library Modal Opened:', {
+                    targetField: targetField,
+                    targetVariationIndex: targetVariationIndex,
+                    trigger: $trigger
+                });
+                
                 selectedMedia = [];
                 $('#select-media-btn').prop('disabled', true);
                 
@@ -1131,6 +1140,11 @@
                     });
                 } else if (targetField === 'variation_image') {
                     // Handle variation image selection
+                    console.log('Handling variation image selection:', {
+                        selectedMedia: selectedMedia,
+                        targetVariationIndex: targetVariationIndex
+                    });
+                    
                     if (selectedMedia.length > 0 && targetVariationIndex !== null) {
                         const mediaId = selectedMedia[0];
                         
@@ -1138,43 +1152,96 @@
                         const $selectedItem = $(`.media-item[data-id="${mediaId}"]`);
                         const mediaUrl = $selectedItem.find('img').attr('src') || '/storage/media/placeholder.jpg';
                         
-                        // Find the variation container
-                        const $variationCard = $(`.variation-card[data-variation-index="${targetVariationIndex}"]`);
+                        console.log('Media details:', {
+                            mediaId: mediaId,
+                            mediaUrl: mediaUrl,
+                            selectedItem: $selectedItem.length
+                        });
+                        
+                        // Find the variation container - try multiple selectors for compatibility
+                        let $variationCard = $(`.variation-card[data-variation-index="${targetVariationIndex}"]`);
+                        
+                        // If not found, try finding by index position
+                        if ($variationCard.length === 0) {
+                            $variationCard = $('.variation-card').eq(targetVariationIndex);
+                            console.log('Found variation card by index position');
+                        }
+                        
+                        console.log('Variation card found:', $variationCard.length);
+                        
+                        if ($variationCard.length === 0) {
+                            console.error('Could not find variation card for index:', targetVariationIndex);
+                            alert('Error: Could not find the variation to update. Please try again.');
+                            return;
+                        }
+                        
                         const $variationUpload = $variationCard.find('.variation-image-upload');
                         const $preview = $variationUpload.find('.image-preview-container');
                         
-                        // Update the preview in the variation body
+                        console.log('Variation upload container found:', $variationUpload.length);
+                        
+                        // Show loading state
                         $preview.html(`
-                            <img src="${mediaUrl}" 
-                                 class="variation-image-preview" 
-                                 style="width: 100%; height: 100%; object-fit: cover;"
-                                 alt="Variation Image">
-                            <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 remove-variation-image" 
-                                    data-variation-index="${targetVariationIndex}"
-                                    style="padding: 2px 6px; font-size: 10px;">
-                                <i class="fas fa-times"></i>
-                            </button>
+                            <div class="d-flex align-items-center justify-content-center h-100">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
                         `);
                         
-                        // Update the thumbnail in the accordion header (if exists)
-                        const $accordionItem = $variationCard.closest('.accordion-item');
-                        if ($accordionItem.length > 0) {
-                            const $headerImg = $accordionItem.find('.accordion-button .variation-header-image');
-                            $headerImg.html(`
+                        // Small delay to show loading state (and ensure image loads)
+                        setTimeout(function() {
+                            // Update the preview in the variation body
+                            $preview.html(`
                                 <img src="${mediaUrl}" 
-                                     style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"
-                                     alt="Variation">
+                                     class="variation-image-preview" 
+                                     style="width: 100%; height: 100%; object-fit: cover;"
+                                     alt="Variation Image"
+                                     onerror="this.parentElement.innerHTML='<div class=\\'text-danger\\'>Image load failed</div>'">
+                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 remove-variation-image" 
+                                        data-variation-index="${targetVariationIndex}"
+                                        style="padding: 2px 6px; font-size: 10px;">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             `);
-                        }
-                        
-                        // Set the hidden image_id field
-                        $variationUpload.find('.variation-image-id').val(mediaId);
-                        
-                        // Clear the file input
-                        $variationUpload.find('.variation-image-input').val('');
-                        
-                        // Reset remove flag
-                        $variationUpload.find('.remove-image-flag').val('0');
+                            
+                            // Update the thumbnail in the accordion header (if exists)
+                            const $accordionItem = $variationCard.closest('.accordion-item');
+                            if ($accordionItem.length > 0) {
+                                const $headerImg = $accordionItem.find('.accordion-button .variation-header-image');
+                                $headerImg.html(`
+                                    <img src="${mediaUrl}" 
+                                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"
+                                         alt="Variation"
+                                         onerror="this.parentElement.innerHTML='<div class=\\'bg-light rounded d-flex align-items-center justify-content-center\\' style=\\'width: 50px; height: 50px;\\'><i class=\\'fas fa-image text-muted\\'></i></div>'">
+                                `);
+                            }
+                            
+                            // Set the hidden image_id field
+                            const $imageIdInput = $variationUpload.find('.variation-image-id');
+                            $imageIdInput.val(mediaId);
+                            console.log('Set image_id input value:', $imageIdInput.val(), 'Input name:', $imageIdInput.attr('name'));
+                            
+                            // Clear the file input
+                            $variationUpload.find('.variation-image-input').val('');
+                            
+                            // Reset remove flag
+                            $variationUpload.find('.remove-image-flag').val('0');
+                            
+                            console.log('Variation image updated successfully');
+                            
+                            // Show success feedback
+                            const $accordionButton = $variationCard.find('.accordion-button');
+                            $accordionButton.addClass('border-success');
+                            setTimeout(function() {
+                                $accordionButton.removeClass('border-success');
+                            }, 2000);
+                        }, 100);
+                    } else {
+                        console.warn('Missing required data:', {
+                            hasSelectedMedia: selectedMedia.length > 0,
+                            hasTargetIndex: targetVariationIndex !== null
+                        });
                     }
                 }
                 

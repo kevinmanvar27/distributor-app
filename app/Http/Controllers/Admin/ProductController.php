@@ -278,9 +278,22 @@ class ProductController extends Controller
                             
                             // Set the image_id
                             $variationData['image_id'] = $media->id;
+                            Log::info("Variation {$index}: Uploaded new image, media_id: {$media->id}");
                         } elseif (isset($variationData['image_id']) && !empty($variationData['image_id'])) {
                             // If image_id is provided (from media library), keep it
-                            // No action needed, just ensure it's set
+                            Log::info("Variation {$index}: Using media library image_id: {$variationData['image_id']}");
+                            
+                            // Verify the media exists
+                            $existingMedia = Media::find($variationData['image_id']);
+                            if (!$existingMedia) {
+                                Log::error("Variation {$index}: Media ID {$variationData['image_id']} not found in database");
+                                // Don't set image_id if media doesn't exist
+                                unset($variationData['image_id']);
+                            } else {
+                                Log::info("Variation {$index}: Media verified - {$existingMedia->name}");
+                            }
+                        } else {
+                            Log::info("Variation {$index}: No image provided");
                         }
                         
                         // Set first variation as default if not specified
@@ -592,6 +605,22 @@ class ProductController extends Controller
                             
                             // Set the new image_id
                             $variationData['image_id'] = $media->id;
+                            Log::info("Variation {$index} (update): Uploaded new image, media_id: {$media->id}");
+                        } elseif (isset($variationData['image_id']) && !empty($variationData['image_id'])) {
+                            // If image_id is provided (from media library), keep it
+                            Log::info("Variation {$index} (update): Using media library image_id: {$variationData['image_id']}");
+                            
+                            // Verify the media exists
+                            $existingMedia = Media::find($variationData['image_id']);
+                            if (!$existingMedia) {
+                                Log::error("Variation {$index} (update): Media ID {$variationData['image_id']} not found in database");
+                                // Don't set image_id if media doesn't exist
+                                unset($variationData['image_id']);
+                            } else {
+                                Log::info("Variation {$index} (update): Media verified - {$existingMedia->name}");
+                            }
+                        } else {
+                            Log::info("Variation {$index} (update): No image change");
                         }
                         
                         // Handle image removal
