@@ -257,4 +257,54 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', 'User approved successfully.');
     }
+
+    /**
+     * Update the user's avatar.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateAvatar(Request $request, User $user)
+    {
+        // Validate only the avatar field
+        $request->validate([
+            'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'], // 2MB max
+        ], [
+            'avatar.required' => 'Please select an image to upload.',
+            'avatar.image' => 'The file must be an image.',
+            'avatar.max' => 'The image may not be greater than 2MB.',
+        ]);
+
+        // Delete old avatar if exists
+        if ($user->avatar) {
+            Storage::disk('public')->delete('avatars/' . $user->avatar);
+        }
+
+        // Store new avatar
+        $avatarName = time() . '_' . $user->id . '.' . $request->file('avatar')->extension();
+        $request->file('avatar')->storeAs('avatars', $avatarName, 'public');
+        $user->avatar = $avatarName;
+        $user->save();
+
+        return redirect()->back()->with('success', 'Profile picture updated successfully.');
+    }
+
+    /**
+     * Remove the user's avatar.
+     *
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function removeAvatar(User $user)
+    {
+        // Delete avatar file if exists
+        if ($user->avatar) {
+            Storage::disk('public')->delete('avatars/' . $user->avatar);
+            $user->avatar = null;
+            $user->save();
+        }
+
+        return redirect()->back()->with('success', 'Profile picture removed successfully.');
+    }
 }

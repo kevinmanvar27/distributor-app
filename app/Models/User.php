@@ -149,11 +149,14 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute()
     {
         if ($this->avatar) {
-            return \Illuminate\Support\Facades\Storage::disk('public')->url('avatars/' . $this->avatar);
+            // Check if the file exists in storage
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists('avatars/' . $this->avatar)) {
+                return asset('storage/avatars/' . $this->avatar);
+            }
         }
         
         // Return a default avatar if none is set
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=0D8ABC&color=fff';
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name ?? 'User') . '&background=0D8ABC&color=fff';
     }
 
     /**

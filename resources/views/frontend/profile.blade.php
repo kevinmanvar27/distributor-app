@@ -36,7 +36,7 @@
                 <div class="card-body text-center">
                     <div class="position-relative d-inline-block avatar-container mb-3">
                         @if($user->avatar)
-                            <img src="{{ asset('storage/avatars/' . $user->avatar) }}" alt="{{ $user->name }}" class="img-fluid rounded-circle avatar-image" style="width: 150px; height: 150px; object-fit: cover;">
+                            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="img-fluid rounded-circle avatar-image" style="width: 150px; height: 150px; object-fit: cover;">
                         @else
                             <div class="bg-theme rounded-circle d-flex align-items-center justify-content-center mx-auto avatar-placeholder" style="width: 150px; height: 150px; background-color: {{ setting('theme_color', '#007bff') }};">
                                 <i class="fas fa-user text-white avatar-icon" style="font-size: 4rem;"></i>

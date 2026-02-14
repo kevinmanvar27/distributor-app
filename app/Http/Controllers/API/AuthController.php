@@ -31,6 +31,7 @@ class AuthController extends ApiController
      *              required={"email","password"},
      *              @OA\Property(property="email", type="string", format="email", example="johndoe@example.com"),
      *              @OA\Property(property="password", type="string", format="password", example="Password123"),
+     *              @OA\Property(property="device_token", type="string", example="fcm_device_token_here", description="FCM device token for push notifications (optional)"),
      *          ),
      *      ),
      *      @OA\Response(
@@ -55,6 +56,7 @@ class AuthController extends ApiController
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'device_token' => 'nullable|string',
         ]);
 
         $credentials = $request->only('email', 'password');
@@ -64,6 +66,13 @@ class AuthController extends ApiController
         }
 
         $user = Auth::user();
+        
+        // Update device token if provided
+        if ($request->filled('device_token')) {
+            $user->device_token = $request->device_token;
+            $user->save();
+        }
+        
         $token = $user->createToken('API Token')->plainTextToken;
 
         $success['token'] = $token;
@@ -89,6 +98,7 @@ class AuthController extends ApiController
      *              @OA\Property(property="email", type="string", format="email", example="johndoe@example.com"),
      *              @OA\Property(property="password", type="string", format="password", example="Password123"),
      *              @OA\Property(property="password_confirmation", type="string", format="password", example="Password123"),
+     *              @OA\Property(property="device_token", type="string", example="fcm_device_token_here", description="FCM device token for push notifications (optional)"),
      *          ),
      *      ),
      *      @OA\Response(
@@ -110,6 +120,7 @@ class AuthController extends ApiController
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'device_token' => 'nullable|string',
         ]);
 
         $user = User::create([
@@ -118,6 +129,7 @@ class AuthController extends ApiController
             'password' => Hash::make($request->password),
             'user_role' => 'user',
             'is_approved' => false,
+            'device_token' => $request->device_token,
         ]);
 
         $token = $user->createToken('API Token')->plainTextToken;
@@ -136,8 +148,14 @@ class AuthController extends ApiController
      *      operationId="logoutUser",
      *      tags={"Authentication"},
      *      summary="User logout",
-     *      description="Logout the authenticated user",
+     *      description="Logout the authenticated user and clear device token",
      *      security={{"sanctum": {}}},
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="clear_device_token", type="boolean", example=true, description="Clear device token on logout (default: true)"),
+     *          ),
+     *      ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful logout",
@@ -153,7 +171,17 @@ class AuthController extends ApiController
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        
+        // Clear device token by default (unless explicitly set to false)
+        $clearDeviceToken = $request->input('clear_device_token', true);
+        if ($clearDeviceToken) {
+            $user->device_token = null;
+            $user->save();
+        }
+        
+        // Delete current access token
+        $user->currentAccessToken()->delete();
 
         return $this->sendResponse(null, 'User logged out successfully');
     }

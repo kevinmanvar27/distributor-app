@@ -84,6 +84,26 @@ class NotificationService
             ];
         }
 
+        // Validate device token
+        if (empty($deviceToken) || !is_string($deviceToken)) {
+            return [
+                'success' => false,
+                'message' => 'Invalid or empty device token'
+            ];
+        }
+
+        // Basic token format validation
+        if (!$this->isValidDeviceToken($deviceToken)) {
+            Log::warning('Invalid device token format', [
+                'device_token' => substr($deviceToken, 0, 30) . '...',
+                'token_length' => strlen($deviceToken)
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Device token format appears invalid (too short or contains invalid characters)'
+            ];
+        }
+
         try {
             $accessToken = $this->generateAccessToken();
             
@@ -106,7 +126,7 @@ class NotificationService
                         'title' => $payload['title'] ?? 'Notification',
                         'body' => $payload['body'] ?? $payload['message'] ?? '',
                     ],
-                    'data' => array_map('strval', $payload['data'] ?? []),
+                    'data' => $this->convertDataToStrings($payload['data'] ?? null),
                     'android' => [
                         'priority' => 'high',
                         'notification' => [
@@ -144,15 +164,40 @@ class NotificationService
                 ];
             }
 
+            $errorBody = $response->body();
+            $errorJson = $response->json();
+            $errorMessage = 'Failed to send notification';
+            
+            // Parse Firebase error response for more specific error message
+            if (isset($errorJson['error']['message'])) {
+                $errorMessage = $errorJson['error']['message'];
+            } elseif (isset($errorJson['error']['details'][0]['errorCode'])) {
+                $errorCode = $errorJson['error']['details'][0]['errorCode'];
+                switch ($errorCode) {
+                    case 'UNREGISTERED':
+                        $errorMessage = 'Device token is no longer valid (app uninstalled or token expired)';
+                        break;
+                    case 'INVALID_ARGUMENT':
+                        $errorMessage = 'Invalid device token format';
+                        break;
+                    case 'SENDER_ID_MISMATCH':
+                        $errorMessage = 'Device token belongs to a different Firebase project';
+                        break;
+                    default:
+                        $errorMessage = "Firebase error: {$errorCode}";
+                }
+            }
+
             Log::error('Firebase notification failed', [
                 'status' => $response->status(),
-                'body' => $response->body(),
+                'body' => $errorBody,
+                'error_message' => $errorMessage,
                 'device_token' => substr($deviceToken, 0, 20) . '...'
             ]);
 
             return [
                 'success' => false,
-                'message' => 'Failed to send notification: ' . $response->body()
+                'message' => $errorMessage
             ];
 
         } catch (\Exception $e) {
@@ -242,9 +287,10 @@ class NotificationService
      *
      * @param UserGroup $userGroup
      * @param array $payload
+     * @param bool $saveToDatabase
      * @return array
      */
-    public function sendToUserGroup($userGroup, $payload)
+    public function sendToUserGroup($userGroup, $payload, $saveToDatabase = true)
     {
         $results = [];
         $successCount = 0;
@@ -254,7 +300,7 @@ class NotificationService
         $users = $userGroup->users;
         
         foreach ($users as $user) {
-            $result = $this->sendToUser($user, $payload);
+            $result = $this->sendToUser($user, $payload, $saveToDatabase);
             $result['user_id'] = $user->id;
             $results[] = $result;
             
@@ -275,6 +321,19 @@ class NotificationService
                 'failed' => $failCount
             ]
         ];
+    }
+
+    /**
+     * Send notification to all users in a group without saving to database
+     * (Used when notifications are already saved by the controller)
+     *
+     * @param UserGroup $userGroup
+     * @param array $payload
+     * @return array
+     */
+    public function sendToUserGroupWithoutSave($userGroup, $payload)
+    {
+        return $this->sendToUserGroup($userGroup, $payload, false);
     }
 
     /**
@@ -311,12 +370,13 @@ class NotificationService
      */
     private function saveNotification($userId, $payload)
     {
+        // Don't json_encode data - the model's 'array' cast handles serialization
         return Notification::create([
             'user_id' => $userId,
             'title' => $payload['title'] ?? 'Notification',
             'message' => $payload['body'] ?? $payload['message'] ?? '',
             'type' => $payload['type'] ?? 'general',
-            'data' => json_encode($payload['data'] ?? []),
+            'data' => $payload['data'] ?? [],
             'read' => false
         ]);
     }
@@ -401,6 +461,139 @@ class NotificationService
             'total_read' => $readNotifications,
             'total_unread' => $unreadNotifications,
             'recent_activity' => $recentActivity
+        ];
+    }
+    
+    /**
+     * Convert data array values to strings for FCM
+     * FCM data payload requires all values to be strings
+     * Returns an object (stdClass) to ensure JSON encodes as {} not []
+     *
+     * @param array|null $data
+     * @return \stdClass
+     */
+    private function convertDataToStrings($data): \stdClass
+    {
+        $result = new \stdClass();
+        
+        // If data is null or empty, return empty object
+        if (empty($data) || !is_array($data)) {
+            return $result;
+        }
+        
+        foreach ($data as $key => $value) {
+            if (is_array($value) || is_object($value)) {
+                // Convert arrays/objects to JSON strings
+                $result->$key = json_encode($value);
+            } elseif (is_bool($value)) {
+                // Convert booleans to string "true" or "false"
+                $result->$key = $value ? 'true' : 'false';
+            } elseif (is_null($value)) {
+                // Skip null values or convert to empty string
+                $result->$key = '';
+            } else {
+                // Convert everything else to string
+                $result->$key = (string) $value;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Validate a Firebase device token format
+     *
+     * @param string $token
+     * @return bool
+     */
+    public function isValidDeviceToken($token)
+    {
+        // FCM tokens are typically long strings (140+ characters)
+        if (strlen($token) < 100) {
+            return false;
+        }
+        
+        // FCM tokens should only contain alphanumeric characters, colons, and dashes
+        if (!preg_match('/^[a-zA-Z0-9:_-]+$/', $token)) {
+            return false;
+        }
+        
+        // Basic check passed, but the only real way to validate is to try sending a message
+        return true;
+    }
+
+    /**
+     * Send notification to all users
+     *
+     * @param array $payload
+     * @param bool $excludeAdmins Whether to exclude admin users from the notification
+     * @param bool $onlyWithDeviceToken Whether to only send push notifications to users with device tokens (notifications are always saved to database for all users)
+     * @return array
+     */
+    public function sendToAllUsers($payload, $excludeAdmins = false, $onlyWithDeviceToken = true)
+    {
+        $results = [];
+        $successCount = 0;
+        $failCount = 0;
+        $savedCount = 0;
+        $totalUsers = 0;
+
+        // Build query to get ALL users (notifications are always saved to database for bell icon)
+        $query = User::query();
+        
+        // Exclude admins if requested
+        if ($excludeAdmins) {
+            $query->whereNotIn('user_role', ['super_admin', 'admin']);
+        }
+        
+        // Get users in chunks to avoid memory issues
+        $query->chunk(100, function($users) use (&$results, &$successCount, &$failCount, &$savedCount, &$totalUsers, $payload, $onlyWithDeviceToken) {
+            foreach ($users as $user) {
+                $totalUsers++;
+                
+                // Always save notification to database (for bell icon in site header)
+                $notification = $this->saveNotification($user->id, $payload);
+                $savedCount++;
+                
+                // Skip push notification if no device token
+                if (empty($user->device_token)) {
+                    $results[] = [
+                        'user_id' => $user->id,
+                        'success' => true, // Database save was successful
+                        'push_sent' => false,
+                        'message' => 'Notification saved to database (no device token for push)',
+                        'notification_id' => $notification->id
+                    ];
+                    // Don't count as failure - notification was saved successfully
+                    continue;
+                }
+                
+                // Send push notification only if user has device token
+                $result = $this->sendPushNotification($user->device_token, $payload);
+                $result['user_id'] = $user->id;
+                $result['notification_id'] = $notification->id;
+                $result['push_sent'] = true;
+                $results[] = $result;
+                
+                if ($result['success']) {
+                    $successCount++;
+                } else {
+                    $failCount++;
+                }
+            }
+        });
+        
+        return [
+            'success' => $savedCount > 0,
+            'message' => "Notifications saved: {$savedCount} users. Push notifications: {$successCount} successful, {$failCount} failed out of {$totalUsers} users",
+            'results' => $results,
+            'summary' => [
+                'total_users' => $totalUsers,
+                'saved_to_database' => $savedCount,
+                'push_successful' => $successCount,
+                'push_failed' => $failCount,
+                'successful' => $successCount,
+                'failed' => $failCount
+            ]
         ];
     }
 }

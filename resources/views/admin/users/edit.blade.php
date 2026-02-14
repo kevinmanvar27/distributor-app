@@ -42,7 +42,8 @@
                                         <div class="col-md-12 text-center mb-4">
                                             <div class="position-relative d-inline-block">
                                                 <img id="avatar-preview" src="{{ $user->avatar_url }}" 
-                                                     class="rounded-circle border border-3 border-primary" width="100" height="100" alt="Avatar Preview">
+                                                     class="rounded-circle border border-3 border-primary" width="100" height="100" alt="Avatar Preview"
+                                                     style="object-fit: cover;">
                                                 <div class="position-absolute bottom-0 end-0 bg-primary rounded-circle p-1">
                                                     <i class="fas fa-user text-white"></i>
                                                 </div>
@@ -50,21 +51,19 @@
                                             <div class="mt-3">
                                                 <label for="avatar" class="form-label fw-medium">Profile Picture</label>
                                                 <input type="file" class="form-control form-control-sm mx-auto @error('avatar') is-invalid @enderror" 
-                                                       id="avatar" name="avatar" accept="image/*" style="max-width: 200px;">
-                                                <div class="form-text">Optional. Max 2MB. JPG, PNG, GIF.</div>
+                                                       id="avatar" name="avatar" accept="image/jpeg,image/png,image/jpg,image/gif,image/svg+xml" style="max-width: 200px;">
+                                                <div class="form-text">Optional. Max 2MB. JPG, PNG, GIF, SVG.</div>
                                                 @error('avatar')
                                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                                 @enderror
                                                 
-                                                <!-- @if($user->avatar)
+                                                @if($user->avatar)
                                                     <div class="mt-2">
-                                                        <a href="{{ route('admin.users.avatar.remove', $user) }}" 
-                                                           class="btn btn-sm btn-outline-danger rounded-pill"
-                                                           onclick="return confirm('Are you sure you want to remove this avatar?')">
+                                                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="confirmRemoveAvatar()">
                                                             <i class="fas fa-trash me-1"></i> Remove Avatar
-                                                        </a>
+                                                        </button>
                                                     </div>
-                                                @endif -->
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -257,7 +256,14 @@ document.getElementById('avatar').addEventListener('change', function(e) {
     if (file) {
         // Check if file is an image
         if (!file.type.match('image.*')) {
-            alert('Please select an image file (JPEG, PNG, GIF).');
+            alert('Please select an image file (JPEG, PNG, GIF, SVG).');
+            e.target.value = '';
+            return;
+        }
+        
+        // Check file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('File size exceeds 2MB. Please choose a smaller file.');
             e.target.value = '';
             return;
         }
@@ -269,5 +275,29 @@ document.getElementById('avatar').addEventListener('change', function(e) {
         reader.readAsDataURL(file);
     }
 });
+
+function confirmRemoveAvatar() {
+    if (confirm('Are you sure you want to remove this avatar?')) {
+        // Create and submit a form dynamically
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route("admin.users.avatar.remove", $user) }}';
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = '{{ csrf_token() }}';
+        form.appendChild(csrfToken);
+        
+        const methodField = document.createElement('input');
+        methodField.type = 'hidden';
+        methodField.name = '_method';
+        methodField.value = 'DELETE';
+        form.appendChild(methodField);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 </script>
 @endsection

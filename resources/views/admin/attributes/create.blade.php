@@ -23,6 +23,17 @@
         </div>
     </div>
 
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
             <form action="{{ route('admin.attributes.store') }}" method="POST">
@@ -75,6 +86,44 @@
                     @enderror
                 </div>
 
+                <!-- Attribute Values Section -->
+                <div class="mb-4">
+                    <label class="form-label">Attribute Values <span class="text-danger">*</span></label>
+                    <small class="text-muted d-block mb-2">Add at least one value for this attribute (e.g., for Size: Small, Medium, Large)</small>
+                    
+                    <div id="valuesContainer">
+                        @if(old('values'))
+                            @foreach(old('values') as $index => $value)
+                                <div class="input-group mb-2 value-row">
+                                    <input type="text" class="form-control @error('values.'.$index) is-invalid @enderror" 
+                                           name="values[]" value="{{ $value }}" placeholder="Enter value">
+                                    <button type="button" class="btn btn-outline-danger remove-value-btn">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    @error('values.'.$index)
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="input-group mb-2 value-row">
+                                <input type="text" class="form-control" name="values[]" placeholder="Enter value">
+                                <button type="button" class="btn btn-outline-danger remove-value-btn">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                    
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="addValueBtn">
+                        <i class="fas fa-plus me-1"></i> Add Another Value
+                    </button>
+                    
+                    @error('values')
+                        <div class="text-danger mt-1"><small>{{ $message }}</small></div>
+                    @enderror
+                </div>
+
                 <div class="d-flex justify-content-end gap-2">
                     <a href="{{ route('admin.attributes.index') }}" class="btn btn-secondary">Cancel</a>
                     <button type="submit" class="btn btn-primary">Create Attribute</button>
@@ -87,4 +136,42 @@
         </main>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const valuesContainer = document.getElementById('valuesContainer');
+    const addValueBtn = document.getElementById('addValueBtn');
+    
+    // Add new value row
+    addValueBtn.addEventListener('click', function() {
+        const newRow = document.createElement('div');
+        newRow.className = 'input-group mb-2 value-row';
+        newRow.innerHTML = `
+            <input type="text" class="form-control" name="values[]" placeholder="Enter value">
+            <button type="button" class="btn btn-outline-danger remove-value-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        valuesContainer.appendChild(newRow);
+        
+        // Focus on the new input
+        newRow.querySelector('input').focus();
+    });
+    
+    // Remove value row (using event delegation)
+    valuesContainer.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-value-btn')) {
+            const rows = valuesContainer.querySelectorAll('.value-row');
+            if (rows.length > 1) {
+                e.target.closest('.value-row').remove();
+            } else {
+                // Don't remove the last row, just clear it
+                rows[0].querySelector('input').value = '';
+            }
+        }
+    });
+});
+</script>
 @endsection

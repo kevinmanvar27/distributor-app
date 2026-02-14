@@ -23,18 +23,32 @@
         </div>
     </div>
 
-    <div class="row">
-        <!-- Attribute Details -->
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Attribute Details</h5>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('admin.attributes.update', $attribute) }}" method="POST">
-                        @csrf
-                        @method('PUT')
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
 
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <div class="card">
+        <div class="card-body">
+            <form action="{{ route('admin.attributes.update', $attribute) }}" method="POST">
+                @csrf
+                @method('PUT')
+
+                <div class="row">
+                    <div class="col-md-6">
                         <div class="mb-3">
                             <label for="name" class="form-label">Attribute Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" 
@@ -43,360 +57,127 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="sort_order" class="form-label">Sort Order</label>
-                                    <input type="number" class="form-control @error('sort_order') is-invalid @enderror" 
-                                           id="sort_order" name="sort_order" value="{{ old('sort_order', $attribute->sort_order) }}" min="0">
-                                    @error('sort_order')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="is_active" class="form-label">Status</label>
-                                    <select class="form-select @error('is_active') is-invalid @enderror" id="is_active" name="is_active" required>
-                                        <option value="1" {{ old('is_active', $attribute->is_active) == '1' ? 'selected' : '' }}>Active</option>
-                                        <option value="0" {{ old('is_active', $attribute->is_active) == '0' ? 'selected' : '' }}>Inactive</option>
-                                    </select>
-                                    @error('is_active')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
+                    <div class="col-md-3">
                         <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" 
-                                      id="description" name="description" rows="3">{{ old('description', $attribute->description) }}</textarea>
-                            @error('description')
+                            <label for="sort_order" class="form-label">Sort Order</label>
+                            <input type="number" class="form-control @error('sort_order') is-invalid @enderror" 
+                                   id="sort_order" name="sort_order" value="{{ old('sort_order', $attribute->sort_order) }}" min="0">
+                            @error('sort_order')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
 
-                        <div class="d-flex justify-content-end gap-2">
-                            <a href="{{ route('admin.attributes.index') }}" class="btn btn-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Update Attribute</button>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="is_active" class="form-label">Status</label>
+                            <select class="form-select @error('is_active') is-invalid @enderror" id="is_active" name="is_active" required>
+                                <option value="1" {{ old('is_active', $attribute->is_active) == '1' ? 'selected' : '' }}>Active</option>
+                                <option value="0" {{ old('is_active', $attribute->is_active) == '0' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                            @error('is_active')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Attribute Values -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Attribute Values</h5>
-                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addValueModal">
-                        <i class="fas fa-plus"></i> Add Value
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control @error('description') is-invalid @enderror" 
+                              id="description" name="description" rows="3">{{ old('description', $attribute->description) }}</textarea>
+                    @error('description')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <!-- Attribute Values Section -->
+                <div class="mb-4">
+                    <label class="form-label">Attribute Values <span class="text-danger">*</span></label>
+                    <small class="text-muted d-block mb-2">Manage the values for this attribute</small>
+                    
+                    <div id="valuesContainer">
+                        @php
+                            $oldValues = old('values', $attribute->values->pluck('value')->toArray());
+                        @endphp
+                        @foreach($oldValues as $index => $value)
+                            <div class="input-group mb-2 value-row">
+                                <input type="text" class="form-control @error('values.'.$index) is-invalid @enderror" 
+                                       name="values[]" value="{{ $value }}" placeholder="Enter value">
+                                <button type="button" class="btn btn-outline-danger remove-value-btn">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                @error('values.'.$index)
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        @endforeach
+                        @if(count($oldValues) == 0)
+                            <div class="input-group mb-2 value-row">
+                                <input type="text" class="form-control" name="values[]" placeholder="Enter value">
+                                <button type="button" class="btn btn-outline-danger remove-value-btn">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                    
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="addValueBtn">
+                        <i class="fas fa-plus me-1"></i> Add Another Value
                     </button>
+                    
+                    @error('values')
+                        <div class="text-danger mt-1"><small>{{ $message }}</small></div>
+                    @enderror
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Value</th>
-                                    <th>Color</th>
-                                    <th>Sort</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="valuesTable">
-                                @forelse($attribute->values as $value)
-                                    <tr data-value-id="{{ $value->id }}">
-                                        <td>{{ $value->value }}</td>
-                                        <td>
-                                            @if($value->color_code)
-                                                <span class="d-inline-block" style="width: 20px; height: 20px; background-color: {{ $value->color_code }}; border: 1px solid #ddd;"></span>
-                                                <code>{{ $value->color_code }}</code>
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $value->sort_order }}</td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-danger delete-value" data-value-id="{{ $value->id }}">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr id="noValuesRow">
-                                        <td colspan="4" class="text-center text-muted">No values added yet</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Add Value Modal -->
-<div class="modal fade" id="addValueModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add Attribute Value</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addValueForm">
-                    <div class="mb-3">
-                        <label for="value" class="form-label">Value <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="value" name="value" required>
-                    </div>
-                    <!-- <div class="mb-3">
-                        <label for="color_code" class="form-label">Color Code (Optional)</label>
-                        <input type="color" class="form-control form-control-color" id="color_code" name="color_code">
-                        <small class="text-muted">Only for color attributes</small>
-                    </div> -->
-                    <div class="mb-3">
-                        <label for="value_sort_order" class="form-label">Sort Order</label>
-                        <input type="number" class="form-control" id="value_sort_order" name="sort_order" value="0" min="0">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="saveValueBtn">
-                            <i class="fas fa-plus me-1"></i> Add Value
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ route('admin.attributes.index') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Update Attribute</button>
+                </div>
+            </form>
         </div>
     </div>
-</div>
 </div>
             </div>
         </main>
     </div>
 </div>
-
 @endsection
 
 @section('scripts')
 <script>
-document.getElementById('saveValueBtn').addEventListener('click', function() {
-alert("sadasd");
-});
-
 document.addEventListener('DOMContentLoaded', function() {
+    const valuesContainer = document.getElementById('valuesContainer');
+    const addValueBtn = document.getElementById('addValueBtn');
     
-    const attributeId = {{ $attribute->id }};
-    const addValueModalElement = document.getElementById('addValueModal');
-    const addValueModal = new bootstrap.Modal(addValueModalElement);
-    const saveBtn = document.getElementById('saveValueBtn');
-    const form = document.getElementById('addValueForm');
-    
-    
-    // Check CSRF token
-    const csrfToken = document.querySelector('meta[name="csrf-token"]');
-    
-    // Helper function to show alerts
-    function showAlert(message, type = 'success') {
-        const alertHtml = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+    // Add new value row
+    addValueBtn.addEventListener('click', function() {
+        const newRow = document.createElement('div');
+        newRow.className = 'input-group mb-2 value-row';
+        newRow.innerHTML = `
+            <input type="text" class="form-control" name="values[]" placeholder="Enter value">
+            <button type="button" class="btn btn-outline-danger remove-value-btn">
+                <i class="fas fa-times"></i>
+            </button>
         `;
-        const container = document.querySelector('.container-fluid');
-        container.insertAdjacentHTML('afterbegin', alertHtml);
+        valuesContainer.appendChild(newRow);
         
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-            const alert = container.querySelector('.alert');
-            if (alert) {
-                alert.remove();
-            }
-        }, 5000);
-    }
-    
-    // Validate form before submission
-    function validateForm() {
-        const valueInput = document.getElementById('value');
-        if (!valueInput.value.trim()) {
-            showAlert('Please enter a value', 'danger');
-            return false;
-        }
-        return true;
-    }
-    
-    // Function to handle form submission
-    function handleFormSubmit(e) {
-        
-        if (e) {
-            e.preventDefault(); // Prevent default form submission
-        }
-        
-        
-        if (!validateForm()) {
-            return;
-        }
-        
-        
-        const formData = new FormData(form);
-        
-        // Disable button during request
-        if (saveBtn) {
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
-        }
-        
-        const url = `/admin/attributes/${attributeId}/values`;
-        
-        const csrfToken = document.querySelector('meta[name="csrf-token"]');
-        
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken.content,
-                'Accept': 'application/json',
-            },
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => {
-                    // Handle validation errors
-                    if (err.errors) {
-                        const errorMessages = Object.values(err.errors).flat().join('<br>');
-                        throw new Error(errorMessages);
-                    }
-                    throw new Error(err.message || 'Failed to add value');
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Remove "no values" row if exists
-                const noValuesRow = document.getElementById('noValuesRow');
-                if (noValuesRow) {
-                    noValuesRow.remove();
-                }
-                
-                // Add new row
-                const tbody = document.getElementById('valuesTable');
-                const colorHtml = data.data.color_code 
-                    ? `<span class="d-inline-block" style="width: 20px; height: 20px; background-color: ${data.data.color_code}; border: 1px solid #ddd;"></span> <code>${data.data.color_code}</code>`
-                    : '<span class="text-muted">-</span>';
-                    
-                const row = `
-                    <tr data-value-id="${data.data.id}">
-                        <td>${data.data.value}</td>
-                        <td>${colorHtml}</td>
-                        <td>${data.data.sort_order}</td>
-                        <td>
-                            <button type="button" class="btn btn-sm btn-danger delete-value" data-value-id="${data.data.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                tbody.insertAdjacentHTML('beforeend', row);
-                
-                // Reset form and close modal
-                form.reset();
-                addValueModal.hide();
-                
-                // Show success message
-                showAlert('Attribute value added successfully!', 'success');
-            } else {
-                throw new Error(data.message || 'Failed to add value');
-            }
-        })
-        .catch(error => {
-            showAlert(error.message || 'Failed to add value. Please try again.', 'danger');
-        })
-        .finally(() => {
-            // Re-enable button
-            if (saveBtn) {
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = '<i class="fas fa-plus me-1"></i> Add Value';
-            }
-        });
-    }
-    
-    // Add event listeners for both button click and form submit
-    if (saveBtn) {
-        saveBtn.addEventListener('click', function(e) {
-            handleFormSubmit(e);
-        });
-    } else {
-        console.error('❌ Save button not found!');
-    }
-    
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            handleFormSubmit(e);
-        });
-    } else {
-        console.error('❌ Form not found!');
-    }
-    
-    // Debug: Check when modal is shown
-    addValueModalElement.addEventListener('shown.bs.modal', function() {
-        const btnCheck = document.getElementById('saveValueBtn');
-        const formCheck = document.getElementById('addValueForm');
+        // Focus on the new input
+        newRow.querySelector('input').focus();
     });
     
-    // Delete value
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.delete-value')) {
-            const btn = e.target.closest('.delete-value');
-            const valueId = btn.dataset.valueId;
-            
-            if (confirm('Are you sure you want to delete this value?')) {
-                // Disable button during request
-                btn.disabled = true;
-                
-                fetch(`/admin/attributes/${attributeId}/values/${valueId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => {
-                            throw new Error(err.message || 'Failed to delete value');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        const row = document.querySelector(`tr[data-value-id="${valueId}"]`);
-                        row.remove();
-                        
-                        // Add "no values" row if table is empty
-                        const tbody = document.getElementById('valuesTable');
-                        if (tbody.children.length === 0) {
-                            tbody.innerHTML = '<tr id="noValuesRow"><td colspan="4" class="text-center text-muted">No values added yet</td></tr>';
-                        }
-                        
-                        // Show success message
-                        showAlert('Attribute value deleted successfully!', 'success');
-                    } else {
-                        throw new Error(data.message || 'Failed to delete value');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert(error.message || 'Failed to delete value. Please try again.', 'danger');
-                    btn.disabled = false;
-                });
+    // Remove value row (using event delegation)
+    valuesContainer.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-value-btn')) {
+            const rows = valuesContainer.querySelectorAll('.value-row');
+            if (rows.length > 1) {
+                e.target.closest('.value-row').remove();
+            } else {
+                // Don't remove the last row, just clear it
+                rows[0].querySelector('input').value = '';
             }
         }
     });

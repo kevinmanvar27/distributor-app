@@ -26,12 +26,38 @@ class ProductController extends Controller
         
         $products = Product::with('mainPhoto')->latest()->paginate(10);
         
-        // Get low stock products count for alert badge
-        $lowStockCount = Product::where('in_stock', true)
-            ->whereColumn('stock_quantity', '<=', 'low_quantity_threshold')
-            ->count();
+        // Get low stock products count for alert badge (includes both simple and variable products)
+        $lowStockCount = $this->getLowStockCount();
         
         return view('admin.products.index', compact('products', 'lowStockCount'));
+    }
+    
+    /**
+     * Get the count of products with low stock (both simple and variable products).
+     *
+     * @return int
+     */
+    private function getLowStockCount(): int
+    {
+        $allProducts = Product::with('variations')->get();
+        
+        return $allProducts->filter(function ($product) {
+            if ($product->isVariable()) {
+                // For variable products, check if any variation has low stock
+                foreach ($product->variations as $variation) {
+                    $threshold = $variation->low_quantity_threshold ?? $product->low_quantity_threshold ?? 10;
+                    // Include variations with 0 stock or stock <= threshold
+                    if ($variation->stock_quantity <= $threshold) {
+                        return true;
+                    }
+                }
+                return false;
+            } else {
+                // For simple products, check if stock <= threshold
+                $threshold = $product->low_quantity_threshold ?? 10;
+                return $product->stock_quantity <= $threshold;
+            }
+        })->count();
     }
 
     /**

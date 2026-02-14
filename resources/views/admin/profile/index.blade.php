@@ -55,7 +55,7 @@
                                             </div>
                                             <div class="card-body text-center">
                                                 <div class="mb-3">
-                                                    <img src="{{ $user->avatar ? asset('storage/avatars/' . $user->avatar) : 'https://ui-avatars.com/api/?name=' . urlencode($user->name) . '&background=random' }}" 
+                                                    <img src="{{ $user->avatar_url }}" 
                                                         alt="{{ $user->name }}" 
                                                         class="rounded-circle border border-default shadow-sm profile-avatar"
                                                         width="128" height="128"

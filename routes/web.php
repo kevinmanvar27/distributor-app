@@ -296,6 +296,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/firebase/notifications', [FirebaseController::class, 'showNotificationForm'])->name('admin.firebase.notifications');
     Route::post('/admin/firebase/notifications/user', [FirebaseController::class, 'sendToUser'])->name('admin.firebase.notifications.user');
     Route::post('/admin/firebase/notifications/group', [FirebaseController::class, 'sendToUserGroup'])->name('admin.firebase.notifications.group');
+    Route::post('/admin/firebase/notifications/all', [FirebaseController::class, 'sendToAllUsers'])->name('admin.firebase.notifications.all');
+    Route::post('/admin/firebase/notifications/test', [FirebaseController::class, 'testNotification'])->name('admin.firebase.notifications.test');
+    
+    // Scheduled Notifications Routes
+    Route::get('/admin/firebase/notifications/data', [FirebaseController::class, 'getNotificationsData'])->name('admin.firebase.notifications.data');
+    Route::get('/admin/firebase/notifications/scheduled/{id}', [FirebaseController::class, 'getScheduledNotification'])->name('admin.firebase.notifications.scheduled.get');
+    Route::put('/admin/firebase/notifications/scheduled/{id}', [FirebaseController::class, 'updateScheduledNotification'])->name('admin.firebase.notifications.scheduled.update');
+    Route::post('/admin/firebase/notifications/scheduled/{id}/cancel', [FirebaseController::class, 'cancelScheduledNotification'])->name('admin.firebase.notifications.scheduled.cancel');
     
     // Product Management Routes
     Route::prefix('admin')->group(function () {

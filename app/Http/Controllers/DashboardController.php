@@ -75,13 +75,8 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Low stock products
-        $lowStockProducts = Product::where('in_stock', true)
-            ->whereColumn('stock_quantity', '<=', 'low_quantity_threshold')
-            ->where('stock_quantity', '>', 0)
-            ->orderBy('stock_quantity', 'asc')
-            ->take(5)
-            ->get();
+        // Low stock products (includes both simple and variable products)
+        $lowStockProducts = $this->getLowStockProducts(5);
         
         // Out of stock products count
         $outOfStockCount = Product::where(function($query) {
@@ -130,6 +125,41 @@ class DashboardController extends Controller
             'topProducts',
             'pendingPayments'
         ));
+    }
+
+    /**
+     * Get low stock products (both simple and variable products).
+     *
+     * @param int $limit
+     * @return \Illuminate\Support\Collection
+     */
+    private function getLowStockProducts(int $limit = 5)
+    {
+        $allProducts = Product::with(['mainPhoto', 'variations'])->get();
+        
+        return $allProducts->filter(function ($product) {
+            if ($product->isVariable()) {
+                // For variable products, check if any variation has low stock
+                foreach ($product->variations as $variation) {
+                    $threshold = $variation->low_quantity_threshold ?? $product->low_quantity_threshold ?? 10;
+                    // Include variations with stock > 0 and stock <= threshold
+                    if ($variation->stock_quantity > 0 && $variation->stock_quantity <= $threshold) {
+                        return true;
+                    }
+                }
+                return false;
+            } else {
+                // For simple products, check if stock > 0 and stock <= threshold
+                $threshold = $product->low_quantity_threshold ?? 10;
+                return $product->in_stock && $product->stock_quantity > 0 && $product->stock_quantity <= $threshold;
+            }
+        })->sortBy(function ($product) {
+            // Sort by lowest stock first
+            if ($product->isVariable()) {
+                return $product->variations->min('stock_quantity');
+            }
+            return $product->stock_quantity;
+        })->take($limit)->values();
     }
 
     /**
