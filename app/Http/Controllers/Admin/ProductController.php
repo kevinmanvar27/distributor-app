@@ -126,6 +126,33 @@ class ProductController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
         
+        // Custom validation for SKU uniqueness in update
+        if ($request->has('variations')) {
+            $variations = $request->variations;
+            if (is_string($variations)) {
+                $variations = json_decode($variations, true);
+            }
+            
+            if (is_array($variations)) {
+                foreach ($variations as $variationData) {
+                    if (!empty($variationData['sku'])) {
+                        $skuQuery = ProductVariation::where('sku', $variationData['sku']);
+                        
+                        // Exclude current variation if it has an ID
+                        if (isset($variationData['id']) && !empty($variationData['id'])) {
+                            $skuQuery->where('id', '!=', $variationData['id']);
+                        }
+                        
+                        if ($skuQuery->exists()) {
+                            return redirect()->back()
+                                ->withErrors(['error' => "SKU '{$variationData['sku']}' already exists. Please use a unique SKU for each variation."])
+                                ->withInput();
+                        }
+                    }
+                }
+            }
+        }
+        
         DB::beginTransaction();
         
         try {
@@ -199,6 +226,17 @@ class ProductController extends Controller
                         // Convert attribute_values if it's a string
                         if (isset($variationData['attribute_values']) && is_string($variationData['attribute_values'])) {
                             $variationData['attribute_values'] = json_decode($variationData['attribute_values'], true);
+                        }
+                        
+                        // Check if SKU already exists in database
+                        if (!empty($variationData['sku'])) {
+                            $existingSku = ProductVariation::where('sku', $variationData['sku'])->first();
+                            if ($existingSku) {
+                                DB::rollBack();
+                                return redirect()->back()
+                                    ->withErrors(['error' => "SKU '{$variationData['sku']}' already exists. Please use a unique SKU for each variation."])
+                                    ->withInput();
+                            }
                         }
                         
                         // Check for duplicate combinations
@@ -356,6 +394,33 @@ class ProductController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
         
+        // Custom validation for SKU uniqueness in update
+        if ($request->has('variations')) {
+            $variations = $request->variations;
+            if (is_string($variations)) {
+                $variations = json_decode($variations, true);
+            }
+            
+            if (is_array($variations)) {
+                foreach ($variations as $variationData) {
+                    if (!empty($variationData['sku'])) {
+                        $skuQuery = ProductVariation::where('sku', $variationData['sku']);
+                        
+                        // Exclude current variation if it has an ID
+                        if (isset($variationData['id']) && !empty($variationData['id'])) {
+                            $skuQuery->where('id', '!=', $variationData['id']);
+                        }
+                        
+                        if ($skuQuery->exists()) {
+                            return redirect()->back()
+                                ->withErrors(['error' => "SKU '{$variationData['sku']}' already exists. Please use a unique SKU for each variation."])
+                                ->withInput();
+                        }
+                    }
+                }
+            }
+        }
+        
         DB::beginTransaction();
         
         try {
@@ -456,6 +521,24 @@ class ProductController extends Controller
                         // Convert attribute_values if it's a string
                         if (isset($variationData['attribute_values']) && is_string($variationData['attribute_values'])) {
                             $variationData['attribute_values'] = json_decode($variationData['attribute_values'], true);
+                        }
+                        
+                        // Check if SKU already exists in database (excluding current variation if updating)
+                        if (!empty($variationData['sku'])) {
+                            $skuQuery = ProductVariation::where('sku', $variationData['sku']);
+                            
+                            // If updating existing variation, exclude it from the check
+                            if (isset($variationData['id']) && !empty($variationData['id'])) {
+                                $skuQuery->where('id', '!=', $variationData['id']);
+                            }
+                            
+                            $existingSku = $skuQuery->first();
+                            if ($existingSku) {
+                                DB::rollBack();
+                                return redirect()->back()
+                                    ->withErrors(['error' => "SKU '{$variationData['sku']}' already exists. Please use a unique SKU for each variation."])
+                                    ->withInput();
+                            }
                         }
                         
                         // Check for duplicate combinations (skip for existing variations being updated)
@@ -831,6 +914,33 @@ class ProductController extends Controller
         
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
+        }
+        
+        // Custom validation for SKU uniqueness in update
+        if ($request->has('variations')) {
+            $variations = $request->variations;
+            if (is_string($variations)) {
+                $variations = json_decode($variations, true);
+            }
+            
+            if (is_array($variations)) {
+                foreach ($variations as $variationData) {
+                    if (!empty($variationData['sku'])) {
+                        $skuQuery = ProductVariation::where('sku', $variationData['sku']);
+                        
+                        // Exclude current variation if it has an ID
+                        if (isset($variationData['id']) && !empty($variationData['id'])) {
+                            $skuQuery->where('id', '!=', $variationData['id']);
+                        }
+                        
+                        if ($skuQuery->exists()) {
+                            return redirect()->back()
+                                ->withErrors(['error' => "SKU '{$variationData['sku']}' already exists. Please use a unique SKU for each variation."])
+                                ->withInput();
+                        }
+                    }
+                }
+            }
         }
         
         DB::beginTransaction();
