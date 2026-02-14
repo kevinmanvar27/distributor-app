@@ -48,10 +48,10 @@
                         
                         @forelse(auth()->user()->notifications->take(5) as $notification)
                             <li>
-                                <a class="dropdown-item d-flex align-items-start py-2 notification-item" href="#" data-notification-id="{{ $notification->id }}" data-notification-type="{{ $notification->type }}" data-notification-data="{{ $notification->data }}">
+                                <a class="dropdown-item d-flex align-items-start py-2 notification-item" href="#" data-notification-id="{{ $notification->id }}" data-notification-type="{{ $notification->type }}" data-notification-data="{{ json_encode($notification->data) }}">
                                     <div class="rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                                         @php
-                                            $notificationData = json_decode($notification->data, true);
+                                            $notificationData = is_array($notification->data) ? $notification->data : json_decode($notification->data, true);
                                             $hasAvatar = isset($notificationData['customer_avatar']) && !empty($notificationData['customer_avatar']);
                                         @endphp
                                         
@@ -99,7 +99,7 @@
                         <img class="rounded-circle me-2" src="{{ Auth::user()->avatar ? asset('storage/avatars/' . Auth::user()->avatar) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=random' }}" alt="{{ Auth::user()->name }}" width="32" height="32">
                         <div class="d-none d-md-block text-start">
                             <div class="fw-medium small mb-0">{{ Auth::user()->name }}</div>
-                            <small>{{ ucfirst(str_replace('_', ' ', Auth::user()->user_role)) }}</small>
+                            <small>{{ is_string(Auth::user()->user_role) ? ucfirst(str_replace('_', ' ', Auth::user()->user_role)) : 'User' }}</small>
                         </div>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2" aria-labelledby="userDropdown">

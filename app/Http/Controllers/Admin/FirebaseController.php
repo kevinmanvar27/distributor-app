@@ -247,7 +247,7 @@ class FirebaseController extends Controller
     }
     
     /**
-     * Schedule an admin notification for later
+     * Schedule a notification for later
      *
      * @param Request $request
      * @param string $targetType
@@ -256,8 +256,6 @@ class FirebaseController extends Controller
     protected function scheduleAdminNotification(Request $request, string $targetType)
     {
         $scheduledNotification = ScheduledNotification::create([
-            'vendor_id' => null,
-            'is_admin_notification' => true,
             'title' => $request->title,
             'body' => $request->body,
             'data' => $request->data,
@@ -269,7 +267,7 @@ class FirebaseController extends Controller
             'created_by' => Auth::id(),
         ]);
 
-        Log::info('Admin scheduled notification created', [
+        Log::info('Scheduled notification created', [
             'notification_id' => $scheduledNotification->id,
             'target_type' => $targetType,
             'scheduled_at' => $scheduledNotification->scheduled_at,
@@ -294,7 +292,7 @@ class FirebaseController extends Controller
      */
     public function getScheduledNotification($id)
     {
-        $notification = ScheduledNotification::admin()->find($id);
+        $notification = ScheduledNotification::find($id);
 
         if (!$notification) {
             return response()->json(['success' => false, 'message' => 'Notification not found'], 404);
@@ -330,7 +328,7 @@ class FirebaseController extends Controller
      */
     public function updateScheduledNotification(Request $request, $id)
     {
-        $notification = ScheduledNotification::admin()->find($id);
+        $notification = ScheduledNotification::find($id);
 
         if (!$notification) {
             return response()->json(['success' => false, 'message' => 'Notification not found'], 404);
@@ -354,7 +352,7 @@ class FirebaseController extends Controller
             'scheduled_at' => Carbon::parse($request->scheduled_at),
         ]);
 
-        Log::info('Admin scheduled notification updated', [
+        Log::info('Scheduled notification updated', [
             'notification_id' => $notification->id,
             'scheduled_at' => $notification->scheduled_at,
         ]);
@@ -374,7 +372,7 @@ class FirebaseController extends Controller
      */
     public function cancelScheduledNotification($id)
     {
-        $notification = ScheduledNotification::admin()->find($id);
+        $notification = ScheduledNotification::find($id);
 
         if (!$notification) {
             return response()->json(['success' => false, 'message' => 'Notification not found'], 404);
@@ -388,7 +386,7 @@ class FirebaseController extends Controller
             'status' => ScheduledNotification::STATUS_CANCELLED,
         ]);
 
-        Log::info('Admin scheduled notification cancelled', [
+        Log::info('Scheduled notification cancelled', [
             'notification_id' => $notification->id,
         ]);
 
@@ -406,7 +404,7 @@ class FirebaseController extends Controller
      */
     public function getNotificationsData(Request $request)
     {
-        $query = ScheduledNotification::admin()
+        $query = ScheduledNotification::query()
             ->with(['user', 'userGroup']);
 
         // Handle search
@@ -431,7 +429,7 @@ class FirebaseController extends Controller
         }
 
         // Get total count before filtering
-        $totalRecords = ScheduledNotification::admin()->count();
+        $totalRecords = ScheduledNotification::count();
         
         // Get filtered count
         $filteredRecords = $query->count();

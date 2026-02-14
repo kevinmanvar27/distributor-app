@@ -240,6 +240,9 @@ class ProductController extends Controller
                             
                             // Set the image_id
                             $variationData['image_id'] = $media->id;
+                        } elseif (isset($variationData['image_id']) && !empty($variationData['image_id'])) {
+                            // If image_id is provided (from media library), keep it
+                            // No action needed, just ensure it's set
                         }
                         
                         // Set first variation as default if not specified

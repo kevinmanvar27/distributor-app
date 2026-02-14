@@ -41,9 +41,8 @@ class ProcessScheduledNotifications extends Command
     {
         $this->info('Processing scheduled notifications...');
 
-        // Get all due admin notifications
+        // Get all due notifications
         $notifications = ScheduledNotification::due()
-            ->admin()
             ->with(['user', 'userGroup'])
             ->get();
 
@@ -53,7 +52,7 @@ class ProcessScheduledNotifications extends Command
             $this->info("Found {$notifications->count()} notification(s) to process.");
 
             foreach ($notifications as $notification) {
-                $this->processAdminNotification($notification);
+                $this->processNotification($notification);
             }
 
             $this->info('Scheduled notifications processing completed.');
@@ -91,11 +90,11 @@ class ProcessScheduledNotifications extends Command
     }
 
     /**
-     * Process a single admin scheduled notification
+     * Process a single scheduled notification
      */
-    protected function processAdminNotification(ScheduledNotification $notification)
+    protected function processNotification(ScheduledNotification $notification)
     {
-        $this->info("Processing ADMIN notification ID: {$notification->id} - Target: {$notification->target_type}");
+        $this->info("Processing notification ID: {$notification->id} - Target: {$notification->target_type}");
 
         try {
             $payload = [
@@ -145,7 +144,7 @@ class ProcessScheduledNotifications extends Command
                 'sent_at' => now(),
             ]);
 
-            Log::info('Scheduled admin notification processed', [
+            Log::info('Scheduled notification processed', [
                 'notification_id' => $notification->id,
                 'target_type' => $notification->target_type,
                 'status' => $status,
@@ -153,10 +152,10 @@ class ProcessScheduledNotifications extends Command
                 'fail_count' => $failCount,
             ]);
 
-            $this->info("Admin Notification ID: {$notification->id} - Sent: {$successCount}, Failed: {$failCount}");
+            $this->info("Notification ID: {$notification->id} - Sent: {$successCount}, Failed: {$failCount}");
 
         } catch (\Exception $e) {
-            Log::error('Failed to process scheduled admin notification', [
+            Log::error('Failed to process scheduled notification', [
                 'notification_id' => $notification->id,
                 'error' => $e->getMessage(),
             ]);
@@ -167,7 +166,7 @@ class ProcessScheduledNotifications extends Command
                 'sent_at' => now(),
             ]);
 
-            $this->error("Failed to process admin notification ID: {$notification->id} - {$e->getMessage()}");
+            $this->error("Failed to process notification ID: {$notification->id} - {$e->getMessage()}");
         }
     }
 

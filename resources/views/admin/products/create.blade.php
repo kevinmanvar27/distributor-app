@@ -656,6 +656,22 @@
                                                name="variations[${index}][image]" 
                                                accept="image/*"
                                                data-variation-index="${index}">
+                                        <button type="button" 
+                                                class="btn btn-outline-primary btn-sm mt-2 w-100 select-variation-image-btn" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#mediaLibraryModal" 
+                                                data-target="variation_image" 
+                                                data-variation-index="${index}">
+                                            <i class="fas fa-folder-open me-1"></i> Select from Library
+                                        </button>
+                                        <input type="hidden" 
+                                               name="variations[${index}][image_id]" 
+                                               value=""
+                                               class="variation-image-id">
+                                        <input type="hidden" 
+                                               name="variations[${index}][remove_image]" 
+                                               value="0"
+                                               class="remove-image-flag">
                                     </div>
                                 </div>
                                 
@@ -816,6 +832,22 @@
                                            name="variations[${index}][image]" 
                                            accept="image/*"
                                            data-variation-index="${index}">
+                                    <button type="button" 
+                                            class="btn btn-outline-primary btn-sm mt-2 w-100 select-variation-image-btn" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#mediaLibraryModal" 
+                                            data-target="variation_image" 
+                                            data-variation-index="${index}">
+                                        <i class="fas fa-folder-open me-1"></i> Select from Library
+                                    </button>
+                                    <input type="hidden" 
+                                           name="variations[${index}][image_id]" 
+                                           value=""
+                                           class="variation-image-id">
+                                    <input type="hidden" 
+                                           name="variations[${index}][remove_image]" 
+                                           value="0"
+                                           class="remove-image-flag">
                                 </div>
                             </div>
                             
@@ -1004,6 +1036,12 @@
             
             // Clear the file input
             $container.find('.variation-image-input').val('');
+            
+            // Clear the image_id (for media library images)
+            $container.find('.variation-image-id').val('');
+            
+            // Mark image for removal
+            $container.find('.remove-image-flag').val('1');
             
             // Show placeholder in body
             $preview.html(`

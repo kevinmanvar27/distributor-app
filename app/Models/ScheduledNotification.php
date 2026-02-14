@@ -10,13 +10,10 @@ class ScheduledNotification extends Model
     use HasFactory;
 
     protected $fillable = [
-        'vendor_id',
-        'is_admin_notification',
         'title',
         'body',
         'data',
         'target_type',
-        'customer_ids',
         'user_id',
         'user_group_id',
         'scheduled_at',
@@ -30,10 +27,8 @@ class ScheduledNotification extends Model
 
     protected $casts = [
         'data' => 'array',
-        'customer_ids' => 'array',
         'scheduled_at' => 'datetime',
         'sent_at' => 'datetime',
-        'is_admin_notification' => 'boolean',
     ];
 
     /**
@@ -45,13 +40,7 @@ class ScheduledNotification extends Model
     const STATUS_CANCELLED = 'cancelled';
 
     /**
-     * Target type constants - Vendor
-     */
-    const TARGET_ALL = 'all';
-    const TARGET_SELECTED = 'selected';
-    
-    /**
-     * Target type constants - Admin
+     * Target type constants
      */
     const TARGET_USER = 'user';
     const TARGET_GROUP = 'group';
@@ -96,22 +85,6 @@ class ScheduledNotification extends Model
     public function scopePending($query)
     {
         return $query->where('status', self::STATUS_PENDING);
-    }
-    
-    /**
-     * Scope for vendor notifications
-     */
-    public function scopeVendor($query)
-    {
-        return $query->where('is_admin_notification', false);
-    }
-    
-    /**
-     * Scope for admin notifications
-     */
-    public function scopeAdmin($query)
-    {
-        return $query->where('is_admin_notification', true);
     }
 
     /**
@@ -163,18 +136,10 @@ class ScheduledNotification extends Model
      */
     public function getTargetDescription(): string
     {
-        if ($this->is_admin_notification) {
-            return match($this->target_type) {
-                self::TARGET_USER => 'Single User',
-                self::TARGET_GROUP => 'User Group',
-                self::TARGET_ALL_USERS => 'All Users',
-                default => ucfirst($this->target_type),
-            };
-        }
-        
         return match($this->target_type) {
-            self::TARGET_ALL => 'All Customers',
-            self::TARGET_SELECTED => 'Selected Customers',
+            self::TARGET_USER => 'Single User',
+            self::TARGET_GROUP => 'User Group',
+            self::TARGET_ALL_USERS => 'All Users',
             default => ucfirst($this->target_type),
         };
     }
