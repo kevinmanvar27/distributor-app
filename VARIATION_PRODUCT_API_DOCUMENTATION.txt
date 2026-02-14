@@ -1,0 +1,1050 @@
+================================================================================
+                    VARIATION PRODUCT API DOCUMENTATION
+                        Distributor App - API v1
+================================================================================
+
+OVERVIEW:
+---------
+This document provides comprehensive information about all APIs related to 
+variation products (variable products with attributes like Size, Color, etc.)
+in the Distributor App.
+
+Base URL: /api/v1
+Authentication: Bearer Token (Sanctum)
+
+================================================================================
+                        TABLE OF CONTENTS
+================================================================================
+
+1. Product APIs with Variation Support
+   1.1 Get Products List
+   1.2 Get Product Details
+   1.3 Search Products
+   1.4 Products by Category
+   1.5 Products by Subcategory
+
+2. Cart APIs with Variation Support
+   2.1 Get Cart Items
+   2.2 Add to Cart (with variation)
+   2.3 Update Cart Item
+   2.4 Remove from Cart
+   2.5 Clear Cart
+   2.6 Get Cart Count
+   2.7 Generate Invoice from Cart
+
+3. Wishlist APIs
+   3.1 Get Wishlist
+   3.2 Add to Wishlist
+   3.3 Remove from Wishlist
+   3.4 Check Wishlist Status
+   3.5 Move Wishlist to Cart
+
+4. Invoice APIs with Variation Support
+   4.1 Get My Invoices
+   4.2 Get Invoice Details
+   4.3 Add Invoice to Cart
+   4.4 Remove Invoice Item
+
+5. Product Variation Model Structure
+
+================================================================================
+                    1. PRODUCT APIs WITH VARIATION SUPPORT
+================================================================================
+
+1.1 GET PRODUCTS LIST
+---------------------
+Endpoint: GET /api/v1/products
+Authentication: Optional (prices differ for authenticated users)
+
+Description:
+Returns paginated list of published products with variation details.
+
+Query Parameters:
+- page (integer, optional): Page number for pagination
+
+Response Structure:
+{
+  "success": true,
+  "data": {
+    "current_page": 1,
+    "data": [
+      {
+        "id": 1,
+        "name": "Product Name",
+        "slug": "product-slug",
+        "product_type": "variable",  // or "simple"
+        "mrp": 1000.00,
+        "selling_price": 900.00,
+        "in_stock": true,
+        "status": "published",
+        "main_photo": {
+          "id": 1,
+          "url": "https://example.com/image.jpg"
+        },
+        
+        // For Variable Products:
+        "price_range": "₹800 - ₹1,200",
+        "variations": [
+          {
+            "id": 1,
+            "product_id": 1,
+            "sku": "PROD-001-RED-L",
+            "mrp": 1000.00,
+            "selling_price": 900.00,
+            "discounted_price": 850.00,  // After user discount
+            "stock_quantity": 50,
+            "in_stock": true,
+            "attribute_values": {
+              "1": "5",  // attribute_id: value_id
+              "2": "8"
+            },
+            "formatted_attributes": {
+              "Color": "Red",
+              "Size": "Large"
+            },
+            "display_name": "Product Name - Red, Large",
+            "image": {
+              "id": 2,
+              "url": "https://example.com/variation-image.jpg"
+            },
+            "image_url": "https://example.com/variation-image.jpg"
+          }
+        ]
+      }
+    ],
+    "per_page": 15,
+    "total": 100
+  },
+  "message": "Products retrieved successfully."
+}
+
+Notes:
+- Simple products have "product_type": "simple" and single discounted_price
+- Variable products have "product_type": "variable" and variations array
+- Each variation has its own price, stock, and attributes
+
+
+1.2 GET PRODUCT DETAILS
+------------------------
+Endpoint: GET /api/v1/products/{id}
+Authentication: Optional
+
+Description:
+Returns detailed information about a specific product including all variations.
+
+Path Parameters:
+- id (integer, required): Product ID
+
+Response Structure:
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Product Name",
+    "slug": "product-slug",
+    "description": "Product description",
+    "product_type": "variable",
+    "mrp": 1000.00,
+    "selling_price": 900.00,
+    "in_stock": true,
+    "status": "published",
+    "main_photo": {
+      "id": 1,
+      "url": "https://example.com/main-image.jpg"
+    },
+    "gallery_photos": [
+      {
+        "id": 2,
+        "url": "https://example.com/gallery-1.jpg"
+      }
+    ],
+    
+    // For Variable Products:
+    "price_range": "₹800 - ₹1,200",
+    "variations": [
+      {
+        "id": 1,
+        "product_id": 1,
+        "sku": "PROD-001-RED-L",
+        "mrp": 1000.00,
+        "selling_price": 900.00,
+        "discounted_price": 850.00,
+        "stock_quantity": 50,
+        "low_quantity_threshold": 10,
+        "in_stock": true,
+        "is_default": false,
+        "attribute_values": {
+          "1": "5",
+          "2": "8"
+        },
+        "formatted_attributes": {
+          "Color": "Red",
+          "Size": "Large"
+        },
+        "display_name": "Product Name - Red, Large",
+        "image": {
+          "id": 2,
+          "url": "https://example.com/variation-image.jpg",
+          "name": "variation-image.jpg"
+        },
+        "image_url": "https://example.com/variation-image.jpg"
+      }
+    ],
+    
+    "stock_status": {
+      "available": true,
+      "quantity": 150,  // Total across all variations
+      "label": "In Stock"
+    },
+    
+    "is_in_wishlist": false,
+    
+    "related_products": [
+      {
+        "id": 2,
+        "name": "Related Product",
+        "slug": "related-product",
+        "product_type": "variable",
+        "price_range": "₹500 - ₹800",
+        "has_variations": true,
+        "variations_count": 6
+      }
+    ]
+  },
+  "message": "Product retrieved successfully."
+}
+
+
+1.3 SEARCH PRODUCTS
+-------------------
+Endpoint: GET /api/v1/products/search
+Authentication: Optional
+
+Description:
+Search products by keyword with variation support.
+
+Query Parameters:
+- q (string, required): Search keyword
+- page (integer, optional): Page number
+
+Response: Same structure as Get Products List
+
+
+1.4 PRODUCTS BY CATEGORY
+-------------------------
+Endpoint: GET /api/v1/products/by-category/{categoryId}
+Authentication: Optional
+
+Description:
+Get products in a specific category with variations.
+
+Path Parameters:
+- categoryId (integer, required): Category ID
+
+Response: Same structure as Get Products List
+
+
+1.5 PRODUCTS BY SUBCATEGORY
+----------------------------
+Endpoint: GET /api/v1/products/by-subcategory/{subcategoryId}
+Authentication: Optional
+
+Description:
+Get products in a specific subcategory with variations.
+
+Path Parameters:
+- subcategoryId (integer, required): Subcategory ID
+
+Response: Same structure as Get Products List
+
+
+================================================================================
+                    2. CART APIs WITH VARIATION SUPPORT
+================================================================================
+
+2.1 GET CART ITEMS
+------------------
+Endpoint: GET /api/v1/cart
+Authentication: Required
+
+Description:
+Get all items in the authenticated user's cart with variation details.
+
+Response Structure:
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "user_id": 1,
+        "product_id": 10,
+        "product_variation_id": 25,  // null for simple products
+        "quantity": 2,
+        "price": 850.00,  // Discounted price
+        "created_at": "2026-02-14T10:00:00.000000Z",
+        
+        "product": {
+          "id": 10,
+          "name": "Product Name",
+          "product_type": "variable"
+        },
+        
+        // For Variable Products:
+        "variation": {
+          "id": 25,
+          "sku": "PROD-001-RED-L",
+          "display_name": "Product Name - Red, Large",
+          "formatted_attributes": {
+            "Color": "Red",
+            "Size": "Large"
+          },
+          "stock_quantity": 48,
+          "image": {
+            "id": 2,
+            "url": "https://example.com/variation-image.jpg"
+          }
+        },
+        
+        "variation_details": {
+          "id": 25,
+          "sku": "PROD-001-RED-L",
+          "display_name": "Product Name - Red, Large",
+          "formatted_attributes": {
+            "Color": "Red",
+            "Size": "Large"
+          }
+        },
+        
+        "product_display_name": "Product Name - Red, Large",
+        
+        "image": {
+          "id": 2,
+          "url": "https://example.com/variation-image.jpg",
+          "name": "variation-image.jpg"
+        }
+      }
+    ],
+    "total": "1700.00",
+    "count": 1
+  },
+  "message": "Cart items retrieved successfully."
+}
+
+Notes:
+- Image priority: variation image > product main photo
+- product_display_name includes variation attributes if applicable
+
+
+2.2 ADD TO CART (WITH VARIATION)
+---------------------------------
+Endpoint: POST /api/v1/cart/add
+Authentication: Required
+
+Description:
+Add a product (simple or variable) to cart with optional variation selection.
+
+Request Body:
+{
+  "product_id": 10,                    // Required
+  "product_variation_id": 25,          // Required for variable products
+  "quantity": 2                        // Optional, default: 1
+}
+
+Validation Rules:
+- product_id: required, must exist in products table
+- product_variation_id: nullable, must exist in product_variations table
+- quantity: nullable, integer, minimum: 1
+
+Response Structure:
+{
+  "success": true,
+  "data": {
+    "cart_item": {
+      "id": 1,
+      "user_id": 1,
+      "product_id": 10,
+      "product_variation_id": 25,
+      "quantity": 2,
+      "price": 850.00,
+      "product_display_name": "Product Name - Red, Large",
+      "variation_details": {
+        "id": 25,
+        "sku": "PROD-001-RED-L",
+        "display_name": "Product Name - Red, Large",
+        "formatted_attributes": {
+          "Color": "Red",
+          "Size": "Large"
+        }
+      },
+      "image": {
+        "id": 2,
+        "url": "https://example.com/variation-image.jpg"
+      }
+    },
+    "cart_count": 1
+  },
+  "message": "Product added to cart successfully."
+}
+
+Error Responses:
+- 400: Invalid variation for this product
+- 400: Variation is out of stock or insufficient quantity available
+- 400: Product is out of stock or insufficient quantity available
+
+Stock Management:
+- Stock is REDUCED when adding to cart
+- For variable products: variation stock is reduced
+- For simple products: product stock is reduced
+- If stock reaches 0, in_stock flag is set to false
+
+
+2.3 UPDATE CART ITEM
+---------------------
+Endpoint: PUT /api/v1/cart/{id}
+Authentication: Required
+
+Description:
+Update quantity of a cart item (works for both simple and variable products).
+
+Path Parameters:
+- id (integer, required): Cart item ID
+
+Request Body:
+{
+  "quantity": 3
+}
+
+Response Structure:
+{
+  "success": true,
+  "data": {
+    "cart_item": {
+      "id": 1,
+      "quantity": 3,
+      "price": 850.00,
+      "product_display_name": "Product Name - Red, Large",
+      "variation_details": {
+        "id": 25,
+        "sku": "PROD-001-RED-L",
+        "display_name": "Product Name - Red, Large",
+        "formatted_attributes": {
+          "Color": "Red",
+          "Size": "Large"
+        }
+      }
+    },
+    "item_total": "2550.00",
+    "cart_total": "2550.00"
+  },
+  "message": "Cart item updated successfully."
+}
+
+Stock Management:
+- If increasing quantity: stock is reduced by the difference
+- If decreasing quantity: stock is restored by the difference
+- Validates available stock before increasing
+
+
+2.4 REMOVE FROM CART
+---------------------
+Endpoint: DELETE /api/v1/cart/{id}
+Authentication: Required
+
+Description:
+Remove an item from cart and restore stock.
+
+Path Parameters:
+- id (integer, required): Cart item ID
+
+Response:
+{
+  "success": true,
+  "data": {
+    "cart_count": 0,
+    "cart_total": "0.00"
+  },
+  "message": "Item removed from cart successfully."
+}
+
+Stock Management:
+- Stock is RESTORED when removing from cart
+- For variable products: variation stock is restored
+- For simple products: product stock is restored
+
+
+2.5 CLEAR CART
+--------------
+Endpoint: DELETE /api/v1/cart/clear
+Authentication: Required
+
+Description:
+Remove all items from cart and restore all stock.
+
+Response:
+{
+  "success": true,
+  "data": {
+    "items_removed": 5
+  },
+  "message": "Cart cleared and stock restored successfully."
+}
+
+
+2.6 GET CART COUNT
+------------------
+Endpoint: GET /api/v1/cart/count
+Authentication: Required
+
+Description:
+Get the number of items in cart.
+
+Response:
+{
+  "success": true,
+  "data": {
+    "cart_count": 3
+  },
+  "message": "Cart count retrieved successfully."
+}
+
+
+2.7 GENERATE INVOICE FROM CART
+-------------------------------
+Endpoint: POST /api/v1/cart/generate-invoice
+Authentication: Required
+
+Description:
+Convert cart items to a proforma invoice (includes variation details).
+
+Response:
+{
+  "success": true,
+  "data": {
+    "invoice": {
+      "id": 1,
+      "invoice_number": "INV-2026-0001",
+      "user_id": 1,
+      "total_amount": 1700.00,
+      "status": "draft",
+      "created_at": "2026-02-14T10:00:00.000000Z"
+    },
+    "invoice_data": {
+      "cart_items": [
+        {
+          "id": 1,
+          "product_id": 10,
+          "product_name": "Product Name",
+          "product_variation_id": 25,
+          "variation_display_name": "Product Name - Red, Large",
+          "variation_attributes": {
+            "Color": "Red",
+            "Size": "Large"
+          },
+          "variation_sku": "PROD-001-RED-L",
+          "quantity": 2,
+          "price": 850.00,
+          "total": 1700.00
+        }
+      ],
+      "total": 1700.00,
+      "invoice_date": "2026-02-14",
+      "customer": {
+        "id": 1,
+        "name": "Customer Name",
+        "email": "customer@example.com"
+      }
+    }
+  },
+  "message": "Proforma invoice generated successfully."
+}
+
+Notes:
+- Cart is cleared after invoice generation
+- Stock remains reduced (not restored)
+- Notifications sent to admin users
+
+
+================================================================================
+                        3. WISHLIST APIs
+================================================================================
+
+3.1 GET WISHLIST
+----------------
+Endpoint: GET /api/v1/wishlist
+Authentication: Required
+
+Description:
+Get user's wishlist items (note: wishlist stores products, not variations).
+
+Query Parameters:
+- page (integer, optional): Page number
+- per_page (integer, optional): Items per page (default: 15, max: 50)
+
+Response:
+{
+  "success": true,
+  "data": {
+    "items": {
+      "current_page": 1,
+      "data": [
+        {
+          "id": 1,
+          "user_id": 1,
+          "product_id": 10,
+          "created_at": "2026-02-14T10:00:00.000000Z",
+          "product": {
+            "id": 10,
+            "name": "Product Name",
+            "product_type": "variable",
+            "mrp": 1000.00,
+            "selling_price": 900.00,
+            "discounted_price": 850.00,
+            "in_stock": true,
+            "is_available": true,
+            "main_photo": {
+              "id": 1,
+              "url": "https://example.com/image.jpg"
+            }
+          }
+        }
+      ]
+    },
+    "total": 1
+  },
+  "message": "Wishlist retrieved successfully."
+}
+
+
+3.2 ADD TO WISHLIST
+-------------------
+Endpoint: POST /api/v1/wishlist/{productId}
+Authentication: Required
+
+Description:
+Add a product to wishlist.
+
+Path Parameters:
+- productId (integer, required): Product ID
+
+Response:
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "user_id": 1,
+    "product_id": 10,
+    "created_at": "2026-02-14T10:00:00.000000Z",
+    "product": {
+      "id": 10,
+      "name": "Product Name"
+    }
+  },
+  "message": "Product added to wishlist."
+}
+
+
+3.3 REMOVE FROM WISHLIST
+-------------------------
+Endpoint: DELETE /api/v1/wishlist/{productId}
+Authentication: Required
+
+Description:
+Remove a product from wishlist.
+
+Path Parameters:
+- productId (integer, required): Product ID
+
+Response:
+{
+  "success": true,
+  "data": null,
+  "message": "Product removed from wishlist."
+}
+
+
+3.4 CHECK WISHLIST STATUS
+--------------------------
+Endpoint: GET /api/v1/wishlist/check/{productId}
+Authentication: Required
+
+Description:
+Check if a product is in wishlist.
+
+Path Parameters:
+- productId (integer, required): Product ID
+
+Response:
+{
+  "success": true,
+  "data": {
+    "is_in_wishlist": true,
+    "added_at": "2026-02-14T10:00:00.000000Z"
+  },
+  "message": "Wishlist status retrieved."
+}
+
+
+3.5 MOVE WISHLIST TO CART
+--------------------------
+Endpoint: POST /api/v1/wishlist/{productId}/add-to-cart
+Authentication: Required
+
+Description:
+Move a wishlist item to cart. For variable products, you must specify variation.
+
+Path Parameters:
+- productId (integer, required): Product ID
+
+Request Body (for variable products):
+{
+  "product_variation_id": 25,
+  "quantity": 1
+}
+
+Response: Same as Add to Cart API
+
+
+================================================================================
+                4. INVOICE APIs WITH VARIATION SUPPORT
+================================================================================
+
+4.1 GET MY INVOICES
+-------------------
+Endpoint: GET /api/v1/my-invoices
+Authentication: Required
+
+Description:
+Get user's proforma invoices with variation details.
+
+Query Parameters:
+- page (integer, optional): Page number
+- status (string, optional): Filter by status (draft, confirmed, cancelled)
+
+Response:
+{
+  "success": true,
+  "data": {
+    "current_page": 1,
+    "data": [
+      {
+        "id": 1,
+        "invoice_number": "INV-2026-0001",
+        "user_id": 1,
+        "total_amount": 1700.00,
+        "status": "draft",
+        "created_at": "2026-02-14T10:00:00.000000Z",
+        "invoice_data": {
+          "cart_items": [
+            {
+              "product_id": 10,
+              "product_name": "Product Name",
+              "product_variation_id": 25,
+              "variation_display_name": "Product Name - Red, Large",
+              "variation_attributes": {
+                "Color": "Red",
+                "Size": "Large"
+              },
+              "variation_sku": "PROD-001-RED-L",
+              "quantity": 2,
+              "price": 850.00,
+              "total": 1700.00
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "message": "Invoices retrieved successfully."
+}
+
+
+4.2 GET INVOICE DETAILS
+------------------------
+Endpoint: GET /api/v1/my-invoices/{id}
+Authentication: Required
+
+Description:
+Get detailed information about a specific invoice.
+
+Path Parameters:
+- id (integer, required): Invoice ID
+
+Response: Same structure as single invoice in Get My Invoices
+
+
+4.3 ADD INVOICE TO CART
+------------------------
+Endpoint: POST /api/v1/my-invoices/{id}/add-to-cart
+Authentication: Required
+
+Description:
+Add all items from an invoice back to cart (including variations).
+
+Path Parameters:
+- id (integer, required): Invoice ID
+
+Response:
+{
+  "success": true,
+  "data": {
+    "items_added": 3,
+    "cart_count": 3,
+    "skipped_items": []  // Items that couldn't be added (out of stock)
+  },
+  "message": "Invoice items added to cart successfully."
+}
+
+Notes:
+- Validates stock availability for each item
+- For variable products, checks variation stock
+- Skips items that are out of stock
+
+
+4.4 REMOVE INVOICE ITEM
+------------------------
+Endpoint: DELETE /api/v1/my-invoices/{id}/items/{productId}
+Authentication: Required
+
+Description:
+Remove a specific item from an invoice.
+
+Path Parameters:
+- id (integer, required): Invoice ID
+- productId (integer, required): Product ID
+
+Query Parameters:
+- product_variation_id (integer, optional): Variation ID for variable products
+
+Response:
+{
+  "success": true,
+  "data": {
+    "invoice": {
+      "id": 1,
+      "invoice_number": "INV-2026-0001",
+      "total_amount": 850.00,
+      "invoice_data": {
+        "cart_items": [...]
+      }
+    }
+  },
+  "message": "Item removed from invoice successfully."
+}
+
+
+================================================================================
+                5. PRODUCT VARIATION MODEL STRUCTURE
+================================================================================
+
+PRODUCT VARIATION TABLE FIELDS:
+--------------------------------
+- id (integer): Primary key
+- product_id (integer): Foreign key to products table
+- sku (string): Unique SKU for this variation
+- mrp (decimal): Maximum Retail Price
+- selling_price (decimal): Selling price (can be null)
+- stock_quantity (integer): Available stock for this variation
+- low_quantity_threshold (integer): Alert threshold for low stock
+- in_stock (boolean): Stock availability flag
+- image_id (integer): Foreign key to media table (variation image)
+- attribute_values (json): Attribute-value pairs {"attribute_id": "value_id"}
+- is_default (boolean): Whether this is the default variation
+- created_at (timestamp)
+- updated_at (timestamp)
+
+
+COMPUTED ATTRIBUTES:
+--------------------
+1. formatted_attributes (array)
+   - Returns human-readable attribute-value pairs
+   - Example: {"Color": "Red", "Size": "Large"}
+
+2. display_name (string)
+   - Product name with variation attributes
+   - Example: "T-Shirt - Red, Large"
+
+3. price (decimal)
+   - Returns selling_price if set, otherwise mrp
+   - Falls back to product prices if variation prices are null
+
+
+RELATIONSHIPS:
+--------------
+1. product() - belongsTo Product
+   - Parent product relationship
+
+2. image() - belongsTo Media
+   - Variation-specific image
+
+
+METHODS:
+--------
+1. isLowStock(): bool
+   - Checks if stock is below threshold
+   - Uses variation threshold or falls back to product threshold
+
+
+PRODUCT TYPES:
+--------------
+1. Simple Product
+   - product_type = "simple"
+   - No variations
+   - Single price and stock
+
+2. Variable Product
+   - product_type = "variable"
+   - Has multiple variations
+   - Each variation has its own price, stock, and attributes
+
+
+================================================================================
+                        IMPORTANT NOTES
+================================================================================
+
+1. STOCK MANAGEMENT:
+   - Stock is REDUCED when adding to cart
+   - Stock is RESTORED when removing from cart or clearing cart
+   - Stock is NOT restored when generating invoice
+   - For variable products, variation stock is managed
+   - For simple products, product stock is managed
+
+2. PRICING:
+   - Authenticated users get discounted prices based on their user group
+   - Guest users see regular selling_price or mrp
+   - Each variation can have its own mrp and selling_price
+
+3. IMAGES:
+   - Variations can have their own images
+   - Priority: variation image > product main photo
+   - Gallery photos are at product level only
+
+4. CART BEHAVIOR:
+   - Same product with different variations = separate cart items
+   - Same product + same variation = quantity is updated
+   - product_variation_id is null for simple products
+
+5. VALIDATION:
+   - For variable products, product_variation_id is required when adding to cart
+   - Variation must belong to the specified product
+   - Stock availability is checked before adding to cart
+
+6. INVOICE GENERATION:
+   - Variation details are stored in invoice_data JSON
+   - Includes variation_display_name, variation_attributes, variation_sku
+   - Cart is cleared after invoice generation
+
+7. WISHLIST:
+   - Wishlist stores products, not specific variations
+   - When moving to cart from wishlist, user must select variation
+   - For simple products, no variation selection needed
+
+8. ATTRIBUTES:
+   - Attributes are stored as JSON: {"attribute_id": "value_id"}
+   - formatted_attributes provides human-readable format
+   - Common attributes: Color, Size, Material, Style, etc.
+
+9. API AUTHENTICATION:
+   - Most APIs require authentication (Bearer token)
+   - Product listing and details are public (optional auth)
+   - Authenticated requests get user-specific pricing
+
+10. ERROR HANDLING:
+    - 400: Validation errors, stock issues
+    - 401: Unauthenticated
+    - 404: Resource not found
+    - 422: Validation error
+
+================================================================================
+                        EXAMPLE USE CASES
+================================================================================
+
+USE CASE 1: Add Variable Product to Cart
+-----------------------------------------
+Step 1: Get product details
+GET /api/v1/products/10
+
+Step 2: User selects variation (e.g., Red, Large)
+variation_id = 25
+
+Step 3: Add to cart
+POST /api/v1/cart/add
+{
+  "product_id": 10,
+  "product_variation_id": 25,
+  "quantity": 2
+}
+
+
+USE CASE 2: Display Cart with Variations
+-----------------------------------------
+GET /api/v1/cart
+
+Response shows:
+- Product name with variation: "T-Shirt - Red, Large"
+- Variation image (if available)
+- Variation attributes: {"Color": "Red", "Size": "Large"}
+- Variation SKU: "TSHIRT-RED-L"
+
+
+USE CASE 3: Generate Invoice from Cart
+---------------------------------------
+POST /api/v1/cart/generate-invoice
+
+Invoice includes:
+- All cart items with variation details
+- Variation display names and attributes
+- Stock is NOT restored
+- Cart is cleared
+
+
+USE CASE 4: Reorder from Invoice
+---------------------------------
+Step 1: Get invoice details
+GET /api/v1/my-invoices/1
+
+Step 2: Add all items back to cart
+POST /api/v1/my-invoices/1/add-to-cart
+
+System:
+- Validates stock for each variation
+- Adds available items to cart
+- Returns list of skipped items (out of stock)
+
+
+================================================================================
+                        TESTING ENDPOINTS
+================================================================================
+
+You can test these APIs using:
+1. Postman
+2. cURL
+3. Flutter/Mobile App
+4. Web Frontend
+
+Example cURL command:
+---------------------
+curl -X POST "https://yourdomain.com/api/v1/cart/add" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "product_id": 10,
+    "product_variation_id": 25,
+    "quantity": 2
+  }'
+
+
+================================================================================
+                        CONTACT & SUPPORT
+================================================================================
+
+For API support or questions, please contact:
+- Development Team
+- Email: support@yourdomain.com
+
+Last Updated: February 14, 2026
+Version: 1.0
+
+================================================================================
+                            END OF DOCUMENT
+================================================================================

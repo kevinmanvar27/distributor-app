@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Product;
+use App\Models\ProductVariation;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
 
@@ -50,19 +51,48 @@ class ProductController extends ApiController
     {
         // Filter by published status only (same as web flow)
         $products = Product::where('status', 'published')
-            ->with('mainPhoto')
+            ->with(['mainPhoto', 'variations.image'])
             ->paginate(15);
 
         // Add discounted price for each product
         $user = $request->user();
         $products->getCollection()->transform(function ($product) use ($user) {
-            $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
-                ? $product->selling_price 
-                : $product->mrp;
-            
-            $product->discounted_price = function_exists('calculateDiscountedPrice') 
-                ? calculateDiscountedPrice($priceToUse, $user) 
-                : $priceToUse;
+            // For simple products, calculate discounted price
+            if ($product->isSimple()) {
+                $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
+                    ? $product->selling_price 
+                    : $product->mrp;
+                
+                $product->discounted_price = function_exists('calculateDiscountedPrice') 
+                    ? calculateDiscountedPrice($priceToUse, $user) 
+                    : $priceToUse;
+            } else {
+                // For variable products, add price range
+                $product->price_range = $product->price_range;
+                
+                // Add discounted prices to variations
+                if ($product->variations) {
+                    $product->variations->transform(function ($variation) use ($user) {
+                        $priceToUse = (!is_null($variation->selling_price) && $variation->selling_price !== '' && $variation->selling_price >= 0) 
+                            ? $variation->selling_price 
+                            : $variation->mrp;
+                        
+                        $variation->discounted_price = function_exists('calculateDiscountedPrice') 
+                            ? calculateDiscountedPrice($priceToUse, $user) 
+                            : $priceToUse;
+                        
+                        // Add formatted attributes
+                        $variation->formatted_attributes = $variation->formatted_attributes;
+                        
+                        // Ensure image URL is included
+                        if ($variation->image) {
+                            $variation->image_url = $variation->image->url;
+                        }
+                        
+                        return $variation;
+                    });
+                }
+            }
             
             return $product;
         });
@@ -243,7 +273,7 @@ class ProductController extends ApiController
      */
     public function show($id)
     {
-        $product = Product::with('mainPhoto')->find($id);
+        $product = Product::with(['mainPhoto', 'variations.image'])->find($id);
 
         if (is_null($product)) {
             return $this->sendError('Product not found.');
@@ -258,11 +288,40 @@ class ProductController extends ApiController
         // Add gallery photos
         $productData['gallery_photos'] = $product->gallery_photos ?? [];
 
-        // Add user-specific discounted price
-        $basePrice = $product->selling_price ?? $product->mrp;
-        $productData['discounted_price'] = $user 
-            ? calculateDiscountedPrice($basePrice, $user) 
-            : $basePrice;
+        // Handle pricing based on product type
+        if ($product->isSimple()) {
+            // Simple product - add single discounted price
+            $basePrice = $product->selling_price ?? $product->mrp;
+            $productData['discounted_price'] = $user 
+                ? calculateDiscountedPrice($basePrice, $user) 
+                : $basePrice;
+        } else {
+            // Variable product - add price range and variations with discounted prices
+            $productData['price_range'] = $product->price_range;
+            
+            // Add discounted prices to variations
+            if ($product->variations && $product->variations->count() > 0) {
+                $productData['variations'] = $product->variations->map(function ($variation) use ($user) {
+                    $variationData = $variation->toArray();
+                    
+                    $basePrice = $variation->selling_price ?? $variation->mrp;
+                    $variationData['discounted_price'] = $user 
+                        ? calculateDiscountedPrice($basePrice, $user) 
+                        : $basePrice;
+                    
+                    // Add formatted attributes
+                    $variationData['formatted_attributes'] = $variation->formatted_attributes;
+                    $variationData['display_name'] = $variation->display_name;
+                    
+                    // Ensure image URL is included
+                    if ($variation->image) {
+                        $variationData['image_url'] = $variation->image->url;
+                    }
+                    
+                    return $variationData;
+                })->toArray();
+            }
+        }
 
         // Add wishlist status (only if authenticated)
         $productData['is_in_wishlist'] = $user 
@@ -270,11 +329,24 @@ class ProductController extends ApiController
             : false;
 
         // Add stock status
-        $productData['stock_status'] = [
-            'available' => $product->in_stock && ($product->stock_quantity === null || $product->stock_quantity > 0),
-            'quantity' => $product->stock_quantity,
-            'label' => $this->getStockLabel($product),
-        ];
+        if ($product->isVariable()) {
+            // For variable products, check if any variation is in stock
+            $totalStock = $product->variations->sum('stock_quantity');
+            $hasStock = $product->variations->where('in_stock', true)->where('stock_quantity', '>', 0)->count() > 0;
+            
+            $productData['stock_status'] = [
+                'available' => $hasStock,
+                'quantity' => $totalStock,
+                'label' => $hasStock ? 'In Stock' : 'Out of Stock',
+            ];
+        } else {
+            // Simple product stock status
+            $productData['stock_status'] = [
+                'available' => $product->in_stock && ($product->stock_quantity === null || $product->stock_quantity > 0),
+                'quantity' => $product->stock_quantity,
+                'label' => $this->getStockLabel($product),
+            ];
+        }
 
         // Get related products from same category
         $productData['related_products'] = $this->getRelatedProducts($product, $user);
@@ -326,7 +398,7 @@ class ProductController extends ApiController
         }
 
         // Find products in the same categories, excluding current product
-        $relatedProducts = Product::with('mainPhoto')
+        $relatedProducts = Product::with(['mainPhoto', 'variations.image'])
             ->where('id', '!=', $product->id)
             ->where('status', 'published')
             ->where('in_stock', true)
@@ -345,17 +417,30 @@ class ProductController extends ApiController
                 'id' => $relatedProduct->id,
                 'name' => $relatedProduct->name,
                 'slug' => $relatedProduct->slug,
+                'product_type' => $relatedProduct->product_type,
                 'mrp' => $relatedProduct->mrp,
                 'selling_price' => $relatedProduct->selling_price,
                 'in_stock' => $relatedProduct->in_stock,
                 'main_photo' => $relatedProduct->mainPhoto,
             ];
 
-            // Add user-specific discounted price
-            $basePrice = $relatedProduct->selling_price ?? $relatedProduct->mrp;
-            $data['discounted_price'] = $user 
-                ? calculateDiscountedPrice($basePrice, $user) 
-                : $basePrice;
+            // Handle pricing based on product type
+            if ($relatedProduct->isSimple()) {
+                // Simple product - add single discounted price
+                $basePrice = $relatedProduct->selling_price ?? $relatedProduct->mrp;
+                $data['discounted_price'] = $user 
+                    ? calculateDiscountedPrice($basePrice, $user) 
+                    : $basePrice;
+            } else {
+                // Variable product - add price range
+                $data['price_range'] = $relatedProduct->price_range;
+                
+                // Optionally include variations for related products (limited info)
+                if ($relatedProduct->variations && $relatedProduct->variations->count() > 0) {
+                    $data['has_variations'] = true;
+                    $data['variations_count'] = $relatedProduct->variations->count();
+                }
+            }
 
             return $data;
         })->toArray();

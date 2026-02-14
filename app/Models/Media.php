@@ -24,6 +24,13 @@ class Media extends Model
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['url'];
+
+    /**
      * Get the URL for the media file.
      */
     public function getUrlAttribute()

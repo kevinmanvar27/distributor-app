@@ -263,14 +263,6 @@ function setMinDateTime() {
                                                     <i class="fas fa-users me-1"></i>
                                                     App Users: {{ $usersWithTokens ?? 0 }}
                                                 </span>
-                                                <span class="badge bg-success rounded-pill px-3 py-2">
-                                                    <i class="fas fa-store me-1"></i>
-                                                    Vendor Customers: {{ $vendorCustomersWithTokens ?? 0 }}
-                                                </span>
-                                                <span class="badge bg-secondary rounded-pill px-3 py-2">
-                                                    <i class="fas fa-mobile-alt me-1"></i>
-                                                    Total: {{ ($usersWithTokens ?? 0) + ($vendorCustomersWithTokens ?? 0) }}
-                                                </span>
                                             </div>
                                         </div>
                                         
@@ -297,12 +289,6 @@ function setMinDateTime() {
                                                     <input class="form-check-input" type="checkbox" id="exclude_admins" name="exclude_admins" value="1">
                                                     <label class="form-check-label" for="exclude_admins">
                                                         Exclude admin users
-                                                    </label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="include_vendor_customers" name="include_vendor_customers" value="1" checked>
-                                                    <label class="form-check-label" for="include_vendor_customers">
-                                                        Include vendor customers <span class="text-muted">({{ $vendorCustomersWithTokens ?? 0 }} with devices)</span>
                                                     </label>
                                                 </div>
                                             </div>
@@ -799,7 +785,6 @@ function setMinDateTime() {
                 body: $('#all_body').val(),
                 data: additionalData,
                 exclude_admins: $('#exclude_admins').is(':checked') ? 1 : 0,
-                include_vendor_customers: $('#include_vendor_customers').is(':checked') ? 1 : 0,
                 schedule_type: scheduleType,
                 scheduled_at: scheduledAt,
                 _token: $('input[name="_token"]').val()
@@ -1061,7 +1046,6 @@ function setMinDateTime() {
             // Show breakdown if available (for broadcast notifications)
             if (response.summary.users_breakdown) {
                 const appUsers = response.summary.users_breakdown.app_users || {};
-                const vendorCustomers = response.summary.users_breakdown.vendor_customers || {};
                 
                 html += `<div class="row mt-3">
                             <div class="col-12">
@@ -1069,7 +1053,7 @@ function setMinDateTime() {
                                     <div class="card-body">
                                         <h6 class="card-title fw-bold mb-3"><i class="fas fa-chart-pie me-2"></i>Breakdown by User Type</h6>
                                         <div class="row">
-                                            <div class="col-md-6">
+                                            <div class="col-md-12">
                                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                                     <span><i class="fas fa-users text-primary me-2"></i>App Users:</span>
                                                     <span class="badge bg-primary">${appUsers.total_users || 0} total</span>
@@ -1077,16 +1061,6 @@ function setMinDateTime() {
                                                 <div class="small text-muted">
                                                     <span class="text-success me-2"><i class="fas fa-check me-1"></i>${appUsers.successful || 0} sent</span>
                                                     <span class="text-danger"><i class="fas fa-times me-1"></i>${appUsers.failed || 0} failed</span>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <span><i class="fas fa-store text-success me-2"></i>Vendor Customers:</span>
-                                                    <span class="badge bg-success">${vendorCustomers.total_customers || 0} total</span>
-                                                </div>
-                                                <div class="small text-muted">
-                                                    <span class="text-success me-2"><i class="fas fa-check me-1"></i>${vendorCustomers.successful || 0} sent</span>
-                                                    <span class="text-danger"><i class="fas fa-times me-1"></i>${vendorCustomers.failed || 0} failed</span>
                                                 </div>
                                             </div>
                                         </div>

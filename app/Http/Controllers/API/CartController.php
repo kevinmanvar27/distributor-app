@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Product;
+use App\Models\ProductVariation;
 use App\Models\ShoppingCartItem;
 use App\Models\ProformaInvoice;
 use App\Models\User;
@@ -77,15 +78,54 @@ class CartController extends ApiController
         $user = $request->user();
         
         $cartItems = ShoppingCartItem::where('user_id', $user->id)
-            ->with(['product.mainPhoto'])
+            ->with(['product.mainPhoto', 'variation.image'])
             ->get();
+        
+        // Transform cart items to include proper image URLs and variation details
+        $transformedItems = $cartItems->map(function ($item) {
+            $itemData = $item->toArray();
+            
+            // Add proper image - variation image takes priority over product image
+            if ($item->variation && $item->variation->image) {
+                $itemData['image'] = [
+                    'id' => $item->variation->image->id,
+                    'url' => $item->variation->image->url,
+                    'name' => $item->variation->image->name,
+                ];
+            } elseif ($item->product && $item->product->mainPhoto) {
+                $itemData['image'] = [
+                    'id' => $item->product->mainPhoto->id,
+                    'url' => $item->product->mainPhoto->url,
+                    'name' => $item->product->mainPhoto->name,
+                ];
+            } else {
+                $itemData['image'] = null;
+            }
+            
+            // Add variation details if applicable
+            if ($item->variation) {
+                $itemData['variation_details'] = [
+                    'id' => $item->variation->id,
+                    'sku' => $item->variation->sku,
+                    'display_name' => $item->variation->display_name,
+                    'formatted_attributes' => $item->variation->formatted_attributes,
+                ];
+            }
+            
+            // Add product name (includes variation name if applicable)
+            $itemData['product_display_name'] = $item->variation 
+                ? $item->variation->display_name 
+                : $item->product->name;
+            
+            return $itemData;
+        });
         
         $total = $cartItems->sum(function ($item) {
             return $item->price * $item->quantity;
         });
         
         return $this->sendResponse([
-            'items' => $cartItems,
+            'items' => $transformedItems,
             'total' => number_format($total, 2, '.', ''),
             'count' => $cartItems->count(),
         ], 'Cart items retrieved successfully.');
@@ -216,8 +256,45 @@ class CartController extends ApiController
         // Get updated cart count
         $cartCount = ShoppingCartItem::where('user_id', $user->id)->count();
 
+        // Load relationships and transform response
+        $cartItem->load('product.mainPhoto', 'variation.image');
+        
+        $itemData = $cartItem->toArray();
+        
+        // Add proper image - variation image takes priority over product image
+        if ($cartItem->variation && $cartItem->variation->image) {
+            $itemData['image'] = [
+                'id' => $cartItem->variation->image->id,
+                'url' => $cartItem->variation->image->url,
+                'name' => $cartItem->variation->image->name,
+            ];
+        } elseif ($cartItem->product && $cartItem->product->mainPhoto) {
+            $itemData['image'] = [
+                'id' => $cartItem->product->mainPhoto->id,
+                'url' => $cartItem->product->mainPhoto->url,
+                'name' => $cartItem->product->mainPhoto->name,
+            ];
+        } else {
+            $itemData['image'] = null;
+        }
+        
+        // Add variation details if applicable
+        if ($cartItem->variation) {
+            $itemData['variation_details'] = [
+                'id' => $cartItem->variation->id,
+                'sku' => $cartItem->variation->sku,
+                'display_name' => $cartItem->variation->display_name,
+                'formatted_attributes' => $cartItem->variation->formatted_attributes,
+            ];
+        }
+        
+        // Add product name (includes variation name if applicable)
+        $itemData['product_display_name'] = $cartItem->variation 
+            ? $cartItem->variation->display_name 
+            : $cartItem->product->name;
+        
         return $this->sendResponse([
-            'cart_item' => $cartItem->load('product.mainPhoto', 'variation'),
+            'cart_item' => $itemData,
             'cart_count' => $cartCount,
         ], 'Product added to cart successfully.');
     }
@@ -330,9 +407,46 @@ class CartController extends ApiController
         $cartTotal = $cartItems->sum(function ($item) {
             return $item->price * $item->quantity;
         });
+        
+        // Load relationships and transform response
+        $cartItem->load('product.mainPhoto', 'variation.image');
+        
+        $itemData = $cartItem->toArray();
+        
+        // Add proper image - variation image takes priority over product image
+        if ($cartItem->variation && $cartItem->variation->image) {
+            $itemData['image'] = [
+                'id' => $cartItem->variation->image->id,
+                'url' => $cartItem->variation->image->url,
+                'name' => $cartItem->variation->image->name,
+            ];
+        } elseif ($cartItem->product && $cartItem->product->mainPhoto) {
+            $itemData['image'] = [
+                'id' => $cartItem->product->mainPhoto->id,
+                'url' => $cartItem->product->mainPhoto->url,
+                'name' => $cartItem->product->mainPhoto->name,
+            ];
+        } else {
+            $itemData['image'] = null;
+        }
+        
+        // Add variation details if applicable
+        if ($cartItem->variation) {
+            $itemData['variation_details'] = [
+                'id' => $cartItem->variation->id,
+                'sku' => $cartItem->variation->sku,
+                'display_name' => $cartItem->variation->display_name,
+                'formatted_attributes' => $cartItem->variation->formatted_attributes,
+            ];
+        }
+        
+        // Add product name (includes variation name if applicable)
+        $itemData['product_display_name'] = $cartItem->variation 
+            ? $cartItem->variation->display_name 
+            : $cartItem->product->name;
 
         return $this->sendResponse([
-            'cart_item' => $cartItem->fresh()->load('product.mainPhoto', 'variation'),
+            'cart_item' => $itemData,
             'item_total' => number_format($itemTotal, 2, '.', ''),
             'cart_total' => number_format($cartTotal, 2, '.', ''),
         ], 'Cart item updated successfully.');

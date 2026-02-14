@@ -172,7 +172,7 @@ class HomeController extends ApiController
         // This can be enhanced with a 'is_featured' flag in the future
         $products = Product::where('status', 'published')
             ->where('in_stock', true)
-            ->with('mainPhoto')
+            ->with(['mainPhoto', 'variations.image'])
             ->orderBy('updated_at', 'desc')
             ->limit($limit)
             ->get();
@@ -190,7 +190,7 @@ class HomeController extends ApiController
     private function getLatestProducts($user, $limit = 10)
     {
         $products = Product::where('status', 'published')
-            ->with('mainPhoto')
+            ->with(['mainPhoto', 'variations.image'])
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();
@@ -208,13 +208,41 @@ class HomeController extends ApiController
     private function addDiscountedPrices($products, $user)
     {
         return $products->map(function ($product) use ($user) {
-            $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
-                ? $product->selling_price 
-                : $product->mrp;
-            
-            $product->discounted_price = function_exists('calculateDiscountedPrice') 
-                ? calculateDiscountedPrice($priceToUse, $user) 
-                : $priceToUse;
+            // For simple products
+            if ($product->isSimple()) {
+                $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
+                    ? $product->selling_price 
+                    : $product->mrp;
+                
+                $product->discounted_price = function_exists('calculateDiscountedPrice') 
+                    ? calculateDiscountedPrice($priceToUse, $user) 
+                    : $priceToUse;
+            } else {
+                // For variable products, add price range
+                $product->price_range = $product->price_range;
+                
+                // Add discounted prices to variations
+                if ($product->variations) {
+                    $product->variations->transform(function ($variation) use ($user) {
+                        $priceToUse = (!is_null($variation->selling_price) && $variation->selling_price !== '' && $variation->selling_price >= 0) 
+                            ? $variation->selling_price 
+                            : $variation->mrp;
+                        
+                        $variation->discounted_price = function_exists('calculateDiscountedPrice') 
+                            ? calculateDiscountedPrice($priceToUse, $user) 
+                            : $priceToUse;
+                        
+                        $variation->formatted_attributes = $variation->formatted_attributes;
+                        
+                        // Ensure image URL is included
+                        if ($variation->image) {
+                            $variation->image_url = $variation->image->url;
+                        }
+                        
+                        return $variation;
+                    });
+                }
+            }
             
             return $product;
         });

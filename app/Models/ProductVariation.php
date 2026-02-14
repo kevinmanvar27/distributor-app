@@ -42,6 +42,13 @@ class ProductVariation extends Model
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['formatted_attributes', 'display_name'];
+
+    /**
      * Get parent product
      */
     public function product()

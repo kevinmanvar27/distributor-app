@@ -336,7 +336,7 @@
             width: 0;
             height: 2px;
             bottom: 0;
-            left: 50%;
+            /* left: 50%; */
             background-color: var(--theme-color);
         }
         

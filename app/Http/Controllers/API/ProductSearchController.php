@@ -92,7 +92,7 @@ class ProductSearchController extends ApiController
         $sortOrder = $request->sort_order ?? 'asc';
 
         $productsQuery = Product::where('status', 'published')
-            ->with(['mainPhoto']);
+            ->with(['mainPhoto', 'variations.image']);
 
         // Only apply search filter if query is provided
         if ($query && strlen(trim($query)) > 0) {
@@ -108,13 +108,36 @@ class ProductSearchController extends ApiController
         // Add discounted price for each product
         $user = $request->user();
         $products->getCollection()->transform(function ($product) use ($user) {
-            $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
-                ? $product->selling_price 
-                : $product->mrp;
-            
-            $product->discounted_price = function_exists('calculateDiscountedPrice') 
-                ? calculateDiscountedPrice($priceToUse, $user) 
-                : $priceToUse;
+            // For simple products
+            if ($product->isSimple()) {
+                $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
+                    ? $product->selling_price 
+                    : $product->mrp;
+                
+                $product->discounted_price = function_exists('calculateDiscountedPrice') 
+                    ? calculateDiscountedPrice($priceToUse, $user) 
+                    : $priceToUse;
+            } else {
+                // For variable products, add price range
+                $product->price_range = $product->price_range;
+                
+                // Add discounted prices to variations
+                if ($product->variations) {
+                    $product->variations->transform(function ($variation) use ($user) {
+                        $priceToUse = (!is_null($variation->selling_price) && $variation->selling_price !== '' && $variation->selling_price >= 0) 
+                            ? $variation->selling_price 
+                            : $variation->mrp;
+                        
+                        $variation->discounted_price = function_exists('calculateDiscountedPrice') 
+                            ? calculateDiscountedPrice($priceToUse, $user) 
+                            : $priceToUse;
+                        
+                        $variation->formatted_attributes = $variation->formatted_attributes;
+                        
+                        return $variation;
+                    });
+                }
+            }
             
             return $product;
         });
@@ -215,7 +238,7 @@ class ProductSearchController extends ApiController
 
         // Get products using JSON filtering (same as web flow)
         $products = Product::where('status', 'published')
-            ->with('mainPhoto')
+            ->with(['mainPhoto', 'variations.image'])
             ->get()
             ->filter(function ($product) use ($categoryId, $selectedSubcategoryId) {
                 if (!$product->product_categories) {
@@ -264,13 +287,36 @@ class ProductSearchController extends ApiController
         // Add discounted price for each product
         $user = $request->user();
         $products = $products->map(function ($product) use ($user) {
-            $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
-                ? $product->selling_price 
-                : $product->mrp;
-            
-            $product->discounted_price = function_exists('calculateDiscountedPrice') 
-                ? calculateDiscountedPrice($priceToUse, $user) 
-                : $priceToUse;
+            // For simple products
+            if ($product->isSimple()) {
+                $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
+                    ? $product->selling_price 
+                    : $product->mrp;
+                
+                $product->discounted_price = function_exists('calculateDiscountedPrice') 
+                    ? calculateDiscountedPrice($priceToUse, $user) 
+                    : $priceToUse;
+            } else {
+                // For variable products, add price range
+                $product->price_range = $product->price_range;
+                
+                // Add discounted prices to variations
+                if ($product->variations) {
+                    $product->variations->transform(function ($variation) use ($user) {
+                        $priceToUse = (!is_null($variation->selling_price) && $variation->selling_price !== '' && $variation->selling_price >= 0) 
+                            ? $variation->selling_price 
+                            : $variation->mrp;
+                        
+                        $variation->discounted_price = function_exists('calculateDiscountedPrice') 
+                            ? calculateDiscountedPrice($priceToUse, $user) 
+                            : $priceToUse;
+                        
+                        $variation->formatted_attributes = $variation->formatted_attributes;
+                        
+                        return $variation;
+                    });
+                }
+            }
             
             return $product;
         });
@@ -400,7 +446,7 @@ class ProductSearchController extends ApiController
 
         // Get products using JSON filtering (same as web flow)
         $products = Product::where('status', 'published')
-            ->with('mainPhoto')
+            ->with(['mainPhoto', 'variations.image'])
             ->get()
             ->filter(function ($product) use ($categoryId, $subcategoryId) {
                 if (!$product->product_categories) {
@@ -433,13 +479,36 @@ class ProductSearchController extends ApiController
         // Add discounted price for each product
         $user = $request->user();
         $products = $products->map(function ($product) use ($user) {
-            $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
-                ? $product->selling_price 
-                : $product->mrp;
-            
-            $product->discounted_price = function_exists('calculateDiscountedPrice') 
-                ? calculateDiscountedPrice($priceToUse, $user) 
-                : $priceToUse;
+            // For simple products
+            if ($product->isSimple()) {
+                $priceToUse = (!is_null($product->selling_price) && $product->selling_price !== '' && $product->selling_price >= 0) 
+                    ? $product->selling_price 
+                    : $product->mrp;
+                
+                $product->discounted_price = function_exists('calculateDiscountedPrice') 
+                    ? calculateDiscountedPrice($priceToUse, $user) 
+                    : $priceToUse;
+            } else {
+                // For variable products, add price range
+                $product->price_range = $product->price_range;
+                
+                // Add discounted prices to variations
+                if ($product->variations) {
+                    $product->variations->transform(function ($variation) use ($user) {
+                        $priceToUse = (!is_null($variation->selling_price) && $variation->selling_price !== '' && $variation->selling_price >= 0) 
+                            ? $variation->selling_price 
+                            : $variation->mrp;
+                        
+                        $variation->discounted_price = function_exists('calculateDiscountedPrice') 
+                            ? calculateDiscountedPrice($priceToUse, $user) 
+                            : $priceToUse;
+                        
+                        $variation->formatted_attributes = $variation->formatted_attributes;
+                        
+                        return $variation;
+                    });
+                }
+            }
             
             return $product;
         });
