@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use League\Csv\Writer;
+use League\Csv\Reader;
 
 class ProductController extends Controller
 {
@@ -712,5 +715,315 @@ class ProductController extends Controller
         $media->getCollection()->each->append('url');
         
         return response()->json($media);
+    }
+    
+    /**
+     * Export products to CSV
+     */
+    public function export()
+    {
+        $this->authorize('viewAny', Product::class);
+        
+        try {
+            // Get all products with their relationships
+            $products = Product::with(['mainPhoto', 'variations'])->get();
+            
+            // Create CSV writer
+            $csv = Writer::createFromString('');
+            
+            // Add UTF-8 BOM for Excel compatibility
+            $csv->setOutputBOM(Writer::BOM_UTF8);
+            
+            // Add headers
+            $headers = [
+                'ID',
+                'Name',
+                'Slug',
+                'Product Type',
+                'Description',
+                'MRP',
+                'Selling Price',
+                'In Stock',
+                'Stock Quantity',
+                'Low Quantity Threshold',
+                'Status',
+                'Main Photo URL',
+                'Product Gallery IDs',
+                'Product Categories',
+                'Product Attributes',
+                'Meta Title',
+                'Meta Description',
+                'Meta Keywords',
+                'Created At',
+                'Updated At'
+            ];
+            $csv->insertOne($headers);
+            
+            // Add product data
+            foreach ($products as $product) {
+                $row = [
+                    $product->id,
+                    $product->name,
+                    $product->slug,
+                    $product->product_type ?? 'simple',
+                    $product->description ?? '',
+                    $product->mrp,
+                    $product->selling_price ?? '',
+                    $product->in_stock ? 'Yes' : 'No',
+                    $product->stock_quantity ?? 0,
+                    $product->low_quantity_threshold ?? 10,
+                    $product->status,
+                    $product->mainPhoto ? $product->mainPhoto->url : '',
+                    is_array($product->product_gallery) ? implode('|', $product->product_gallery) : '',
+                    is_array($product->product_categories) ? json_encode($product->product_categories) : '',
+                    is_array($product->product_attributes) ? json_encode($product->product_attributes) : '',
+                    $product->meta_title ?? '',
+                    $product->meta_description ?? '',
+                    $product->meta_keywords ?? '',
+                    $product->created_at->format('Y-m-d H:i:s'),
+                    $product->updated_at->format('Y-m-d H:i:s')
+                ];
+                $csv->insertOne($row);
+            }
+            
+            // Generate filename with timestamp
+            $filename = 'products_export_' . date('Y-m-d_His') . '.csv';
+            
+            // Return CSV as download
+            return response($csv->toString(), 200, [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Product export failed:', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Failed to export products: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Show import form
+     */
+    public function importForm()
+    {
+        $this->authorize('create', Product::class);
+        
+        return view('admin.products.import');
+    }
+    
+    /**
+     * Import products from CSV
+     */
+    public function import(Request $request)
+    {
+        $this->authorize('create', Product::class);
+        
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|file|mimes:csv,txt|max:10240', // 10MB max
+            'update_existing' => 'nullable|boolean'
+        ]);
+        
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+        
+        DB::beginTransaction();
+        
+        try {
+            $file = $request->file('file');
+            $updateExisting = $request->has('update_existing') && $request->update_existing;
+            
+            // Read CSV file
+            $csv = Reader::createFromPath($file->getPathname(), 'r');
+            $csv->setHeaderOffset(0);
+            
+            // Strip BOM if present
+            $csv->skipInputBOM();
+            
+            $records = $csv->getRecords();
+            
+            $imported = 0;
+            $updated = 0;
+            $skipped = 0;
+            $errors = [];
+            
+            foreach ($records as $index => $record) {
+                try {
+                    // Skip empty rows
+                    if (empty($record['Name'])) {
+                        $skipped++;
+                        continue;
+                    }
+                    
+                    // Prepare product data
+                    $productData = [
+                        'name' => $record['Name'],
+                        'slug' => !empty($record['Slug']) ? $record['Slug'] : Str::slug($record['Name']),
+                        'product_type' => $record['Product Type'] ?? 'simple',
+                        'description' => $record['Description'] ?? null,
+                        'mrp' => !empty($record['MRP']) ? floatval($record['MRP']) : 0,
+                        'selling_price' => !empty($record['Selling Price']) ? floatval($record['Selling Price']) : null,
+                        'in_stock' => isset($record['In Stock']) ? (strtolower($record['In Stock']) === 'yes' || $record['In Stock'] === '1') : true,
+                        'stock_quantity' => !empty($record['Stock Quantity']) ? intval($record['Stock Quantity']) : 0,
+                        'low_quantity_threshold' => !empty($record['Low Quantity Threshold']) ? intval($record['Low Quantity Threshold']) : 10,
+                        'status' => $record['Status'] ?? 'draft',
+                        'meta_title' => $record['Meta Title'] ?? null,
+                        'meta_description' => $record['Meta Description'] ?? null,
+                        'meta_keywords' => $record['Meta Keywords'] ?? null,
+                    ];
+                    
+                    // Handle product gallery
+                    if (!empty($record['Product Gallery IDs'])) {
+                        $galleryIds = explode('|', $record['Product Gallery IDs']);
+                        $productData['product_gallery'] = array_map('intval', array_filter($galleryIds));
+                    } else {
+                        $productData['product_gallery'] = [];
+                    }
+                    
+                    // Handle product categories
+                    if (!empty($record['Product Categories'])) {
+                        $productData['product_categories'] = json_decode($record['Product Categories'], true) ?? [];
+                    } else {
+                        $productData['product_categories'] = [];
+                    }
+                    
+                    // Handle product attributes
+                    if (!empty($record['Product Attributes'])) {
+                        $productData['product_attributes'] = json_decode($record['Product Attributes'], true) ?? [];
+                    } else {
+                        $productData['product_attributes'] = [];
+                    }
+                    
+                    // Check if product exists (by ID or slug)
+                    $existingProduct = null;
+                    if (!empty($record['ID'])) {
+                        $existingProduct = Product::find($record['ID']);
+                    }
+                    if (!$existingProduct && !empty($record['Slug'])) {
+                        $existingProduct = Product::where('slug', $record['Slug'])->first();
+                    }
+                    
+                    if ($existingProduct && $updateExisting) {
+                        // Update existing product
+                        $existingProduct->update($productData);
+                        $updated++;
+                    } elseif (!$existingProduct) {
+                        // Create new product
+                        Product::create($productData);
+                        $imported++;
+                    } else {
+                        // Skip if exists and update not enabled
+                        $skipped++;
+                    }
+                    
+                } catch (\Exception $e) {
+                    $errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
+                    $skipped++;
+                }
+            }
+            
+            DB::commit();
+            
+            $message = "Import completed! Imported: {$imported}, Updated: {$updated}, Skipped: {$skipped}";
+            
+            if (!empty($errors)) {
+                $message .= " | Errors: " . implode('; ', array_slice($errors, 0, 5));
+                if (count($errors) > 5) {
+                    $message .= " (and " . (count($errors) - 5) . " more)";
+                }
+            }
+            
+            return redirect()->route('admin.products.index')->with('success', $message);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Product import failed:', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Failed to import products: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Download sample CSV template
+     */
+    public function downloadTemplate()
+    {
+        $this->authorize('create', Product::class);
+        
+        try {
+            // Create CSV writer
+            $csv = Writer::createFromString('');
+            
+            // Add UTF-8 BOM for Excel compatibility
+            $csv->setOutputBOM(Writer::BOM_UTF8);
+            
+            // Add headers
+            $headers = [
+                'ID',
+                'Name',
+                'Slug',
+                'Product Type',
+                'Description',
+                'MRP',
+                'Selling Price',
+                'In Stock',
+                'Stock Quantity',
+                'Low Quantity Threshold',
+                'Status',
+                'Main Photo URL',
+                'Product Gallery IDs',
+                'Product Categories',
+                'Product Attributes',
+                'Meta Title',
+                'Meta Description',
+                'Meta Keywords',
+                'Created At',
+                'Updated At'
+            ];
+            $csv->insertOne($headers);
+            
+            // Add sample data
+            $sampleRow = [
+                '', // ID - leave empty for new products
+                'Sample Product',
+                'sample-product',
+                'simple',
+                'This is a sample product description',
+                '1000.00',
+                '850.00',
+                'Yes',
+                '100',
+                '10',
+                'published',
+                '',
+                '',
+                '[]',
+                '[]',
+                'Sample Product - Meta Title',
+                'Sample product meta description',
+                'sample, product, keywords',
+                '',
+                ''
+            ];
+            $csv->insertOne($sampleRow);
+            
+            // Generate filename
+            $filename = 'products_import_template.csv';
+            
+            // Return CSV as download
+            return response($csv->toString(), 200, [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Template download failed:', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Failed to download template: ' . $e->getMessage());
+        }
     }
 }

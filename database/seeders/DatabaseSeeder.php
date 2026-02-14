@@ -31,6 +31,9 @@ class DatabaseSeeder extends Seeder
         // Seed roles and permissions
         $this->call(RolesAndPermissionsSeeder::class);
         
+        // Seed settings permissions
+        $this->call(SettingsPermissionSeeder::class);
+        
         // Seed category permissions
         $this->call(CategoryPermissionSeeder::class);
         

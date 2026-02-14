@@ -213,9 +213,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/color-palette', function () {
         return view('admin.color-palette');
     })->name('admin.color-palette');
-    Route::get('/admin/settings', [SettingsController::class, 'index'])->name('admin.settings');
-    Route::post('/admin/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
-    Route::post('/admin/settings/reset', [SettingsController::class, 'reset'])->name('admin.settings.reset');
+    Route::get('/admin/settings', [SettingsController::class, 'index'])->name('admin.settings')->middleware('permission:view_settings');
+    Route::post('/admin/settings', [SettingsController::class, 'update'])->name('admin.settings.update')->middleware('permission:update_settings');
+    Route::post('/admin/settings/reset', [SettingsController::class, 'reset'])->name('admin.settings.reset')->middleware('permission:reset_settings');
     
     // Profile Routes
     Route::get('/admin/profile', [ProfileController::class, 'show'])->name('admin.profile');
@@ -282,7 +282,7 @@ Route::middleware('auth')->group(function () {
         ]);
     });
     
-    // Database Management Routes
+    // Database Management Routes (Super Admin Only)
     Route::post('/admin/settings/database/clean', [SettingsController::class, 'cleanDatabase'])->name('admin.settings.database.clean');
     Route::post('/admin/settings/database/export', [SettingsController::class, 'exportDatabase'])->name('admin.settings.database.export');
     
@@ -307,6 +307,13 @@ Route::middleware('auth')->group(function () {
     
     // Product Management Routes
     Route::prefix('admin')->group(function () {
+        // Product Import/Export Routes (must come before resource routes)
+        Route::get('/products/export/csv', [ProductController::class, 'export'])->name('admin.products.export');
+        Route::get('/products/import/form', [ProductController::class, 'importForm'])->name('admin.products.import.form');
+        Route::post('/products/import', [ProductController::class, 'import'])->name('admin.products.import');
+        Route::get('/products/template/download', [ProductController::class, 'downloadTemplate'])->name('admin.products.template');
+        Route::get('/products-low-stock', [ProductController::class, 'lowStock'])->name('admin.products.low-stock');
+        
         Route::resource('products', ProductController::class)->names([
             'index' => 'admin.products.index',
             'create' => 'admin.products.create',
@@ -319,7 +326,6 @@ Route::middleware('auth')->group(function () {
         
         // Additional product routes
         Route::get('/products/{product}/details', [ProductController::class, 'showDetails'])->name('admin.products.details');
-        Route::get('/products-low-stock', [ProductController::class, 'lowStock'])->name('admin.products.low-stock');
         
         // Product Analytics Routes
         Route::get('/analytics/products', [ProductAnalyticsController::class, 'index'])->name('admin.analytics.products');

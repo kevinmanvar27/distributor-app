@@ -19,6 +19,10 @@ class SettingsController extends Controller
      */
     public function index()
     {
+        // Check permission
+        if (!Auth::user()->isSuperAdmin() && !Auth::user()->hasPermission('view_settings')) {
+            return redirect()->back()->with('error', 'You do not have permission to view settings.');
+        }
         // Get the first (and only) settings record, or create a new one with default values
         $setting = Setting::firstOrCreate([], [
             'site_title' => 'Hardware Store',
@@ -107,6 +111,11 @@ class SettingsController extends Controller
      */
     public function update(Request $request)
     {
+        // Check permission
+        if (!Auth::user()->isSuperAdmin() && !Auth::user()->hasPermission('update_settings')) {
+            return redirect()->back()->with('error', 'You do not have permission to update settings.');
+        }
+        
         // Check if this is a password change request
         if ($request->filled('current_password')) {
             return $this->changePassword($request);
@@ -439,6 +448,11 @@ class SettingsController extends Controller
      */
     public function reset(Request $request)
     {
+        // Check permission
+        if (!Auth::user()->isSuperAdmin() && !Auth::user()->hasPermission('reset_settings')) {
+            return redirect()->back()->with('error', 'You do not have permission to reset settings.');
+        }
+        
         $setting = Setting::first();
         if ($setting) {
             // Delete existing images and files
@@ -538,6 +552,11 @@ class SettingsController extends Controller
      */
     public function cleanDatabase(Request $request)
     {
+        // Check permission - Only super admin can clean database
+        if (!Auth::user()->isSuperAdmin()) {
+            return redirect()->back()->with('error', 'Only super administrators can perform database cleaning.');
+        }
+        
         // Add database cleaning logic here
         // This is a placeholder implementation
         
@@ -552,6 +571,11 @@ class SettingsController extends Controller
      */
     public function exportDatabase(Request $request)
     {
+        // Check permission - Only super admin can export database
+        if (!Auth::user()->isSuperAdmin()) {
+            return redirect()->back()->with('error', 'Only super administrators can export the database.');
+        }
+        
         // Add database export logic here
         // This is a placeholder implementation
         

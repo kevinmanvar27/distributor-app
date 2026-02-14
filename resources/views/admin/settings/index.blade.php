@@ -15,12 +15,14 @@
                     <div class="card-header bg-transparent border-0">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 gap-md-0">
                             <h2 class="card-title mb-0 fw-semibold h5 h4-md">Settings</h2>
+                            @if(Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('reset_settings'))
                             <form action="{{ route('admin.settings.reset') }}" method="POST" id="resetForm">
                                 @csrf
                                 <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" id="resetButton">
                                     <i class="fas fa-sync-alt me-1"></i><span class="d-none d-sm-inline">Reset to Default</span><span class="d-sm-none">Reset</span>
                                 </button>
                             </form>
+                            @endif
                         </div>
                     </div>
                     <div class="card-body">
@@ -39,6 +41,10 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         @endif
+                        
+                        @php
+                            $canUpdate = Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('update_settings');
+                        @endphp
                         
                         <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data" id="settingsForm">
                             @csrf
@@ -833,9 +839,15 @@
                                                                 <strong>Warning:</strong> This action cannot be undone!
                                                             </div>
                                                             
+                                                            @if(Auth::user()->isSuperAdmin())
                                                             <button type="button" class="btn btn-danger w-100" data-action="clean-database" onclick="return confirm('Are you sure you want to clean the database? This action cannot be undone!')">
                                                                 <i class="fas fa-trash-alt me-1"></i> Clean Database
                                                             </button>
+                                                            @else
+                                                            <button type="button" class="btn btn-secondary w-100" disabled title="Only super administrators can clean the database">
+                                                                <i class="fas fa-lock me-1"></i> Super Admin Only
+                                                            </button>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 </div>
@@ -861,9 +873,15 @@
                                                                 <div class="form-text">Complete SQL backup of your database</div>
                                                             </div>
                                                             
+                                                            @if(Auth::user()->isSuperAdmin())
                                                             <button type="button" class="btn btn-theme w-100" data-action="export-database">
                                                                 <i class="fas fa-download me-1"></i> Export Full Database
                                                             </button>
+                                                            @else
+                                                            <button type="button" class="btn btn-secondary w-100" disabled title="Only super administrators can export the database">
+                                                                <i class="fas fa-lock me-1"></i> Super Admin Only
+                                                            </button>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 </div>
@@ -951,9 +969,15 @@
                             
                             <div class="mt-4 d-flex justify-content-between">
                                 <span></span>
+                                @if($canUpdate)
                                 <button type="submit" class="btn btn-theme rounded-pill px-4">
                                     <i class="fas fa-save me-1"></i> Save Settings
                                 </button>
+                                @else
+                                <button type="button" class="btn btn-secondary rounded-pill px-4" disabled title="You don't have permission to update settings">
+                                    <i class="fas fa-lock me-1"></i> Read Only
+                                </button>
+                                @endif
                             </div>
                         </form>
                         
@@ -986,6 +1010,29 @@
     
     // Add mutual exclusivity logic for site management modes
     document.addEventListener('DOMContentLoaded', function() {
+        // Disable form inputs if user doesn't have update permission
+        @if(!$canUpdate)
+        const form = document.getElementById('settingsForm');
+        if (form) {
+            // Disable all input fields
+            const inputs = form.querySelectorAll('input:not([type="hidden"]), textarea, select');
+            inputs.forEach(input => {
+                input.disabled = true;
+                input.style.cursor = 'not-allowed';
+                input.title = 'You do not have permission to edit settings';
+            });
+            
+            // Add a notice at the top of the form
+            const notice = document.createElement('div');
+            notice.className = 'alert alert-info mb-4';
+            notice.innerHTML = '<i class="fas fa-info-circle me-2"></i><strong>View Only Mode:</strong> You do not have permission to modify settings.';
+            const tabContent = form.querySelector('.tab-content');
+            if (tabContent) {
+                form.insertBefore(notice, tabContent);
+            }
+        }
+        @endif
+        
         const maintenanceModeCheckbox = document.getElementById('maintenanceMode');
         const comingSoonModeCheckbox = document.getElementById('comingSoonMode');
         

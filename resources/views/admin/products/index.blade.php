@@ -27,6 +27,16 @@
                                             <span class="badge bg-danger ms-1">{{ $lowStockCount }}</span>
                                         </a>
                                         @endif
+                                        @can('viewAny', App\Models\Product::class)
+                                        <!-- Import Button -->
+                                        <a href="{{ route('admin.products.import.form') }}" class="btn btn-sm btn-md-normal btn-success rounded-pill px-3 px-md-4">
+                                            <i class="fas fa-file-import me-1 me-md-2"></i><span class="d-none d-sm-inline">Import</span><span class="d-sm-none">Import</span>
+                                        </a>
+                                        <!-- Export Button -->
+                                        <a href="{{ route('admin.products.export') }}" class="btn btn-sm btn-md-normal btn-info rounded-pill px-3 px-md-4">
+                                            <i class="fas fa-file-export me-1 me-md-2"></i><span class="d-none d-sm-inline">Export</span><span class="d-sm-none">Export</span>
+                                        </a>
+                                        @endcan
                                         @can('create', App\Models\Product::class)
                                         <a href="{{ route('admin.products.create') }}" class="btn btn-sm btn-md-normal btn-theme rounded-pill px-3 px-md-4">
                                             <i class="fas fa-plus me-1 me-md-2"></i><span class="d-none d-sm-inline">Add New Product</span><span class="d-sm-none">Add</span>
