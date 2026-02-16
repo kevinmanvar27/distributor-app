@@ -100,10 +100,21 @@ class CategoryController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
         
+        // Store old image_id to check if it changed
+        $oldImageId = $category->image_id;
+        
         $data = $request->only(['name', 'description', 'image_id', 'is_active']);
         $data['slug'] = Str::slug($request->name);
         
         $category->update($data);
+        
+        // If image_id changed and old image exists, check if it's orphaned and delete
+        if ($oldImageId && $oldImageId != $category->image_id) {
+            $oldMedia = Media::find($oldImageId);
+            if ($oldMedia && !$oldMedia->isInUse()) {
+                $oldMedia->safeDelete(true);
+            }
+        }
         
         // Load the image relationship
         $category->load('image');
@@ -123,7 +134,18 @@ class CategoryController extends Controller
     {
         $this->authorize('delete', $category);
         
+        // Store image_id before deleting category
+        $imageId = $category->image_id;
+        
         $category->delete();
+        
+        // If category had an image, check if it's orphaned and delete
+        if ($imageId) {
+            $media = Media::find($imageId);
+            if ($media && !$media->isInUse()) {
+                $media->safeDelete(true);
+            }
+        }
         
         return response()->json(['success' => true]);
     }
@@ -218,10 +240,21 @@ class CategoryController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
         
+        // Store old image_id to check if it changed
+        $oldImageId = $subCategory->image_id;
+        
         $data = $request->only(['category_id', 'name', 'description', 'image_id', 'is_active']);
         $data['slug'] = Str::slug($request->name);
         
         $subCategory->update($data);
+        
+        // If image_id changed and old image exists, check if it's orphaned and delete
+        if ($oldImageId && $oldImageId != $subCategory->image_id) {
+            $oldMedia = Media::find($oldImageId);
+            if ($oldMedia && !$oldMedia->isInUse()) {
+                $oldMedia->safeDelete(true);
+            }
+        }
         
         // Load the image relationship
         $subCategory->load('image');
@@ -241,7 +274,18 @@ class CategoryController extends Controller
     {
         $this->authorize('delete', $subCategory);
         
+        // Store image_id before deleting subcategory
+        $imageId = $subCategory->image_id;
+        
         $subCategory->delete();
+        
+        // If subcategory had an image, check if it's orphaned and delete
+        if ($imageId) {
+            $media = Media::find($imageId);
+            if ($media && !$media->isInUse()) {
+                $media->safeDelete(true);
+            }
+        }
         
         return response()->json(['success' => true]);
     }

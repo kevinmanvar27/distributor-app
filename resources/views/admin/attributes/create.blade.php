@@ -96,7 +96,7 @@
                             @foreach(old('values') as $index => $value)
                                 <div class="input-group mb-2 value-row">
                                     <input type="text" class="form-control @error('values.'.$index) is-invalid @enderror" 
-                                           name="values[]" value="{{ $value }}" placeholder="Enter value">
+                                           name="values[]" value="{{ $value }}" placeholder="Enter value" required>
                                     <button type="button" class="btn btn-outline-danger remove-value-btn">
                                         <i class="fas fa-times"></i>
                                     </button>
@@ -107,7 +107,7 @@
                             @endforeach
                         @else
                             <div class="input-group mb-2 value-row">
-                                <input type="text" class="form-control" name="values[]" placeholder="Enter value">
+                                <input type="text" class="form-control" name="values[]" placeholder="Enter value" required>
                                 <button type="button" class="btn btn-outline-danger remove-value-btn">
                                     <i class="fas fa-times"></i>
                                 </button>
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const newRow = document.createElement('div');
         newRow.className = 'input-group mb-2 value-row';
         newRow.innerHTML = `
-            <input type="text" class="form-control" name="values[]" placeholder="Enter value">
+            <input type="text" class="form-control" name="values[]" placeholder="Enter value" required>
             <button type="button" class="btn btn-outline-danger remove-value-btn">
                 <i class="fas fa-times"></i>
             </button>
@@ -170,6 +170,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Don't remove the last row, just clear it
                 rows[0].querySelector('input').value = '';
             }
+        }
+    });
+    
+    // Form validation before submit
+    const form = valuesContainer.closest('form');
+    form.addEventListener('submit', function(e) {
+        const valueInputs = valuesContainer.querySelectorAll('input[name="values[]"]');
+        const hasValue = Array.from(valueInputs).some(input => input.value.trim() !== '');
+        
+        if (!hasValue) {
+            e.preventDefault();
+            alert('Please add at least one attribute value.');
+            return false;
+        }
+        
+        // Check if all filled inputs have values
+        let hasEmptyRequired = false;
+        valueInputs.forEach(input => {
+            if (input.value.trim() === '') {
+                input.setCustomValidity('Please fill out this field or remove this row.');
+                hasEmptyRequired = true;
+            } else {
+                input.setCustomValidity('');
+            }
+        });
+        
+        if (hasEmptyRequired) {
+            e.preventDefault();
+            return false;
         }
     });
 });

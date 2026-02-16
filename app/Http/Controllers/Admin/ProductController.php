@@ -467,6 +467,10 @@ class ProductController extends Controller
             // Log the data that will be saved
             Log::info('Product data to be updated:', $data);
             
+            // Store old main_photo_id and product_gallery to check for changes
+            $oldMainPhotoId = $product->main_photo_id;
+            $oldProductGallery = $product->product_gallery ?? [];
+            
             // Handle product type
             $data['product_type'] = $request->product_type ?? $product->product_type ?? 'simple';
             
@@ -723,6 +727,25 @@ class ProductController extends Controller
             // Log the updated product
             Log::info('Product updated:', $product->toArray());
             
+            // Clean up orphaned media after successful update
+            // Check if main_photo_id changed
+            if ($oldMainPhotoId && $oldMainPhotoId != $product->main_photo_id) {
+                $oldMedia = Media::find($oldMainPhotoId);
+                if ($oldMedia && !$oldMedia->isInUse()) {
+                    $oldMedia->safeDelete(true);
+                }
+            }
+            
+            // Check if product_gallery changed - find removed images
+            $newProductGallery = $product->product_gallery ?? [];
+            $removedGalleryIds = array_diff($oldProductGallery, $newProductGallery);
+            foreach ($removedGalleryIds as $removedId) {
+                $oldMedia = Media::find($removedId);
+                if ($oldMedia && !$oldMedia->isInUse()) {
+                    $oldMedia->safeDelete(true);
+                }
+            }
+            
             DB::commit();
             
             return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
@@ -741,7 +764,39 @@ class ProductController extends Controller
     {
         $this->authorize('delete', $product);
         
+        // Store image references before deletion
+        $mainPhotoId = $product->main_photo_id;
+        $productGallery = $product->product_gallery ?? [];
+        
+        // Get variation image IDs
+        $variationImageIds = $product->variations()->whereNotNull('image_id')->pluck('image_id')->toArray();
+        
+        // Delete the product (variations will be deleted via cascade)
         $product->delete();
+        
+        // Clean up main photo if orphaned
+        if ($mainPhotoId) {
+            $media = Media::find($mainPhotoId);
+            if ($media && !$media->isInUse()) {
+                $media->safeDelete(true);
+            }
+        }
+        
+        // Clean up gallery images if orphaned
+        foreach ($productGallery as $galleryImageId) {
+            $media = Media::find($galleryImageId);
+            if ($media && !$media->isInUse()) {
+                $media->safeDelete(true);
+            }
+        }
+        
+        // Clean up variation images if orphaned
+        foreach ($variationImageIds as $variationImageId) {
+            $media = Media::find($variationImageId);
+            if ($media && !$media->isInUse()) {
+                $media->safeDelete(true);
+            }
+        }
         
         return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
     }

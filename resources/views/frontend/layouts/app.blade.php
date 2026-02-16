@@ -33,6 +33,8 @@
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
+    <!-- Professional Frontend CSS -->
+    <link rel="stylesheet" href="{{ asset('assets/css/frontend.css') }}">
     
     <!-- Custom Styles with dynamic settings from backend -->
     <style>
@@ -407,6 +409,27 @@
         
         /* ==================== Cart Badge ==================== */
         .cart-count {
+            font-size: 0.65rem !important;
+            font-weight: 600;
+            padding: 0.35em 0.5em !important;
+            min-width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--white) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+        }
+        
+        /* Cart button styling */
+        .btn-outline-theme.position-relative {
+            overflow: visible !important;
+            padding: 0.5rem 1rem;
+        }
+        
+        .btn-outline-theme .fa-shopping-cart {
+            font-size: 1.1rem;
         }
         
         /* ==================== Loading Spinner ==================== */

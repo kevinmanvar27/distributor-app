@@ -212,17 +212,19 @@
                     
                     <!-- Quantity Input -->
                     <div class="quantity-section mb-4">
-                        <label class="form-label fw-bold">Quantity:</label>
-                        <div class="input-group quantity-control" style="max-width: 150px;">
-                            <button class="btn btn-outline-theme decrement-qty" type="button" id="decrement-qty">
+                        <label class="form-label fw-bold mb-3" style="font-size: 0.95rem; color: var(--heading-text-color);">
+                            <i class="fas fa-sort-numeric-up me-2" style="color: var(--theme-color);"></i>Quantity:
+                        </label>
+                        <div class="input-group quantity-control-wrapper" style="max-width: 180px;">
+                            <button class="btn btn-outline-theme decrement-qty quantity-btn" type="button" id="decrement-qty">
                                 <i class="fas fa-minus"></i>
                             </button>
-                            <input type="number" class="form-control text-center" id="product-quantity" value="1" min="1" max="9999">
-                            <button class="btn btn-outline-theme increment-qty" type="button" id="increment-qty">
+                            <input type="number" class="form-control text-center quantity-input" id="product-quantity" value="1" min="1" max="9999" readonly>
+                            <button class="btn btn-outline-theme increment-qty quantity-btn" type="button" id="increment-qty">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
-                        <small class="text-muted" id="quantity-error" style="display: none; color: #dc3545 !important;">
+                        <small class="text-muted mt-2 d-block" id="quantity-error" style="display: none !important; color: #dc3545 !important;">
                             <i class="fas fa-exclamation-circle"></i> Quantity must be at least 1
                         </small>
                     </div>
@@ -413,23 +415,101 @@
     }
     
     /* Quantity Control */
-    .quantity-control {
+    .quantity-control-wrapper {
         display: inline-flex;
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
     }
     
-    .quantity-control .btn {
-        padding: 0.5rem 1rem;
+    .quantity-control-wrapper:hover {
+        border-color: var(--theme-color);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
     
-    .quantity-control input {
+    .quantity-control-wrapper:focus-within {
+        border-color: var(--theme-color);
+        box-shadow: 0 0 0 3px rgba(var(--theme-color-rgb, 255, 107, 0), 0.15);
+    }
+    
+    .quantity-btn {
+        padding: 0.75rem 1.25rem !important;
+        border: none !important;
+        background: white !important;
+        color: var(--theme-color) !important;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 50px;
+    }
+    
+    .quantity-btn:hover {
+        background: var(--theme-color) !important;
+        color: white !important;
+        transform: scale(1.05);
+    }
+    
+    .quantity-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .quantity-btn i {
+        font-size: 0.875rem;
+    }
+    
+    .quantity-input {
+        border: none !important;
+        border-left: 1px solid #dee2e6 !important;
+        border-right: 1px solid #dee2e6 !important;
+        font-weight: 700;
+        font-size: 1.125rem;
+        color: var(--heading-text-color) !important;
+        background: #f8f9fa !important;
         max-width: 80px;
         text-align: center;
+        padding: 0.75rem 0.5rem;
+        box-shadow: none !important;
     }
     
-    .quantity-control input::-webkit-inner-spin-button,
-    .quantity-control input::-webkit-outer-spin-button {
+    .quantity-input:focus {
+        background: white !important;
+        outline: none;
+    }
+    
+    .quantity-input::-webkit-inner-spin-button,
+    .quantity-input::-webkit-outer-spin-button {
         -webkit-appearance: none;
         margin: 0;
+    }
+    
+    .quantity-input[type=number] {
+        -moz-appearance: textfield;
+    }
+    
+    .quantity-section label {
+        display: flex;
+        align-items: center;
+    }
+    
+    /* Responsive Quantity Control */
+    @media (max-width: 576px) {
+        .quantity-control-wrapper {
+            max-width: 160px !important;
+        }
+        
+        .quantity-btn {
+            padding: 0.625rem 1rem !important;
+            min-width: 45px;
+        }
+        
+        .quantity-input {
+            max-width: 70px;
+            font-size: 1rem;
+        }
     }
     
     /* Action Buttons */

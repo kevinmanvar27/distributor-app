@@ -8,7 +8,7 @@ use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\SubCategoryController;
 use App\Http\Controllers\API\ProductController;
-use App\Http\Controllers\API\MediaController;
+// use App\Http\Controllers\API\MediaController; // Removed - Media Library feature disabled
 use App\Http\Controllers\API\SettingController;
 use App\Http\Controllers\API\ShoppingCartController;
 use App\Http\Controllers\API\ProformaInvoiceController;
@@ -144,7 +144,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('categories', CategoryController::class)->except(['index', 'show']);
     Route::apiResource('subcategories', SubCategoryController::class)->except(['index', 'show']);
     Route::apiResource('products', ProductController::class)->except(['index', 'show']);
-    Route::apiResource('media', MediaController::class);
+    // Route::apiResource('media', MediaController::class); // Removed - Media Library feature disabled
     Route::apiResource('settings', SettingController::class);
     Route::apiResource('shopping-cart', ShoppingCartController::class);
     Route::apiResource('proforma-invoices', ProformaInvoiceController::class);

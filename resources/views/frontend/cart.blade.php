@@ -26,14 +26,24 @@
             <div class="card shadow-sm border-0 mb-4 hover-lift">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-borderless">
+                        <table class="table table-borderless cart-table">
                             <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Price</th>
-                                    <th>Quantity</th>
-                                    <th>Total</th>
-                                    <th>Actions</th>
+                                <tr class="cart-table-header">
+                                    <th class="fw-bold" style="color: var(--heading-text-color);">
+                                        <i class="fas fa-box me-2" style="color: var(--theme-color);"></i>Product
+                                    </th>
+                                    <th class="fw-bold" style="color: var(--heading-text-color);">
+                                        <i class="fas fa-tag me-2" style="color: var(--theme-color);"></i>Price
+                                    </th>
+                                    <th class="fw-bold" style="color: var(--heading-text-color);">
+                                        <i class="fas fa-sort-numeric-up me-2" style="color: var(--theme-color);"></i>Quantity
+                                    </th>
+                                    <th class="fw-bold" style="color: var(--heading-text-color);">
+                                        <i class="fas fa-calculator me-2" style="color: var(--theme-color);"></i>Total
+                                    </th>
+                                    <th class="fw-bold" style="color: var(--heading-text-color);">
+                                        <i class="fas fa-cog me-2" style="color: var(--theme-color);"></i>Actions
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -73,15 +83,19 @@
                                             // Get actual stock - for variations use variation stock, for simple products use product stock
                                             $actualStock = $item->variation ? $item->variation->stock_quantity : $item->product->stock_quantity;
                                         @endphp
-                                        <div class="input-group quantity-control" style="width: 120px;">
-                                            <button class="btn btn-outline-theme decrement-qty btn-ripple" type="button">-</button>
-                                            <input type="number" class="form-control text-center qty-input" value="{{ $item->quantity }}" min="1" data-max="{{ $actualStock }}">
-                                            <button class="btn btn-outline-theme increment-qty btn-ripple" type="button">+</button>
+                                        <div class="input-group quantity-control-wrapper cart-quantity-control" style="width: 140px;">
+                                            <button class="btn btn-outline-theme decrement-qty quantity-btn btn-ripple" type="button">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <input type="number" class="form-control text-center qty-input quantity-input" value="{{ $item->quantity }}" min="1" max="{{ $actualStock }}" data-max="{{ $actualStock }}" readonly>
+                                            <button class="btn btn-outline-theme increment-qty quantity-btn btn-ripple" type="button">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
                                         </div>
                                         @if($actualStock < 10 && $actualStock > 0)
-                                            <small class="text-warning stock-warning">
+                                            <small class="text-warning stock-warning d-block mt-2">
                                                 <i class="fas fa-exclamation-triangle me-1"></i>
-                                                Only {{ $actualStock }} left in stock
+                                                Only {{ $actualStock }} left
                                             </small>
                                         @endif
                                     </td>
@@ -89,8 +103,8 @@
                                         <p class="fw-bold mb-0 item-total price-tag">₹{{ number_format($item->price * $item->quantity, 2) }}</p>
                                     </td>
                                     <td>
-                                        <button class="btn btn-danger remove-item btn-ripple hover-scale" data-id="{{ $item->id }}">
-                                            <i class="fas fa-trash"></i>
+                                        <button class="btn btn-danger btn-sm remove-item btn-ripple hover-scale" data-id="{{ $item->id }}" title="Remove from cart">
+                                            <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -302,21 +316,129 @@
 </div>
 
 <style>
+    /* ==================== CART TABLE STYLES ==================== */
+    .cart-table {
+        margin-bottom: 0;
+    }
+    
+    .cart-table-header {
+        background: linear-gradient(135deg, rgba(var(--theme-color-rgb, 255, 107, 0), 0.08), rgba(var(--theme-color-rgb, 255, 107, 0), 0.03));
+        border-bottom: 2px solid var(--theme-color);
+    }
+    
+    .cart-table-header th {
+        padding: 1rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+    }
+    
+    .cart-table tbody td {
+        padding: 1.5rem 1rem;
+        vertical-align: middle;
+    }
+    
     /* Cart item styles */
     .cart-item-row {
         opacity: 1;
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .cart-item-row:hover {
+        background-color: rgba(var(--theme-color-rgb, 255, 107, 0), 0.02);
+    }
+    
+    .cart-item-row:last-child {
+        border-bottom: none;
+    }
+    
+    /* Product link styling */
+    .product-link {
+        color: var(--heading-text-color) !important;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+    
+    .product-link:hover {
+        color: var(--theme-color) !important;
     }
     
     /* Product thumbnail hover */
     .product-thumbnail {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        border-radius: 8px;
     }
     
     .product-thumbnail:hover {
         box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        border-color: var(--theme-color);
+        transform: scale(1.05);
     }
     
-    /* Quantity control */
-    .quantity-control .btn {
+    /* Cart Quantity Control - Enhanced Design */
+    .cart-quantity-control.quantity-control-wrapper {
+        display: inline-flex;
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .cart-quantity-control.quantity-control-wrapper:hover {
+        border-color: var(--theme-color);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    
+    .cart-quantity-control .quantity-btn {
+        padding: 0.625rem 1rem !important;
+        border: none !important;
+        background: white !important;
+        color: var(--theme-color) !important;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 42px;
+        font-size: 0.875rem;
+    }
+    
+    .cart-quantity-control .quantity-btn:hover {
+        background: var(--theme-color) !important;
+        color: white !important;
+        transform: scale(1.05);
+    }
+    
+    .cart-quantity-control .quantity-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .cart-quantity-control .quantity-btn i {
+        font-size: 0.75rem;
+    }
+    
+    .cart-quantity-control .quantity-input {
+        border: none !important;
+        border-left: 1px solid #dee2e6 !important;
+        border-right: 1px solid #dee2e6 !important;
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--heading-text-color) !important;
+        background: #f8f9fa !important;
+        max-width: 56px;
+        text-align: center;
+        padding: 0.625rem 0.25rem;
+        box-shadow: none !important;
+    }
+    
+    .cart-quantity-control .quantity-input:focus {
+        background: white !important;
+        outline: none;
     }
     
     .qty-input {
@@ -330,17 +452,42 @@
         margin: 0;
     }
     
-    .qty-input:focus {
-        border-color: var(--theme-color);
-        box-shadow: 0 0 0 0.2rem rgba(var(--theme-color-rgb), 0.25);
+    .qty-input[type=number] {
+        -moz-appearance: textfield;
     }
     
     /* Price tag */
     .price-tag {
+        font-size: 1.125rem;
+        color: var(--theme-color);
     }
     
     /* Stock warning */
     .stock-warning {
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 5px;
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+    
+    /* Remove button styling */
+    .remove-item {
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 0.875rem;
+    }
+    
+    .remove-item:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+    
+    .remove-item:active {
+        transform: scale(0.95);
     }
     
     /* Form control */

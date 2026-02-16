@@ -213,7 +213,7 @@
                     @endif
                     
                     <!-- Content -->
-                    @if($hasLeadPermission || $hasPagePermission || auth()->user()->hasPermission('viewAny_media'))
+                    @if($hasLeadPermission || $hasPagePermission)
                         <li class="nav-item mt-2">
                             <div class="px-3 py-1">
                                 <small class="text-muted text-uppercase fw-semibold sidebar-text" style="font-size: 0.7rem; letter-spacing: 0.5px;">Content</small>
@@ -234,15 +234,6 @@
                                 <a class="nav-link py-2 {{ request()->routeIs('admin.pages*') ? 'active' : '' }}" href="{{ route('admin.pages.index') }}" data-title="Pages">
                                     <i class="fas fa-file-alt me-2"></i>
                                     <span class="sidebar-text">Pages</span>
-                                </a>
-                            </li>
-                        @endif
-                        
-                        @if(auth()->user()->hasPermission('viewAny_media'))
-                            <li class="nav-item">
-                                <a class="nav-link py-2 {{ request()->routeIs('admin.media*') ? 'active' : '' }}" href="{{ route('admin.media.index') }}" data-title="Media">
-                                    <i class="fas fa-photo-video me-2"></i>
-                                    <span class="sidebar-text">Media</span>
                                 </a>
                             </li>
                         @endif

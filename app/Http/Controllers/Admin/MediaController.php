@@ -186,13 +186,34 @@ class MediaController extends Controller
         $mediaItems = Media::all();
         
         foreach ($mediaItems as $media) {
+            // Delete if file doesn't exist in storage
             if (!Storage::disk('public')->exists($media->path)) {
                 $media->delete();
                 $deletedCount++;
             }
         }
         
-        return response()->json(['success' => true, 'deleted_count' => $deletedCount]);
+        return response()->json([
+            'success' => true, 
+            'deleted_count' => $deletedCount,
+            'message' => "Cleaned up {$deletedCount} database records for missing files."
+        ]);
+    }
+    
+    /**
+     * Clean up orphaned media (not referenced by any entity).
+     */
+    public function cleanupOrphaned()
+    {
+        $this->authorize('delete', Media::class);
+        
+        $deletedCount = Media::deleteOrphaned();
+        
+        return response()->json([
+            'success' => true, 
+            'deleted_count' => $deletedCount,
+            'message' => "Cleaned up {$deletedCount} orphaned media files."
+        ]);
     }
 
     /**

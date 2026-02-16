@@ -265,11 +265,6 @@ Route::middleware('auth')->group(function () {
             ]);
         });
             
-        // Test route for debugging
-        Route::get('/test-media', function () {
-            return response()->json(['message' => 'Test route working']);
-        });
-        
         // User Group Management Routes
         Route::resource('user-groups', UserGroupController::class)->names([
             'index' => 'admin.user-groups.index',
@@ -348,12 +343,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('/attributes/{attribute}/values/{value}', [ProductAttributeController::class, 'destroyValue'])->name('admin.attributes.values.destroy');
         
         // Media Library Routes
-        // Media Management Routes
         Route::get('/media', [MediaController::class, 'index'])->name('admin.media.index');
         Route::get('/media/list', [MediaController::class, 'getMedia'])->name('admin.media.list');
         Route::post('/media', [MediaController::class, 'store'])->name('admin.media.store');
         Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('admin.media.destroy');
         Route::post('/media/cleanup', [MediaController::class, 'cleanup'])->name('admin.media.cleanup');
+        Route::post('/media/cleanup-orphaned', [MediaController::class, 'cleanupOrphaned'])->name('admin.media.cleanup-orphaned');
         Route::get('/media/check-storage', [MediaController::class, 'checkStorage'])->name('admin.media.check-storage');
         
     });
@@ -379,10 +374,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/subcategories/{subCategory}', [CategoryController::class, 'destroySubCategory'])->name('admin.subcategories.destroy');
     });
     
-    // Test route for debugging
-    Route::get('/test-media', function () {
-        return response()->json(['message' => 'Test route working']);
-    });
 
     // Test route to check categories and subcategories
     Route::get('/test-categories', function () {

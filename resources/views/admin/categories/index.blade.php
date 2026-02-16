@@ -164,15 +164,16 @@
                     
                     <div class="mb-3">
                         <label class="form-label">Category Image</label>
-                        <div class="border rounded-3 p-3 text-center position-relative" id="category-image-preview">
-                            <div class="upload-area" id="category-image-upload-area" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                <div>
-                                    <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
-                                    <p class="text-muted mb-2">Drag & drop an image here or click to select</p>
-                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="openMediaLibrary('category')">
-                                        <i class="fas fa-folder-open me-1"></i> Select from Media Library
-                                    </button>
-                                </div>
+                        <div id="category-image-upload-area" class="border border-2 border-dashed rounded p-4 text-center" style="cursor: pointer;">
+                            <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Click or drag & drop to upload image</p>
+                            <small class="text-muted">Supported formats: JPEG, PNG, GIF, WEBP (Max 20MB)</small>
+                        </div>
+                        <input type="file" id="categoryImageFile" accept="image/*" class="d-none">
+                        <div id="category-image-preview" class="mt-3 text-center">
+                            <div class="py-3">
+                                <i class="fas fa-image fa-2x text-muted mb-2"></i>
+                                <p class="text-muted mb-2">No image selected</p>
                             </div>
                         </div>
                     </div>
@@ -192,61 +193,6 @@
                 </button>
                 <button type="button" class="btn btn-theme rounded-pill" onclick="saveCategory()">
                     <i class="fas fa-save me-2"></i>Save
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Media Library Modal -->
-<div class="modal fade" id="mediaLibraryModal" tabindex="-1" aria-labelledby="mediaLibraryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="mediaLibraryModalLabel">Media Library</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="border rounded-3 p-3 mb-3">
-                            <h6 class="mb-3">Upload New Media</h6>
-                            <form id="mediaUploadForm">
-                                @csrf
-                                <div class="mb-3">
-                                    <label for="mediaFile" class="form-label">Select File</label>
-                                    <div class="upload-area" id="media-upload-area" style="min-height: 100px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                        <div class="text-center" id="media-upload-content">
-                                            <i class="fas fa-cloud-upload-alt text-muted mb-2" style="font-size: 24px;"></i>
-                                            <p class="text-muted mb-0 small">Drag & drop file here or click to upload</p>
-                                        </div>
-                                    </div>
-                                    <input type="file" class="form-control d-none" id="mediaFile" name="file" accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/csv">
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="col-md-9">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6>Existing Media</h6>
-                            <div class="d-flex">
-                                <input type="text" class="form-control rounded-pill me-2" id="mediaSearch" placeholder="Search media...">
-                            </div>
-                        </div>
-                        
-                        <div id="mediaLibraryContent" class="row">
-                            <!-- Media items will be loaded here -->
-                        </div>
-                        
-                        <div id="mediaLibraryPagination" class="d-flex justify-content-center mt-3">
-                            <!-- Pagination will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Close
                 </button>
             </div>
         </div>
@@ -327,15 +273,16 @@
                     
                     <div class="mb-3">
                         <label class="form-label">Subcategory Image</label>
-                        <div class="border rounded-3 p-3 text-center position-relative" id="subcategory-image-preview">
-                            <div class="upload-area" id="subcategory-image-upload-area" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                <div>
-                                    <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
-                                    <p class="text-muted mb-2">Drag & drop an image here or click to select</p>
-                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="openMediaLibrary('subcategory')">
-                                        <i class="fas fa-folder-open me-1"></i> Select from Media Library
-                                    </button>
-                                </div>
+                        <div id="subcategory-image-upload-area" class="border border-2 border-dashed rounded p-4 text-center" style="cursor: pointer;">
+                            <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Click or drag & drop to upload image</p>
+                            <small class="text-muted">Supported formats: JPEG, PNG, GIF, WEBP (Max 20MB)</small>
+                        </div>
+                        <input type="file" id="subcategoryImageFile" accept="image/*" class="d-none">
+                        <div id="subcategory-image-preview" class="mt-3 text-center">
+                            <div class="py-3">
+                                <i class="fas fa-image fa-2x text-muted mb-2"></i>
+                                <p class="text-muted mb-2">No image selected</p>
                             </div>
                         </div>
                     </div>
@@ -410,6 +357,49 @@
     let currentCategoryId = null;
     
     $(document).ready(function() {
+        
+        // ============================================
+        // Category Image Upload Handlers
+        // ============================================
+        
+        // Click handler for category image upload area
+        $(document).on('click', '#category-image-upload-area', function() {
+            $('#categoryImageFile').click();
+        });
+        
+        // File input change handler for category
+        $(document).on('change', '#categoryImageFile', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                uploadAndSelectImage(file, 'category');
+            }
+        });
+        
+        // ============================================
+        // Subcategory Image Upload Handlers
+        // ============================================
+        
+        // Click handler for subcategory image upload area
+        $(document).on('click', '#subcategory-image-upload-area', function() {
+            $('#subcategoryImageFile').click();
+        });
+        
+        // File input change handler for subcategory
+        $(document).on('change', '#subcategoryImageFile', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                uploadAndSelectImage(file, 'subcategory');
+            }
+        });
+        
+        // Reset file inputs when modals are hidden
+        $('#categoryModal').on('hidden.bs.modal', function() {
+            $('#categoryImageFile').val('');
+        });
+        
+        $('#subcategoryModal').on('hidden.bs.modal', function() {
+            $('#subcategoryImageFile').val('');
+        });
         
         // Initialize DataTable with a more robust check and delay
         setTimeout(function() {
@@ -488,22 +478,6 @@
         // Use event delegation for media upload area click handler
         $(document).on('click', '#media-upload-area', function() {
             $('#mediaFile').click();
-        });
-        
-        // Click handler for category image upload area (opens media library)
-        $(document).on('click', '#category-image-upload-area', function(e) {
-            // Prevent triggering if clicking on the button inside
-            if (!$(e.target).closest('button').length) {
-                openMediaLibrary('category');
-            }
-        });
-        
-        // Click handler for subcategory image upload area (opens media library)
-        $(document).on('click', '#subcategory-image-upload-area', function(e) {
-            // Prevent triggering if clicking on the button inside
-            if (!$(e.target).closest('button').length) {
-                openMediaLibrary('subcategory');
-            }
         });
         
         // Add change handler for file input to auto-upload
@@ -706,9 +680,6 @@
             <div class="py-3">
                 <i class="fas fa-image fa-2x text-muted mb-2"></i>
                 <p class="text-muted mb-2">No image selected</p>
-                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="openMediaLibrary('category')">
-                    <i class="fas fa-folder-open me-1"></i> Select Image
-                </button>
             </div>
         `);
         $('#categoryImageId').val('');
@@ -743,9 +714,6 @@
                         <div class="py-3">
                             <i class="fas fa-image fa-2x text-muted mb-2"></i>
                             <p class="text-muted mb-2">No image selected</p>
-                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="openMediaLibrary('category')">
-                                <i class="fas fa-folder-open me-1"></i> Select Image
-                            </button>
                         </div>
                     `);
                     $('#categoryImageId').val('');
@@ -936,9 +904,6 @@
             <div class="py-3">
                 <i class="fas fa-image fa-2x text-muted mb-2"></i>
                 <p class="text-muted mb-2">No image selected</p>
-                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="openMediaLibrary('subcategory')">
-                    <i class="fas fa-folder-open me-1"></i> Select Image
-                </button>
             </div>
         `);
         $('#subcategoryImageId').val('');
@@ -973,9 +938,6 @@
                         <div class="py-3">
                             <i class="fas fa-image fa-2x text-muted mb-2"></i>
                             <p class="text-muted mb-2">No image selected</p>
-                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="openMediaLibrary('subcategory')">
-                                <i class="fas fa-folder-open me-1"></i> Select Image
-                            </button>
                         </div>
                     `);
                     $('#subcategoryImageId').val('');
@@ -1045,119 +1007,6 @@
         }
     }
     
-    // Open media library
-    function openMediaLibrary(target) {
-        currentMediaTarget = target;
-        loadMedia();
-        $('#mediaLibraryModal').modal('show');
-    }
-    
-    // Load media items
-    function loadMedia(page = 1) {
-        const search = $('#mediaSearch').val();
-        const params = new URLSearchParams();
-        params.append('page', page);
-        if (search && search.length > 0) {
-            params.append('search', search);
-        }
-        
-        $.ajax({
-            url: '/admin/media/list?' + params.toString(),
-            type: 'GET',
-            success: function(data) {
-                let html = '';
-                if (data.data.length > 0) {
-                    data.data.forEach(function(media) {
-                        html += `
-                            <div class="col-md-3 mb-3">
-                                <div class="border rounded-3 p-2 media-item" onclick="selectMedia(${media.id}, '${media.url}', '${currentMediaTarget}')">
-                                    ${media.mime_type.startsWith('image/') ? 
-                                        `<img src="${media.url}" class="img-fluid rounded" alt="${media.name}" style="height: 120px; object-fit: cover;">` :
-                                        `<div class="d-flex align-items-center justify-content-center" style="height: 120px;">
-                                            <i class="fas fa-file fa-2x text-muted"></i>
-                                        </div>`
-                                    }
-                                    <div class="mt-2 text-truncate small">${media.name}</div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    html = `
-                        <div class="col-12 text-center py-5">
-                            <i class="fas fa-image fa-2x text-muted mb-3"></i>
-                            <p class="text-muted">No media found</p>
-                        </div>
-                    `;
-                }
-                
-                $('#mediaLibraryContent').html(html);
-                
-                // Populate pagination
-                if (data.last_page > 1) {
-                    let paginationHtml = `
-                        <nav>
-                            <ul class="pagination justify-content-center mb-0">
-                                ${data.prev_page_url ? 
-                                    `<li class="page-item"><a class="page-link rounded-pill" href="javascript:void(0)" onclick="loadMedia(${data.current_page - 1})">Previous</a></li>` :
-                                    `<li class="page-item disabled"><span class="page-link rounded-pill">Previous</span></li>`
-                                }
-                    `;
-                    
-                    for (let i = 1; i <= data.last_page; i++) {
-                        paginationHtml += `
-                            <li class="page-item ${i === data.current_page ? 'active' : ''}">
-                                <a class="page-link rounded-pill" href="javascript:void(0)" onclick="loadMedia(${i})">${i}</a>
-                            </li>
-                        `;
-                    }
-                    
-                    paginationHtml += `
-                                ${data.next_page_url ? 
-                                    `<li class="page-item"><a class="page-link rounded-pill" href="javascript:void(0)" onclick="loadMedia(${data.current_page + 1})">Next</a></li>` :
-                                    `<li class="page-item disabled"><span class="page-link rounded-pill">Next</span></li>`
-                                }
-                            </ul>
-                        </nav>
-                    `;
-                    
-                    $('#mediaLibraryPagination').html(paginationHtml);
-                } else {
-                    $('#mediaLibraryPagination').html('');
-                }
-            },
-            error: function() {
-                alert('Error loading media.');
-            }
-        });
-    }
-    
-    // Select media
-    function selectMedia(id, url, target) {
-        if (target === 'category') {
-            $('#category-image-preview').html(`
-                <div class="position-relative">
-                    <img src="${url}" class="img-fluid rounded" alt="Selected image" style="max-height: 200px; object-fit: contain;">
-                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 rounded-circle" onclick="removeCategoryImage()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `);
-            $('#categoryImageId').val(id);
-        } else if (target === 'subcategory') {
-            $('#subcategory-image-preview').html(`
-                <div class="position-relative">
-                    <img src="${url}" class="img-fluid rounded" alt="Selected image" style="max-height: 200px; object-fit: contain;">
-                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 rounded-circle" onclick="removeSubcategoryImage()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `);
-            $('#subcategoryImageId').val(id);
-        }
-        
-        $('#mediaLibraryModal').modal('hide');
-    }
     
     // Remove category image
     function removeCategoryImage() {
@@ -1165,9 +1014,6 @@
             <div class="py-3">
                 <i class="fas fa-image fa-2x text-muted mb-2"></i>
                 <p class="text-muted mb-2">No image selected</p>
-                <button type="button" class="btn btn-outline-theme btn-sm rounded-pill" onclick="openMediaLibrary('category')">
-                    <i class="fas fa-folder-open me-1"></i> Select Image
-                </button>
             </div>
         `);
         $('#categoryImageId').val('');
@@ -1179,136 +1025,46 @@
             <div class="py-3">
                 <i class="fas fa-image fa-2x text-muted mb-2"></i>
                 <p class="text-muted mb-2">No image selected</p>
-                <button type="button" class="btn btn-outline-theme btn-sm rounded-pill" onclick="openMediaLibrary('subcategory')">
-                    <i class="fas fa-folder-open me-1"></i> Select Image
-                </button>
             </div>
         `);
         $('#subcategoryImageId').val('');
     }
     
-    // Upload media
-    function uploadMedia() {
-        const fileInput = $('#mediaFile')[0];
-        if (!fileInput.files || fileInput.files.length === 0) {
-            alert('Please select a file to upload.');
-            return;
-        }
-        
-        const file = fileInput.files[0];
-        
+    // ============================================
+    // Upload and Select Image Function
+    // ============================================
+    function uploadAndSelectImage(file, type) {
         // Validate file type
-        const validTypes = [
-            'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-            'video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv', 'video/mpeg', 'video/ogg', 'video/webm',
-            'application/pdf', 'application/msword', 
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'text/plain', 'text/csv'
-        ];
-        
+        const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
         if (!validTypes.includes(file.type)) {
-            alert('Please upload a valid file (JPEG, PNG, GIF, WEBP, MP4, MOV, AVI, WMV, MPEG, OGG, WEBM, PDF, DOC, DOCX, XLSX, PPTX, TXT, CSV).');
-            return;
-        }
-        
-        // Validate file size - 25MB limit
-        const maxSize = 25 * 1024 * 1024; // 25MB in bytes
-        if (file.size > maxSize) {
-            alert('File size must be less than 25MB.');
-            return;
-        }
-        
-        const formData = new FormData($('#mediaUploadForm')[0]);
-        
-        // Show loading indicator in upload area
-        const uploadArea = $('#media-upload-area');
-        const uploadContent = $('#media-upload-content');
-        const originalContent = uploadContent.html();
-        uploadContent.html('<i class="fas fa-spinner fa-spin text-theme mb-2" style="font-size: 24px;"></i><p class="text-muted mb-0 small">Uploading...</p>');
-        uploadArea.css('pointer-events', 'none');
-        
-        // Remove file info display during upload
-        $('.file-info-container').remove();
-        
-        $.ajax({
-            url: '/admin/media',
-            type: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    // Reset form
-                    $('#mediaUploadForm')[0].reset();
-                    
-                    // Reload media library
-                    loadMedia();
-                    
-                } else {
-                    alert('Error uploading file: ' + (response.error || 'Unknown error'));
-                }
-            },
-            error: function(xhr) {
-                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    let errors = xhr.responseJSON.errors;
-                    let errorMessages = '';
-                    for (let field in errors) {
-                        errorMessages += errors[field].join(', ') + '\n';
-                    }
-                    alert('Validation errors:\n' + errorMessages);
-                } else if (xhr.responseJSON && xhr.responseJSON.error) {
-                    alert('Error uploading media: ' + xhr.responseJSON.error);
-                } else {
-                    alert('Error uploading media. Please try again.');
-                }
-            },
-            complete: function() {
-                // Restore upload area state
-                uploadContent.html(originalContent);
-                uploadArea.css('pointer-events', 'auto');
-            }
-        });
-    }
-    
-    // Upload image via drag and drop and select it for category/subcategory
-    function uploadAndSelectImage(file, target) {
-        // Validate file type
-        const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!validImageTypes.includes(file.type)) {
             alert('Please upload a valid image file (JPEG, PNG, GIF, or WEBP).');
             return;
         }
         
-        // Validate file size - 25MB limit
-        const maxSize = 25 * 1024 * 1024;
+        // Validate file size (20MB max)
+        const maxSize = 20 * 1024 * 1024; // 20MB in bytes
         if (file.size > maxSize) {
-            alert('Image size must be less than 25MB.');
+            alert('File size must be less than 20MB.');
             return;
         }
         
-        // Get the preview container based on target
-        const previewContainer = target === 'category' ? '#category-image-preview' : '#subcategory-image-preview';
-        
-        // Show loading indicator in the preview area
-        $(previewContainer).html(`
-            <div class="upload-progress-overlay">
-                <div class="text-center">
-                    <i class="fas fa-spinner fa-spin fa-2x text-theme mb-2"></i>
-                    <p class="mb-0 text-muted">Uploading image...</p>
+        // Show upload progress
+        const previewId = type === 'category' ? '#category-image-preview' : '#subcategory-image-preview';
+        $(previewId).html(`
+            <div class="py-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Uploading...</span>
                 </div>
+                <p class="text-muted mt-2 mb-0">Uploading image...</p>
             </div>
         `);
         
-        // Prepare form data
+        // Create FormData
         const formData = new FormData();
         formData.append('file', file);
         formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
         
+        // Upload the file
         $.ajax({
             url: '/admin/media',
             type: 'POST',
@@ -1317,50 +1073,61 @@
             contentType: false,
             success: function(response) {
                 if (response.success && response.media) {
-                    // Use the existing selectMedia function to set the image
-                    selectMedia(response.media.id, response.media.url, target);
+                    // Set the image ID
+                    const imageIdField = type === 'category' ? '#categoryImageId' : '#subcategoryImageId';
+                    $(imageIdField).val(response.media.id);
+                    
+                    // Show the uploaded image
+                    $(previewId).html(`
+                        <div class="position-relative">
+                            <img src="${response.media.url}" class="img-fluid rounded" alt="Uploaded image" style="max-height: 200px; object-fit: contain;">
+                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 rounded-circle" onclick="${type === 'category' ? 'removeCategoryImage()' : 'removeSubcategoryImage()'}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `);
                 } else {
-                    // Restore the upload area on error
-                    restoreUploadArea(target);
-                    alert('Error uploading image: ' + (response.error || 'Unknown error'));
+                    // Upload failed
+                    let errorMessage = 'Upload failed';
+                    if (response.errors) {
+                        errorMessage += ': ' + Object.values(response.errors).flat().join(', ');
+                    } else if (response.error) {
+                        errorMessage += ': ' + response.error;
+                    }
+                    alert(errorMessage);
+                    
+                    // Reset preview
+                    $(previewId).html(`
+                        <div class="py-3">
+                            <i class="fas fa-image fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-2">No image selected</p>
+                        </div>
+                    `);
                 }
             },
             error: function(xhr) {
-                // Restore the upload area on error
-                restoreUploadArea(target);
+                let errorMessage = 'Upload failed';
                 
                 if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    let errors = xhr.responseJSON.errors;
-                    let errorMessages = '';
-                    for (let field in errors) {
-                        errorMessages += errors[field].join(', ') + '\n';
-                    }
-                    alert('Validation errors:\n' + errorMessages);
+                    errorMessage += ': ' + Object.values(xhr.responseJSON.errors).flat().join(', ');
                 } else if (xhr.responseJSON && xhr.responseJSON.error) {
-                    alert('Error uploading image: ' + xhr.responseJSON.error);
+                    errorMessage += ': ' + xhr.responseJSON.error;
                 } else {
-                    alert('Error uploading image. Please try again.');
+                    errorMessage += ': HTTP ' + xhr.status;
                 }
+                
+                alert(errorMessage);
+                
+                // Reset preview
+                $(previewId).html(`
+                    <div class="py-3">
+                        <i class="fas fa-image fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-2">No image selected</p>
+                    </div>
+                `);
             }
         });
     }
     
-    // Restore the upload area after failed upload
-    function restoreUploadArea(target) {
-        const previewContainer = target === 'category' ? '#category-image-preview' : '#subcategory-image-preview';
-        const uploadAreaId = target === 'category' ? 'category-image-upload-area' : 'subcategory-image-upload-area';
-        
-        $(previewContainer).html(`
-            <div class="upload-area" id="${uploadAreaId}" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                <div>
-                    <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
-                    <p class="text-muted mb-2">Drag & drop an image here or click to select</p>
-                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="openMediaLibrary('${target}')">
-                        <i class="fas fa-folder-open me-1"></i> Select from Media Library
-                    </button>
-                </div>
-            </div>
-        `);
-    }
 </script>
 @endsection

@@ -236,18 +236,6 @@
                                                                                    name="variations[{{ $index }}][image]" 
                                                                                    accept="image/*"
                                                                                    data-variation-index="{{ $index }}">
-                                                                            <button type="button" 
-                                                                                    class="btn btn-outline-primary btn-sm mt-2 w-100 select-variation-image-btn" 
-                                                                                    data-bs-toggle="modal" 
-                                                                                    data-bs-target="#mediaLibraryModal" 
-                                                                                    data-target="variation_image" 
-                                                                                    data-variation-index="{{ $index }}">
-                                                                                <i class="fas fa-folder-open me-1"></i> Select from Library
-                                                                            </button>
-                                                                            <input type="hidden" 
-                                                                                   name="variations[{{ $index }}][image_id]" 
-                                                                                   value="{{ $variation->image_id }}"
-                                                                                   class="variation-image-id">
                                                                             <input type="hidden" 
                                                                                    name="variations[{{ $index }}][remove_image]" 
                                                                                    value="0"
@@ -458,21 +446,20 @@
                                                     @if($product->mainPhoto)
                                                         <div class="position-relative">
                                                             <img src="{{ $product->mainPhoto->url }}" class="img-fluid mb-2" alt="{{ $product->mainPhoto->name }}" style="max-height: 200px; object-fit: contain;">
-                                                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#mediaLibraryModal" data-target="main_photo">
-                                                                <i class="fas fa-folder-open me-1"></i> Change Image
-                                                            </button>
-                                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill ms-2" id="remove-main-photo">
-                                                                <i class="fas fa-trash me-1"></i> Remove
-                                                            </button>
+                                                            <div class="mt-2">
+                                                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill me-2" id="change-main-photo">
+                                                                    <i class="fas fa-sync-alt me-1"></i> Change
+                                                                </button>
+                                                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" id="remove-main-photo">
+                                                                    <i class="fas fa-trash me-1"></i> Remove
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     @else
                                                         <div class="upload-area" id="main-photo-upload-area" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                                            <div>
+                                                            <div class="text-center">
                                                                 <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
-                                                                <p class="text-muted mb-2">Drag & drop an image here or click to select</p>
-                                                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#mediaLibraryModal" data-target="main_photo">
-                                                                    <i class="fas fa-folder-open me-1"></i> Select from Media Library
-                                                                </button>
+                                                                <p class="text-muted mb-0">Drag & drop an image here or click to select</p>
                                                             </div>
                                                         </div>
                                                     @endif
@@ -503,9 +490,6 @@
                                                             @endforeach
                                                         @endif
                                                     </div>
-                                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#mediaLibraryModal" data-target="gallery">
-                                                        <i class="fas fa-plus me-1"></i> Add Photos from Media Library
-                                                    </button>
                                                     <input type="hidden" id="product_gallery" name="product_gallery" value="{{ json_encode($product->galleryPhotos->pluck('id')->toArray()) }}">
                                                 </div>
                                             </div>
@@ -539,9 +523,6 @@
                                     </div>
                                     
                                     <div class="d-flex justify-content-end gap-2 mt-4">
-                                        <button type="button" class="btn btn-info rounded-pill px-4 py-2" id="debug-check-btn" style="margin-right: auto;">
-                                            <i class="fas fa-bug me-2"></i> Debug Check (Console)
-                                        </button>
                                         <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2">
                                             <i class="fas fa-times me-2"></i> Cancel
                                         </a>
@@ -556,74 +537,6 @@
                 </div>
             </div>
             
-            <!-- Media Library Modal -->
-            <div class="modal fade" id="mediaLibraryModal" tabindex="-1" aria-labelledby="mediaLibraryModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl modal-dialog-centered">
-                    <div class="modal-content border-0 shadow">
-                        <div class="modal-header border-0 pb-0">
-                            <h5 class="modal-title fw-bold" id="mediaLibraryModalLabel">Media Library</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body pt-0">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div>
-                                    <button class="btn btn-outline-primary btn-sm rounded-pill" id="upload-media-btn">
-                                        <i class="fas fa-upload me-1"></i> Upload New
-                                    </button>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <input type="text" class="form-control form-control-sm rounded-pill" id="media-search" placeholder="Search media..." style="width: 200px;">
-                                    <select class="form-select form-select-sm rounded-pill" id="media-filter">
-                                        <option value="all">All Media</option>
-                                        <option value="images">Images</option>
-                                        <option value="videos">Videos</option>
-                                        <option value="documents">Documents</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Hidden form for media upload -->
-                            <form id="mediaUploadForm" class="d-none">
-                                @csrf
-                                <input type="file" id="mediaFile" name="file" accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.presentationml.presentation,text/plain,text/csv">
-                                <input type="text" id="mediaName" name="name">
-                            </form>
-                            
-                            <div class="row g-3" id="media-library-items">
-                                <!-- Media items will be loaded here via AJAX -->
-                                <div class="col-12 text-center py-5" id="media-loading">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                </div>
-                                <div class="col-12 text-center py-5 d-none" id="no-media-message">
-                                    <i class="fas fa-image fa-3x text-muted mb-3"></i>
-                                    <h5 class="mb-2">No media found</h5>
-                                    <p class="text-muted mb-3">Upload your first media file to get started</p>
-                                    <div class="upload-area" id="empty-state-upload">
-                                        <i class="fas fa-cloud-upload-alt"></i>
-                                        <p class="mb-0">Drag & drop files here or click to upload</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="d-flex justify-content-center mt-4" id="load-more-container">
-                                <button class="btn btn-outline-primary rounded-pill d-none" id="load-more-btn">
-                                    <i class="fas fa-sync me-1"></i> Load More
-                                </button>
-                            </div>
-                        </div>
-                        <div class="modal-footer border-0 pt-0">
-                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
-                                <i class="fas fa-times me-2"></i> Cancel
-                            </button>
-                            <button type="button" class="btn btn-theme rounded-pill px-4" id="select-media-btn" disabled>
-                                <i class="fas fa-check me-2"></i> Select
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Unified Category Management Modal -->
             <div class="modal fade" id="categoryManagementModal" tabindex="-1" aria-labelledby="categoryManagementModalLabel" aria-hidden="true">
@@ -692,6 +605,112 @@
 @section('scripts')
 <script>
     // All JavaScript functionality has been moved to resources/js/common.js
+    
+    // Main Photo Change and Remove handlers for Edit page
+    $(document).ready(function() {
+        // Change Main Photo button
+        $(document).on('click', '#change-main-photo', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const fileInput = $('<input type="file" accept="image/*" style="display: none;">');
+            $('body').append(fileInput);
+            
+            fileInput.on('change', function() {
+                if (this.files.length > 0) {
+                    // Use the existing handleProductImageUpload function from admin.js
+                    if (typeof handleProductImageUpload === 'function') {
+                        handleProductImageUpload(this.files[0], 'main_photo');
+                    } else {
+                        // Fallback: manually upload
+                        uploadMainPhoto(this.files[0]);
+                    }
+                }
+                fileInput.remove();
+            });
+            
+            fileInput.click();
+        });
+        
+        // Remove Main Photo button
+        $(document).on('click', '#remove-main-photo', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (confirm('Are you sure you want to remove the main photo?')) {
+                // Clear the main photo ID
+                $('#main_photo_id').val('');
+                
+                // Replace with upload area
+                $('#main-photo-preview').html(`
+                    <div class="upload-area" id="main-photo-upload-area" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                        <div class="text-center">
+                            <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Drag & drop an image here or click to select</p>
+                        </div>
+                    </div>
+                `);
+            }
+        });
+        
+        // Fallback upload function if admin.js function is not available
+        function uploadMainPhoto(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('name', file.name);
+            
+            // Show upload indicator
+            const $uploadIndicator = $(`
+                <div class="upload-progress-indicator">
+                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                    <span>Uploading...</span>
+                </div>
+            `);
+            $('#main-photo-preview').append($uploadIndicator);
+            
+            $.ajax({
+                url: '/admin/media',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(data) {
+                    $uploadIndicator.remove();
+                    
+                    if (data.success && data.media) {
+                        // Set main photo
+                        $('#main_photo_id').val(data.media.id);
+                        $('#main-photo-preview').html(`
+                            <div class="position-relative">
+                                <img src="${data.media.url}" class="img-fluid mb-2" alt="${data.media.name}" style="max-height: 200px; object-fit: contain;">
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill me-2" id="change-main-photo">
+                                        <i class="fas fa-sync-alt me-1"></i> Change
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" id="remove-main-photo">
+                                        <i class="fas fa-trash me-1"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        `);
+                    } else {
+                        alert('Error uploading file. Please try again.');
+                    }
+                },
+                error: function(xhr) {
+                    $uploadIndicator.remove();
+                    let errorMsg = 'Error uploading file. Please try again.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    alert(errorMsg);
+                }
+            });
+        }
+    });
     
     // Variable Product Functionality for Edit
     @if($product->isVariable())
@@ -1026,18 +1045,6 @@
                                                name="variations[${index}][image]" 
                                                accept="image/*"
                                                data-variation-index="${index}">
-                                        <button type="button" 
-                                                class="btn btn-outline-primary btn-sm mt-2 w-100 select-variation-image-btn" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#mediaLibraryModal" 
-                                                data-target="variation_image" 
-                                                data-variation-index="${index}">
-                                            <i class="fas fa-folder-open me-1"></i> Select from Library
-                                        </button>
-                                        <input type="hidden" 
-                                               name="variations[${index}][image_id]" 
-                                               value=""
-                                               class="variation-image-id">
                                         <input type="hidden" 
                                                name="variations[${index}][remove_image]" 
                                                value="0"
@@ -1316,146 +1323,13 @@
             `);
         });
         
-        // Form submission handler - verify image_id values before submit
+        // Form submission handler - validate before submit
         $('#product-form').on('submit', function(e) {
-            // TEMPORARY: Prevent submission to see console output
-            // Remove this after debugging
-            e.preventDefault();
+            // Optional: Log form data for debugging (can be removed if not needed)
+            console.log('Form submitting...');
             
-            console.log('=== FORM SUBMISSION DEBUG ===');
-            console.log('⚠️ FORM SUBMISSION PREVENTED FOR DEBUGGING');
-            console.log('Form action:', $(this).attr('action'));
-            console.log('Form method:', $(this).attr('method'));
-            
-            let hasIssues = false;
-            let debugReport = [];
-            
-            // Check all variation image_id inputs
-            $('.variation-image-id').each(function(index) {
-                const $input = $(this);
-                const value = $input.val();
-                const domValue = this.value;
-                const name = $input.attr('name');
-                const attrValue = $input.attr('value');
-                const jsSet = $input.attr('data-js-set');
-                const jsValue = $input.attr('data-js-value');
-                
-                const logData = {
-                    name: name,
-                    jqueryVal: value,
-                    domValue: domValue,
-                    attrValue: attrValue,
-                    isEmpty: !value || value === '' || value === 'null',
-                    isDisabled: $input.prop('disabled'),
-                    isVisible: $input.is(':visible'),
-                    wasSetByJS: jsSet === 'true',
-                    jsValueMarker: jsValue,
-                    element: this
-                };
-                
-                console.log(`Variation ${index}:`, logData);
-                
-                // Build debug report
-                let status = '';
-                if (!value || value === '' || value === 'null') {
-                    status = '❌ EMPTY';
-                    if (jsSet === 'true') {
-                        status = '🔴 CRITICAL - WAS SET BY JS BUT NOW EMPTY';
-                        hasIssues = true;
-                    }
-                } else {
-                    status = `✅ HAS VALUE: ${value}`;
-                }
-                
-                debugReport.push(`Variation ${index}: ${status}`);
-                
-                // If value is empty or null string, log warning
-                if (!value || value === '' || value === 'null') {
-                    console.warn(`⚠️ WARNING: Variation ${index} has no image_id set`);
-                    if (jsSet === 'true') {
-                        console.error(`🔴 CRITICAL: Variation ${index} was set by JS (marker present) but value is now empty!`);
-                        console.error(`   JS tried to set: ${jsValue}`);
-                        console.error(`   Current value: ${value}`);
-                    }
-                } else {
-                    console.log(`✅ Variation ${index} has image_id: ${value}`);
-                }
-            });
-            
-            // Also check by name attribute directly
-            console.log('--- Checking by name attribute ---');
-            $('input[name^="variations["][name$="][image_id]"]').each(function(index) {
-                console.log(`Found input ${index}:`, {
-                    name: $(this).attr('name'),
-                    value: $(this).val(),
-                    domValue: this.value
-                });
-            });
-            
-            if (hasIssues) {
-                console.error('🔴 ISSUES DETECTED: Some values were set by JavaScript but are now empty!');
-                console.error('This suggests the values are being cleared between selection and submission.');
-            }
-            
-            console.log('=== END FORM SUBMISSION DEBUG ===');
-            console.log('\n📋 SUMMARY:\n' + debugReport.join('\n'));
-            
-            // Show alert with summary
-            alert('FORM SUBMISSION PREVENTED FOR DEBUGGING\n\nCheck browser console for details.\n\n' + debugReport.join('\n') + '\n\nTo actually submit, comment out e.preventDefault() in the code.');
-            
-            // UNCOMMENT THIS LINE TO ALLOW ACTUAL SUBMISSION:
-            // return true;
-            
-            return false; // Prevent submission for now
-        });
-        
-        // Debug Check Button - Check variation image_id values without submitting
-        $('#debug-check-btn').on('click', function() {
-            console.log('\n\n=== MANUAL DEBUG CHECK ===');
-            console.log('Timestamp:', new Date().toISOString());
-            
-            let debugReport = [];
-            
-            // Check all variation image_id inputs
-            $('.variation-image-id').each(function(index) {
-                const $input = $(this);
-                const value = $input.val();
-                const domValue = this.value;
-                const name = $input.attr('name');
-                const jsSet = $input.attr('data-js-set');
-                const jsValue = $input.attr('data-js-value');
-                
-                console.log(`\nVariation ${index}:`, {
-                    name: name,
-                    jqueryVal: value,
-                    domValue: domValue,
-                    attrValue: $input.attr('value'),
-                    propValue: $input.prop('value'),
-                    isEmpty: !value || value === '' || value === 'null',
-                    wasSetByJS: jsSet === 'true',
-                    jsValueMarker: jsValue,
-                    element: this
-                });
-                
-                let status = '';
-                if (!value || value === '' || value === 'null') {
-                    if (jsSet === 'true') {
-                        status = `🔴 CRITICAL - JS set ${jsValue} but now EMPTY`;
-                    } else {
-                        status = '❌ EMPTY (never set by JS)';
-                    }
-                } else {
-                    status = `✅ HAS VALUE: ${value}`;
-                }
-                
-                debugReport.push(`Variation ${index}: ${status}`);
-            });
-            
-            console.log('\n📋 SUMMARY:\n' + debugReport.join('\n'));
-            console.log('=== END MANUAL DEBUG CHECK ===\n\n');
-            
-            // Show alert
-            alert('Debug check complete!\n\nCheck browser console for details.\n\n' + debugReport.join('\n'));
+            // Allow form to submit normally
+            return true;
         });
     });
     @endif

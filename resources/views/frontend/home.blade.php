@@ -4,39 +4,36 @@
 
 @section('content')
 <div class="container-fluid px-0">
-    <!-- Hero Section with AOS animations -->
-    <div class="hero-section text-center py-5 mb-5" style="background: linear-gradient(135deg, var(--theme-color) 0%, var(--link-hover-color) 100%); color: white;">
+    <!-- Hero Section -->
+    <div class="hero-section text-center py-5 mb-5">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <h1 class="display-4 fw-bold mb-4" style="color: white !important;">
+                <div class="col-lg-9 col-xl-8">
+                    <h1 class="display-3 fw-bold mb-4 fade-in" style="color: white !important;">
                         Welcome to {{ setting('site_title', 'Frontend App') }}
                     </h1>
-                    <p class="lead mb-4" style="color: rgba(255,255,255,0.9) !important;">
+                    <p class="lead mb-5 fade-in" style="color: rgba(255,255,255,0.95) !important; font-size: 1.25rem; line-height: 1.8;">
                         @auth
-                            Welcome back, {{ Auth::user()->name }}! Explore our latest products and categories.
+                            Welcome back, <strong>{{ Auth::user()->name }}</strong>! Explore our latest products and categories.
                         @else
-                            Discover our amazing products and categories. Join us today!
+                            Discover our amazing products and categories. Join us today for the best deals!
                         @endauth
                     </p>
                     @auth
-                    <div class="d-flex justify-content-center gap-3">
-                        <a href="{{ route('frontend.profile') }}" class="btn btn-light btn-lg rounded-pill px-4 btn-ripple hover-lift">
+                    <div class="d-flex justify-content-center gap-3 flex-wrap fade-in">
+                        <a href="{{ route('frontend.profile') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 btn-ripple hover-lift">
                             <i class="fas fa-user me-2"></i>My Profile
                         </a>
-                        <form method="POST" action="{{ route('frontend.logout') }}" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-outline-light btn-lg rounded-pill px-4 btn-ripple hover-lift">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </button>
-                        </form>
+                        <a href="{{ route('frontend.cart.index') }}" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 btn-ripple hover-lift">
+                            <i class="fas fa-shopping-cart me-2"></i>View Cart
+                        </a>
                     </div>
                     @else
-                    <div class="d-flex justify-content-center gap-3">
-                        <a href="{{ route('frontend.login') }}" class="btn btn-light btn-lg rounded-pill px-4 btn-ripple hover-lift">
+                    <div class="d-flex justify-content-center gap-3 flex-wrap fade-in">
+                        <a href="{{ route('frontend.login') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 btn-ripple hover-lift">
                             <i class="fas fa-sign-in-alt me-2"></i>Login
                         </a>
-                        <a href="{{ route('frontend.register') }}" class="btn btn-outline-light btn-lg rounded-pill px-4 btn-ripple hover-lift">
+                        <a href="{{ route('frontend.register') }}" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 btn-ripple hover-lift">
                             <i class="fas fa-user-plus me-2"></i>Register
                         </a>
                     </div>
@@ -47,50 +44,58 @@
     </div>
 </div>
 
-<div class="container">
+<div class="container py-5">
     <!-- Categories Section -->
     <div class="section mb-5">
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0 heading-text" style="color: var(--theme-color);">
-                        <i class="fas fa-tags me-2"></i>Categories
-                    </h2>
-                    <a href="#" class="btn btn-theme btn-ripple hover-lift">View All</a>
-                </div>
-                <hr class="my-3">
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-2 fw-bold" style="color: var(--heading-text-color); font-size: 2rem;">
+                    <i class="fas fa-tags me-3" style="color: var(--theme-color);"></i>Browse Categories
+                </h2>
+                <p class="text-muted mb-0">Explore our wide range of product categories</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="#" class="btn btn-outline-theme btn-ripple hover-lift">
+                    <i class="fas fa-th-large me-2"></i>View All Categories
+                </a>
             </div>
         </div>
         
         @if($categories->count() > 0)
-        <div class="row">
+        <div class="row g-4">
             @foreach($categories as $index => $category)
-            <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-                <div class="card h-100 shadow-sm border-0 category-card hover-lift">
-                    <div class="position-relative overflow-hidden">
+            <div class="col-sm-6 col-md-4 col-lg-3 fade-in" style="animation-delay: {{ $index * 0.1 }}s;">
+                <div class="card h-100 border-0 category-card">
+                    <div class="position-relative overflow-hidden" style="border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
                         @if($category->image)
-                            <img src="{{ $category->image->url }}" class="card-img-top" alt="{{ $category->name }}" style="height: 200px; object-fit: cover;">
+                            <img src="{{ $category->image->url }}" class="card-img-top" alt="{{ $category->name }}" style="height: 220px; object-fit: cover;">
                         @else
-                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <i class="fas fa-image fa-3x text-muted"></i>
+                            <div class="bg-gradient-theme d-flex align-items-center justify-content-center" style="height: 220px;">
+                                <i class="fas fa-image fa-4x text-white opacity-50"></i>
                             </div>
                         @endif
-                        <div class="position-absolute top-0 end-0 m-2">
-                            <span class="badge bg-success text-white">{{ $category->product_count }} Products</span>
+                        @if($category->product_count > 0)
+                        <div class="position-absolute top-0 end-0 m-3">
+                            <span class="badge bg-success shadow-sm" style="font-size: 0.875rem; padding: 0.5rem 0.875rem;">
+                                {{ $category->product_count }} Products
+                            </span>
+                        </div>
+                        @endif
+                    </div>
+                    <div class="card-body d-flex flex-column p-4">
+                        <h5 class="card-title fw-bold mb-2" style="color: var(--heading-text-color);">{{ $category->name }}</h5>
+                        <p class="card-text text-muted flex-grow-1 mb-3" style="font-size: 0.9375rem;">
+                            {{ Str::limit($category->description ?? 'Explore our collection', 80) }}
+                        </p>
+                        <div class="d-flex align-items-center text-muted" style="font-size: 0.875rem;">
+                            <i class="fas fa-layer-group me-2 text-theme"></i>
+                            <span>{{ $category->subCategories->count() }} Subcategories</span>
                         </div>
                     </div>
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ $category->name }}</h5>
-                        <p class="card-text flex-grow-1">{{ Str::limit($category->description ?? 'No description available', 100) }}</p>
-                        <div class="mt-auto">
-                            <small class="text-muted">
-                                {{ $category->subCategories->count() }} subcategories • 
-                                {{ $category->product_count }} products
-                            </small>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-transparent border-0">
-                        <a href="{{ route('frontend.category.show', $category) }}" class="btn btn-theme w-100 btn-ripple">Explore</a>
+                    <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                        <a href="{{ route('frontend.category.show', $category) }}" class="btn btn-theme w-100 btn-ripple hover-lift">
+                            <i class="fas fa-arrow-right me-2"></i>Explore Category
+                        </a>
                     </div>
                 </div>
             </div>
@@ -99,8 +104,12 @@
         @else
         <div class="row">
             <div class="col-12">
-                <div class="alert alert-info text-center">
-                    <i class="fas fa-info-circle me-2"></i>No categories available at the moment.
+                <div class="alert alert-info d-flex align-items-center" style="border-radius: var(--radius-lg);">
+                    <i class="fas fa-info-circle me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h5 class="mb-1">No Categories Available</h5>
+                        <p class="mb-0">Categories will appear here once they are added.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -109,107 +118,134 @@
     
     <!-- Products Section -->
     <div class="section mb-5">
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h2 class="mb-0 heading-text" style="color: var(--theme-color);">
-                        <i class="fas fa-box-open me-2"></i>Products
-                    </h2>
-                    <a href="#" class="btn btn-theme btn-ripple hover-lift">View All</a>
-                </div>
-                <hr class="my-3">
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-2 fw-bold" style="color: var(--heading-text-color); font-size: 2rem;">
+                    <i class="fas fa-box-open me-3" style="color: var(--theme-color);"></i>Featured Products
+                </h2>
+                <p class="text-muted mb-0">Check out our latest and most popular products</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="#" class="btn btn-outline-theme btn-ripple hover-lift">
+                    <i class="fas fa-shopping-bag me-2"></i>View All Products
+                </a>
             </div>
         </div>
         
         @if($products->count() > 0)
-        <div class="row">
+        <div class="row g-4">
             @foreach($products as $index => $product)
-            <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
-                <div class="card h-100 shadow-sm border-0 product-card hover-lift">
-                    <div class="position-relative overflow-hidden">
+            <div class="col-sm-6 col-md-4 col-lg-3 fade-in" style="animation-delay: {{ $index * 0.1 }}s;">
+                <div class="card h-100 border-0 product-card">
+                    <div class="position-relative overflow-hidden" style="border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
                         @if($product->mainPhoto)
-                            <img src="{{ $product->mainPhoto->url }}" class="card-img-top" alt="{{ $product->name }}" style="height: 200px; object-fit: cover;">
+                            <img src="{{ $product->mainPhoto->url }}" class="card-img-top" alt="{{ $product->name }}" style="height: 220px; object-fit: cover;">
                         @else
-                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <i class="fas fa-image fa-3x text-muted"></i>
+                            <div class="bg-gradient-theme d-flex align-items-center justify-content-center" style="height: 220px;">
+                                <i class="fas fa-image fa-4x text-white opacity-50"></i>
                             </div>
                         @endif
-                        <div class="position-absolute top-0 end-0 m-2">
-                            <span class="badge bg-success text-white">{{ ucfirst($product->status) }}</span>
+                        <div class="position-absolute top-0 end-0 m-3">
+                            <span class="badge {{ $product->status === 'active' || $product->status === 'published' ? 'bg-success' : 'bg-secondary' }} shadow-sm">
+                                {{ ucfirst($product->status) }}
+                            </span>
                         </div>
+                        @php
+                            $hasSellingPrice = !is_null($product->selling_price) && $product->selling_price !== '';
+                            if ($hasSellingPrice && $product->mrp > $product->selling_price) {
+                                $discountPercent = round((($product->mrp - $product->selling_price) / $product->mrp) * 100);
+                            }
+                        @endphp
+                        @if(isset($discountPercent) && $discountPercent > 0)
+                        <div class="position-absolute top-0 start-0 m-3">
+                            <span class="badge bg-danger shadow-sm" style="font-size: 0.875rem; padding: 0.5rem 0.875rem;">
+                                {{ $discountPercent }}% OFF
+                            </span>
+                        </div>
+                        @endif
                     </div>
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">
-                            <a href="{{ route('frontend.product.show', $product->slug) }}" class="product-link text-decoration-none">
-                                {{ $product->name }}
+                    <div class="card-body d-flex flex-column p-4">
+                        <h5 class="card-title fw-bold mb-2" style="color: var(--heading-text-color);">
+                            <a href="{{ route('frontend.product.show', $product->slug) }}" class="text-decoration-none" style="color: inherit;">
+                                {{ Str::limit($product->name, 50) }}
                             </a>
                         </h5>
-                        <p class="card-text flex-grow-1">{{ Str::limit($product->description ?? 'No description available', 100) }}</p>
-                        <div class="mt-auto">
-                            <div class="d-flex justify-content-between align-items-center">
-                                @php
-                                    $hasSellingPrice = !is_null($product->selling_price) && $product->selling_price !== '';
-                                    $displayPrice = $hasSellingPrice ? $product->selling_price : $product->mrp;
-                                    $calculatedPrice = $displayPrice;
+                        <p class="card-text text-muted flex-grow-1 mb-3" style="font-size: 0.875rem; line-height: 1.6;">
+                            {{ Str::limit($product->description ?? 'No description available', 80) }}
+                        </p>
+                        
+                        <!-- Price Section -->
+                        <div class="mb-3">
+                            @php
+                                $displayPrice = $hasSellingPrice ? $product->selling_price : $product->mrp;
+                                $calculatedPrice = $displayPrice;
+                                
+                                if (Auth::check() && $hasSellingPrice) {
+                                    $user = Auth::user();
                                     
-                                    if (Auth::check() && $hasSellingPrice) {
-                                        $user = Auth::user();
-                                        
-                                        if (!is_null($user->discount_percentage) && $user->discount_percentage > 0) {
-                                            $calculatedPrice = $product->selling_price * (1 - $user->discount_percentage / 100);
-                                        } 
-                                        else {
-                                            $userGroups = $user->userGroups;
-                                            if ($userGroups->count() > 0) {
-                                                $highestGroupDiscount = 0;
-                                                foreach ($userGroups as $group) {
-                                                    if (!is_null($group->discount_percentage) && $group->discount_percentage > $highestGroupDiscount) {
-                                                        $highestGroupDiscount = $group->discount_percentage;
-                                                    }
+                                    if (!is_null($user->discount_percentage) && $user->discount_percentage > 0) {
+                                        $calculatedPrice = $product->selling_price * (1 - $user->discount_percentage / 100);
+                                    } else {
+                                        $userGroups = $user->userGroups;
+                                        if ($userGroups->count() > 0) {
+                                            $highestGroupDiscount = 0;
+                                            foreach ($userGroups as $group) {
+                                                if (!is_null($group->discount_percentage) && $group->discount_percentage > $highestGroupDiscount) {
+                                                    $highestGroupDiscount = $group->discount_percentage;
                                                 }
-                                                
-                                                if ($highestGroupDiscount > 0) {
-                                                    $calculatedPrice = $product->selling_price * (1 - $highestGroupDiscount / 100);
-                                                }
+                                            }
+                                            
+                                            if ($highestGroupDiscount > 0) {
+                                                $calculatedPrice = $product->selling_price * (1 - $highestGroupDiscount / 100);
                                             }
                                         }
                                     }
-                                @endphp
-                                <p class="fw-bold text-success mb-0">₹{{ number_format($calculatedPrice, 2) }}</p>
+                                }
+                            @endphp
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="price-tag" style="font-size: 1.5rem; font-weight: 700; color: var(--theme-color);">
+                                    ₹{{ number_format($calculatedPrice, 2) }}
+                                </span>
                                 @if($hasSellingPrice && $product->mrp > $product->selling_price)
-                                    <small class="text-muted text-decoration-line-through">₹{{ number_format($product->mrp, 2) }}</small>
+                                    <span class="original-price" style="font-size: 1rem;">
+                                        ₹{{ number_format($product->mrp, 2) }}
+                                    </span>
                                 @endif
                             </div>
-                            <div class="mt-2">
-                                <small class="text-muted">
-                                    @php
-                                        // For variable products, show total stock from all variations
-                                        $displayStock = $product->isVariable() ? $product->total_stock : $product->stock_quantity;
-                                        $isInStock = $displayStock > 0;
-                                    @endphp
-                                    @if($isInStock)
-                                        <i class="fas fa-check-circle text-success me-1"></i>In Stock ({{ $displayStock }})
-                                    @else
-                                        <i class="fas fa-times-circle text-danger me-1"></i>Out of Stock
-                                    @endif
+                        </div>
+                        
+                        <!-- Stock Status -->
+                        <div class="mb-3">
+                            @php
+                                $displayStock = $product->isVariable() ? $product->total_stock : $product->stock_quantity;
+                                $isInStock = $displayStock > 0;
+                            @endphp
+                            @if($isInStock)
+                                <small class="text-success d-flex align-items-center">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <span class="fw-medium">In Stock ({{ $displayStock }} available)</span>
                                 </small>
-                            </div>
+                            @else
+                                <small class="text-danger d-flex align-items-center">
+                                    <i class="fas fa-times-circle me-2"></i>
+                                    <span class="fw-medium">Out of Stock</span>
+                                </small>
+                            @endif
                         </div>
                     </div>
-                    <div class="card-footer bg-transparent border-0">
+                    
+                    <div class="card-footer bg-transparent border-0 p-4 pt-0">
                         @if($product->isVariable())
-                            {{-- Variable Product: Show only View Product button --}}
-                            <a href="{{ route('frontend.product.show', $product->slug) }}" class="btn btn-theme w-100 btn-ripple">
-                                <i class="fas fa-eye me-1"></i>View Product
+                            <a href="{{ route('frontend.product.show', $product->slug) }}" class="btn btn-theme w-100 btn-ripple hover-lift">
+                                <i class="fas fa-eye me-2"></i>View Options
                             </a>
                         @else
-                            {{-- Simple Product: Show Buy Now and Add to Cart buttons --}}
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-theme buy-now-btn btn-ripple flex-fill" data-product-id="{{ $product->id }}">
-                                    <i class="fas fa-bolt me-1"></i>Buy Now
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-theme buy-now-btn btn-ripple hover-lift" data-product-id="{{ $product->id }}">
+                                    <i class="fas fa-bolt me-2"></i>Buy Now
                                 </button>
-                                <button type="button" class="btn btn-outline-theme add-to-cart-btn btn-ripple flex-fill" data-product-id="{{ $product->id }}">
-                                    <i class="fas fa-shopping-cart me-1"></i>Add to Cart
+                                <button type="button" class="btn btn-outline-theme add-to-cart-btn btn-ripple hover-lift" data-product-id="{{ $product->id }}">
+                                    <i class="fas fa-shopping-cart me-2"></i>Add to Cart
                                 </button>
                             </div>
                         @endif
@@ -221,8 +257,12 @@
         @else
         <div class="row">
             <div class="col-12">
-                <div class="alert alert-info text-center">
-                    <i class="fas fa-info-circle me-2"></i>No products available at the moment.
+                <div class="alert alert-info d-flex align-items-center" style="border-radius: var(--radius-lg);">
+                    <i class="fas fa-info-circle me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h5 class="mb-1">No Products Available</h5>
+                        <p class="mb-0">Products will appear here once they are added.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -231,38 +271,46 @@
 </div>
 
 <style>
+    /* Additional page-specific styles */
     .hero-section {
-        background-size: cover;
-        background-position: center;
+        background: linear-gradient(135deg, var(--theme-color) 0%, var(--link-hover-color) 100%);
         position: relative;
         overflow: hidden;
     }
     
-    .subcategories-container {
-        border-top: 1px solid #eee;
-        padding-top: 15px;
-    }
-    
-    .product-link {
-        font-weight: 600;
-    }
-    
-    .category-card::after,
-    .product-card::after {
+    .hero-section::before {
         content: '';
         position: absolute;
-        bottom: 0;
+        top: 0;
         left: 0;
-        width: 100%;
-        height: 3px;
-        background: linear-gradient(90deg, var(--theme-color), var(--link-hover-color));
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 40%);
+        pointer-events: none;
     }
     
-    .category-card:hover::after,
-    .product-card:hover::after {
+    .category-card,
+    .product-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-
+    .category-card:hover,
+    .product-card:hover {
+        transform: translateY(-8px) scale(1.02);
+    }
+    
+    @media (max-width: 768px) {
+        .hero-section .display-3 {
+            font-size: 2.25rem !important;
+        }
+        
+        .hero-section .lead {
+            font-size: 1rem !important;
+        }
+    }
 </style>
 @endsection
 
