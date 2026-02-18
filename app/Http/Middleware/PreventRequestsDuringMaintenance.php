@@ -1,6 +1,6 @@
 <?php
 
-namespace Illuminate\Foundation\Http\Middleware;
+namespace App\Http\Middleware;
 
 use Closure;
 use ErrorException;
@@ -22,11 +22,17 @@ class PreventRequestsDuringMaintenance
     protected $app;
 
     /**
-     * The URIs that should be excluded.
+     * The URIs that should be excluded from maintenance mode.
+     * Admin panel and related routes remain accessible during maintenance.
      *
      * @var array<int, string>
      */
-    protected $except = [];
+    protected $except = [
+        '/admin/*',           // Admin panel routes (login, dashboard, etc.)
+        '/super-admin/*',     // Super admin specific routes
+        '/api/admin/*',       // Admin API routes
+        '/logout',            // Logout route for admin users
+    ];
 
     /**
      * The URIs that should be accessible during maintenance.
