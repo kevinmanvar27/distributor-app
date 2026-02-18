@@ -199,7 +199,7 @@
                                                     <span class="input-group-text bg-light border-0 rounded-start-pill">
                                                         <i class="fas fa-phone text-muted"></i>
                                                     </span>
-                                                    <input type="text" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2 @error('mobile_number') is-invalid @enderror" 
+                                                    <input type="number" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2 @error('mobile_number') is-invalid @enderror" 
                                                            id="mobile_number" name="mobile_number" value="{{ old('mobile_number', $user->mobile_number) }}" placeholder="Enter mobile number">
                                                 </div>
                                                 @error('mobile_number')

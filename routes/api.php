@@ -137,6 +137,43 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/device-token', [NotificationController::class, 'registerDeviceToken']);
     Route::get('/notifications/stats', [NotificationController::class, 'getStatistics']);
     
+    // Task Management API (Admin)
+    Route::prefix('tasks')->group(function () {
+        // List and statistics - require view_tasks permission
+        Route::get('/', [\App\Http\Controllers\Admin\TaskController::class, 'index'])->middleware('permission:view_tasks');
+        Route::get('/statistics', [\App\Http\Controllers\Admin\TaskController::class, 'statistics'])->middleware('permission:view_tasks');
+        
+        // Create routes (must be before {id} routes) - require manage_tasks permission
+        Route::get('/create', [\App\Http\Controllers\Admin\TaskController::class, 'create'])->middleware('permission:manage_tasks');
+        Route::post('/', [\App\Http\Controllers\Admin\TaskController::class, 'store'])->middleware('permission:manage_tasks');
+        
+        // Show specific task - require view_tasks permission
+        Route::get('/{id}', [\App\Http\Controllers\Admin\TaskController::class, 'show'])->middleware('permission:view_tasks');
+        
+        // Edit routes - require manage_tasks permission
+        Route::get('/{id}/edit', [\App\Http\Controllers\Admin\TaskController::class, 'edit'])->middleware('permission:manage_tasks');
+        Route::put('/{id}', [\App\Http\Controllers\Admin\TaskController::class, 'update'])->middleware('permission:manage_tasks');
+        Route::delete('/{id}', [\App\Http\Controllers\Admin\TaskController::class, 'destroy'])->middleware('permission:manage_tasks');
+        
+        // Comment and Status routes - require update_task_status permission
+        Route::post('/{id}/comment', [\App\Http\Controllers\Admin\TaskController::class, 'addComment'])->middleware('permission:update_task_status');
+        Route::post('/{id}/status', [\App\Http\Controllers\Admin\TaskController::class, 'updateStatus'])->middleware('permission:update_task_status');
+    });
+    
+    // Task Management API (Staff - View and Update Only)
+    Route::prefix('staff/tasks')->group(function () {
+        // List and statistics - require view_tasks permission
+        Route::get('/', [\App\Http\Controllers\Staff\TaskController::class, 'index'])->middleware('permission:view_tasks');
+        Route::get('/statistics', [\App\Http\Controllers\Staff\TaskController::class, 'statistics'])->middleware('permission:view_tasks');
+        
+        // Show specific task - require view_tasks permission
+        Route::get('/{id}', [\App\Http\Controllers\Staff\TaskController::class, 'show'])->middleware('permission:view_tasks');
+        
+        // Status and comment routes - require update_task_status permission
+        Route::post('/{id}/status', [\App\Http\Controllers\Staff\TaskController::class, 'updateStatus'])->middleware('permission:update_task_status');
+        Route::post('/{id}/comment', [\App\Http\Controllers\Staff\TaskController::class, 'addComment'])->middleware('permission:update_task_status');
+    });
+    
     // Resource routes
     Route::apiResource('users', UserController::class);
     Route::apiResource('roles', RoleController::class);

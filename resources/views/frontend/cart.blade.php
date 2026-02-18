@@ -139,7 +139,7 @@
                             
                             <div class="col-md-6 mb-3">
                                 <label for="mobile_number" class="form-label fw-medium label-text">Mobile Number</label>
-                                <input type="text" class="form-control form-control-animated" id="mobile_number" name="mobile_number" value="{{ old('mobile_number', Auth::user()->mobile_number) }}">
+                                <input type="number" class="form-control form-control-animated" id="mobile_number" name="mobile_number" value="{{ old('mobile_number', Auth::user()->mobile_number) }}">
                             </div>
                             
                             <div class="col-md-6 mb-3">

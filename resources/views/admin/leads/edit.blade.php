@@ -46,7 +46,7 @@
                                             
                                             <div class="mb-3">
                                                 <label for="contact_number" class="form-label">Contact Number <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control rounded-pill" id="contact_number" name="contact_number" value="{{ old('contact_number', $lead->contact_number) }}" required>
+                                                <input type="number" class="form-control rounded-pill" id="contact_number" name="contact_number" value="{{ old('contact_number', $lead->contact_number) }}" required>
                                                 @error('contact_number')
                                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                                 @enderror

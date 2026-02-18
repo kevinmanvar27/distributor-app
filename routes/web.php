@@ -29,6 +29,8 @@ use App\Http\Controllers\Frontend\AccountDeletionController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\SalaryController;
 use App\Http\Controllers\Admin\ProductAnalyticsController;
+use App\Http\Controllers\Admin\TaskController;
+use App\Http\Controllers\Staff\TaskController as StaffTaskController;
 
 // Redirect root URL based on frontend access settings
 Route::get('/', function () {
@@ -435,21 +437,26 @@ Route::middleware('auth')->group(function () {
     });
 
     // Lead Management Routes
-    Route::prefix('admin')->middleware(['permission:viewAny_lead'])->group(function () {
-        Route::resource('leads', LeadController::class)->names([
-            'index' => 'admin.leads.index',
-            'create' => 'admin.leads.create',
-            'store' => 'admin.leads.store',
-            'show' => 'admin.leads.show',
-            'edit' => 'admin.leads.edit',
-            'update' => 'admin.leads.update',
-            'destroy' => 'admin.leads.destroy',
-        ]);
+    Route::prefix('admin')->group(function () {
+        // List and view routes - require viewAny_lead permission
+        Route::get('/leads', [LeadController::class, 'index'])->name('admin.leads.index')->middleware('permission:viewAny_lead');
+        Route::get('/leads-trashed', [LeadController::class, 'trashed'])->name('admin.leads.trashed')->middleware('permission:viewAny_lead');
         
-        // Trashed leads routes
-        Route::get('/leads-trashed', [LeadController::class, 'trashed'])->name('admin.leads.trashed');
-        Route::post('/leads/{id}/restore', [LeadController::class, 'restore'])->name('admin.leads.restore');
-        Route::delete('/leads/{id}/force-delete', [LeadController::class, 'forceDelete'])->name('admin.leads.force-delete');
+        // Create routes (must be before {lead} routes) - require create_lead permission
+        Route::get('/leads/create', [LeadController::class, 'create'])->name('admin.leads.create')->middleware('permission:create_lead');
+        Route::post('/leads', [LeadController::class, 'store'])->name('admin.leads.store')->middleware('permission:create_lead');
+        
+        // Show specific lead - require view_lead permission
+        Route::get('/leads/{lead}', [LeadController::class, 'show'])->name('admin.leads.show')->middleware('permission:view_lead');
+        
+        // Edit routes - require update_lead permission
+        Route::get('/leads/{lead}/edit', [LeadController::class, 'edit'])->name('admin.leads.edit')->middleware('permission:update_lead');
+        Route::put('/leads/{lead}', [LeadController::class, 'update'])->name('admin.leads.update')->middleware('permission:update_lead');
+        Route::post('/leads/{id}/restore', [LeadController::class, 'restore'])->name('admin.leads.restore')->middleware('permission:update_lead');
+        
+        // Delete routes - require delete_lead permission
+        Route::delete('/leads/{lead}', [LeadController::class, 'destroy'])->name('admin.leads.destroy')->middleware('permission:delete_lead');
+        Route::delete('/leads/{id}/force-delete', [LeadController::class, 'forceDelete'])->name('admin.leads.force-delete')->middleware('permission:delete_lead');
     });
 
     // Coupon Management Routes
@@ -492,6 +499,43 @@ Route::middleware('auth')->group(function () {
         Route::post('/salary/payments/{id}/recalculate', [SalaryController::class, 'recalculate'])->name('admin.salary.recalculate');
         Route::get('/salary/slip/{id}', [SalaryController::class, 'slip'])->name('admin.salary.slip');
         Route::get('/salary/slip/{id}/download', [SalaryController::class, 'downloadSlip'])->name('admin.salary.download-slip');
+    });
+
+    // Task Management Routes (Admin)
+    Route::prefix('admin')->group(function () {
+        // List and statistics - require view_tasks permission
+        Route::get('/tasks', [TaskController::class, 'index'])->name('admin.tasks.index')->middleware('permission:view_tasks');
+        Route::get('/tasks-statistics', [TaskController::class, 'statistics'])->name('admin.tasks.statistics')->middleware('permission:view_tasks');
+        
+        // Create routes (must be before {id} routes) - require manage_tasks permission
+        Route::get('/tasks/create', [TaskController::class, 'create'])->name('admin.tasks.create')->middleware('permission:manage_tasks');
+        Route::post('/tasks', [TaskController::class, 'store'])->name('admin.tasks.store')->middleware('permission:manage_tasks');
+        
+        // Show specific task - require view_tasks permission
+        Route::get('/tasks/{id}', [TaskController::class, 'show'])->name('admin.tasks.show')->middleware('permission:view_tasks');
+        
+        // Edit routes - require manage_tasks permission
+        Route::get('/tasks/{id}/edit', [TaskController::class, 'edit'])->name('admin.tasks.edit')->middleware('permission:manage_tasks');
+        Route::put('/tasks/{id}', [TaskController::class, 'update'])->name('admin.tasks.update')->middleware('permission:manage_tasks');
+        Route::delete('/tasks/{id}', [TaskController::class, 'destroy'])->name('admin.tasks.destroy')->middleware('permission:manage_tasks');
+        
+        // Comment and Status routes - require update_task_status permission
+        Route::post('/tasks/{id}/comment', [TaskController::class, 'addComment'])->name('admin.tasks.comment')->middleware('permission:update_task_status');
+        Route::post('/tasks/{id}/status', [TaskController::class, 'updateStatus'])->name('admin.tasks.status')->middleware('permission:update_task_status');
+    });
+
+    // Task Management Routes (Staff - View and Update Only)
+    Route::prefix('staff')->group(function () {
+        // List and statistics - require view_tasks permission
+        Route::get('/tasks', [StaffTaskController::class, 'index'])->name('staff.tasks.index')->middleware('permission:view_tasks');
+        Route::get('/tasks-statistics', [StaffTaskController::class, 'statistics'])->name('staff.tasks.statistics')->middleware('permission:view_tasks');
+        
+        // Show specific task - require view_tasks permission
+        Route::get('/tasks/{id}', [StaffTaskController::class, 'show'])->name('staff.tasks.show')->middleware('permission:view_tasks');
+        
+        // Status and comment routes - require update_task_status permission
+        Route::post('/tasks/{id}/status', [StaffTaskController::class, 'updateStatus'])->name('staff.tasks.status')->middleware('permission:update_task_status');
+        Route::post('/tasks/{id}/comment', [StaffTaskController::class, 'addComment'])->name('staff.tasks.comment')->middleware('permission:update_task_status');
     });
 
 });

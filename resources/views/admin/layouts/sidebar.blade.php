@@ -58,7 +58,13 @@
                                               auth()->user()->hasPermission('update_salary') || 
                                               auth()->user()->hasPermission('delete_salary') ||
                                               auth()->user()->isSuperAdmin();
+                        $hasTaskPermission = auth()->user()->hasPermission('manage_tasks') ||
+                                            auth()->user()->hasPermission('view_tasks') || 
+                                            auth()->user()->hasPermission('create_tasks') || 
+                                            auth()->user()->hasPermission('edit_tasks') ||
+                                            auth()->user()->isSuperAdmin();
                         $hasLeadPermission = auth()->user()->hasPermission('viewAny_lead') || 
+                                            auth()->user()->hasPermission('view_lead') || 
                                             auth()->user()->hasPermission('create_lead') || 
                                             auth()->user()->hasPermission('update_lead') || 
                                             auth()->user()->hasPermission('delete_lead');
@@ -186,7 +192,7 @@
                     @endif
                     
                     <!-- HR -->
-                    @if($hasAttendancePermission || $hasSalaryPermission)
+                    @if($hasAttendancePermission || $hasSalaryPermission || $hasTaskPermission)
                         <li class="nav-item mt-2">
                             <div class="px-3 py-1">
                                 <small class="text-muted text-uppercase fw-semibold sidebar-text" style="font-size: 0.7rem; letter-spacing: 0.5px;">HR</small>
@@ -207,6 +213,15 @@
                                 <a class="nav-link py-2 {{ request()->routeIs('admin.salary*') ? 'active' : '' }}" href="{{ route('admin.salary.index') }}" data-title="Salary">
                                     <i class="fas fa-wallet me-2"></i>
                                     <span class="sidebar-text">Salary</span>
+                                </a>
+                            </li>
+                        @endif
+                        
+                        @if($hasTaskPermission)
+                            <li class="nav-item">
+                                <a class="nav-link py-2 {{ request()->routeIs('admin.tasks*') ? 'active' : '' }}" href="{{ route('admin.tasks.index') }}" data-title="Tasks">
+                                    <i class="fas fa-tasks me-2"></i>
+                                    <span class="sidebar-text">Tasks</span>
                                 </a>
                             </li>
                         @endif

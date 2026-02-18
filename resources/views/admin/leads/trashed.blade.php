@@ -120,10 +120,15 @@
                                                 <td>{{ $lead->deleted_at->format('M d, Y h:i A') }}</td>
                                                 <td>
                                                     <div class="btn-group btn-group-sm" role="group">
+                                                        @if(auth()->user()->hasPermission('view_lead'))
+                                                            <a href="{{ route('admin.leads.show', $lead->id) }}" class="btn btn-outline-info rounded-start-pill px-3" title="View">
+                                                                <i class="fas fa-eye"></i>
+                                                            </a>
+                                                        @endif
                                                         @if(auth()->user()->hasPermission('update_lead'))
                                                             <form action="{{ route('admin.leads.restore', $lead->id) }}" method="POST" class="d-inline">
                                                                 @csrf
-                                                                <button type="submit" class="btn btn-outline-success rounded-start-pill px-3" onclick="return confirm('Are you sure you want to restore this lead?')">
+                                                                <button type="submit" class="btn btn-outline-success {{ auth()->user()->hasPermission('view_lead') ? '' : 'rounded-start-pill' }} px-3" onclick="return confirm('Are you sure you want to restore this lead?')" title="Restore">
                                                                     <i class="fas fa-undo"></i>
                                                                 </button>
                                                             </form>
@@ -132,7 +137,7 @@
                                                             <form action="{{ route('admin.leads.force-delete', $lead->id) }}" method="POST" class="d-inline">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="submit" class="btn btn-outline-danger {{ auth()->user()->hasPermission('update_lead') ? '' : 'rounded-start-pill' }} rounded-end-pill px-3" onclick="return confirm('Are you sure you want to permanently delete this lead? This action cannot be undone.')">
+                                                                <button type="submit" class="btn btn-outline-danger {{ (auth()->user()->hasPermission('update_lead') || auth()->user()->hasPermission('view_lead')) ? '' : 'rounded-start-pill' }} rounded-end-pill px-3" onclick="return confirm('Are you sure you want to permanently delete this lead? This action cannot be undone.')" title="Delete Permanently">
                                                                     <i class="fas fa-trash"></i>
                                                                 </button>
                                                             </form>

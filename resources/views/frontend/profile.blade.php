@@ -117,7 +117,7 @@
                             <div class="col-md-6 mb-3">
                                 <label for="mobile_number" class="form-label fw-medium label-text">Mobile Number</label>
                                 <div class="input-wrapper">
-                                    <input type="text" class="form-control form-input" id="mobile_number" name="mobile_number" value="{{ old('mobile_number', $user->mobile_number) }}">
+                                    <input type="number" class="form-control form-input" id="mobile_number" name="mobile_number" value="{{ old('mobile_number', $user->mobile_number) }}">
                                     <span class="input-focus-border"></span>
                                 </div>
                             </div>

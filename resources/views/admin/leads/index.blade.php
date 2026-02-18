@@ -138,8 +138,13 @@
                                                 <td>{{ $lead->created_at->format('M d, Y') }}</td>
                                                 <td>
                                                     <div class="btn-group btn-group-sm" role="group">
+                                                        @if(auth()->user()->hasPermission('view_lead'))
+                                                            <a href="{{ route('admin.leads.show', $lead) }}" class="btn btn-outline-info rounded-start-pill px-3" title="View">
+                                                                <i class="fas fa-eye"></i>
+                                                            </a>
+                                                        @endif
                                                         @if(auth()->user()->hasPermission('update_lead'))
-                                                            <a href="{{ route('admin.leads.edit', $lead) }}" class="btn btn-outline-primary rounded-start-pill px-3">
+                                                            <a href="{{ route('admin.leads.edit', $lead) }}" class="btn btn-outline-primary {{ auth()->user()->hasPermission('view_lead') ? '' : 'rounded-start-pill' }} px-3" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
                                                         @endif
@@ -147,7 +152,7 @@
                                                             <form action="{{ route('admin.leads.destroy', $lead) }}" method="POST" class="d-inline">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="submit" class="btn btn-outline-danger {{ auth()->user()->hasPermission('update_lead') ? '' : 'rounded-start-pill' }} rounded-end-pill px-3" onclick="return confirm('Are you sure you want to delete this lead?')">
+                                                                <button type="submit" class="btn btn-outline-danger {{ (auth()->user()->hasPermission('update_lead') || auth()->user()->hasPermission('view_lead')) ? '' : 'rounded-start-pill' }} rounded-end-pill px-3" onclick="return confirm('Are you sure you want to delete this lead?')" title="Delete">
                                                                     <i class="fas fa-trash"></i>
                                                                 </button>
                                                             </form>

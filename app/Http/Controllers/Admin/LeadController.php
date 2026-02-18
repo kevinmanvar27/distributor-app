@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Lead;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LeadController extends Controller
 {
@@ -13,6 +14,11 @@ class LeadController extends Controller
      */
     public function index(Request $request)
     {
+        // Check permission
+        if (!Auth::user()->hasPermission('viewAny_lead')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $query = Lead::query();
 
         // Status filter
@@ -48,6 +54,11 @@ class LeadController extends Controller
      */
     public function create()
     {
+        // Check permission
+        if (!Auth::user()->hasPermission('create_lead')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         return view('admin.leads.create');
     }
 
@@ -56,6 +67,11 @@ class LeadController extends Controller
      */
     public function store(Request $request)
     {
+        // Check permission
+        if (!Auth::user()->hasPermission('create_lead')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
@@ -74,6 +90,11 @@ class LeadController extends Controller
      */
     public function show(Lead $lead)
     {
+        // Check permission
+        if (!Auth::user()->hasPermission('view_lead')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         return view('admin.leads.show', compact('lead'));
     }
 
@@ -82,6 +103,11 @@ class LeadController extends Controller
      */
     public function edit(Lead $lead)
     {
+        // Check permission
+        if (!Auth::user()->hasPermission('update_lead')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         return view('admin.leads.edit', compact('lead'));
     }
 
@@ -90,6 +116,11 @@ class LeadController extends Controller
      */
     public function update(Request $request, Lead $lead)
     {
+        // Check permission
+        if (!Auth::user()->hasPermission('update_lead')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
@@ -108,6 +139,11 @@ class LeadController extends Controller
      */
     public function destroy(Lead $lead)
     {
+        // Check permission
+        if (!Auth::user()->hasPermission('delete_lead')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $lead->delete(); // This performs soft delete due to SoftDeletes trait
 
         return redirect()->route('admin.leads.index')
@@ -119,6 +155,11 @@ class LeadController extends Controller
      */
     public function trashed(Request $request)
     {
+        // Check permission
+        if (!Auth::user()->hasPermission('viewAny_lead')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $query = Lead::onlyTrashed();
 
         // Status filter
@@ -154,6 +195,11 @@ class LeadController extends Controller
      */
     public function restore($id)
     {
+        // Check permission
+        if (!Auth::user()->hasPermission('update_lead')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $lead = Lead::onlyTrashed()->findOrFail($id);
         $lead->restore();
 
@@ -166,6 +212,11 @@ class LeadController extends Controller
      */
     public function forceDelete($id)
     {
+        // Check permission
+        if (!Auth::user()->hasPermission('delete_lead')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $lead = Lead::onlyTrashed()->findOrFail($id);
         $lead->forceDelete();
 

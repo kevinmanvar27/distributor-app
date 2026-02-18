@@ -59,7 +59,7 @@
     $canCreateProduct = $user->hasPermission('create_product');
     $canViewOrders = $user->hasPermission('manage_proforma_invoices');
     $canViewPendingBills = $user->hasPermission('manage_pending_bills');
-    $canViewLeads = $user->hasPermission('viewAny_lead') || $user->hasPermission('create_lead') || $user->hasPermission('update_lead') || $user->hasPermission('delete_lead');
+    $canViewLeads = $user->hasPermission('viewAny_lead') || $user->hasPermission('view_lead') || $user->hasPermission('create_lead') || $user->hasPermission('update_lead') || $user->hasPermission('delete_lead');
     $canViewUsers = $user->hasPermission('show_user') || $user->hasPermission('add_user') || $user->hasPermission('edit_user') || $user->hasPermission('delete_user');
 @endphp
 <div class="container-fluid h-100">
