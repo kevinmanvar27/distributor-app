@@ -70,7 +70,9 @@ class DashboardController extends Controller
         $orderStatusData = $this->getOrderStatusDistribution();
 
         // Recent orders
-        $recentOrders = ProformaInvoice::with('user')
+        $recentOrders = ProformaInvoice::with(['user' => function($query) {
+                $query->withTrashed(); // Include soft-deleted users
+            }])
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
@@ -89,6 +91,7 @@ class DashboardController extends Controller
             'total' => Lead::count(),
             'new' => Lead::where('status', 'new')->count(),
             'contacted' => Lead::where('status', 'contacted')->count(),
+            'followup' => Lead::where('status', 'followup')->count(),
             'qualified' => Lead::where('status', 'qualified')->count(),
             'converted' => Lead::where('status', 'converted')->count(),
             'lost' => Lead::where('status', 'lost')->count(),

@@ -150,6 +150,14 @@
                                 {{ ucfirst($product->status) }}
                             </span>
                         </div>
+                        @auth
+                        <button class="btn btn-sm btn-light position-absolute top-0 start-0 m-3 wishlist-btn {{ $product->isInWishlist(Auth::id()) ? 'in-wishlist' : '' }}" 
+                                data-product-id="{{ $product->id }}"
+                                title="{{ $product->isInWishlist(Auth::id()) ? 'Remove from wishlist' : 'Add to wishlist' }}"
+                                style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-heart {{ $product->isInWishlist(Auth::id()) ? 'text-danger' : '' }}"></i>
+                        </button>
+                        @endauth
                         @php
                             $hasSellingPrice = !is_null($product->selling_price) && $product->selling_price !== '';
                             if ($hasSellingPrice && $product->mrp > $product->selling_price) {
@@ -157,7 +165,7 @@
                             }
                         @endphp
                         @if(isset($discountPercent) && $discountPercent > 0)
-                        <div class="position-absolute top-0 start-0 m-3">
+                        <div class="position-absolute bottom-0 start-0 m-3">
                             <span class="badge bg-danger shadow-sm" style="font-size: 0.875rem; padding: 0.5rem 0.875rem;">
                                 {{ $discountPercent }}% OFF
                             </span>

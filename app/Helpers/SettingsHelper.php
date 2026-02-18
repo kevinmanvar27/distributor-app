@@ -555,3 +555,67 @@ if (!function_exists('show_invoice_payment')) {
         return setting('show_invoice_payment', false);
     }
 }
+
+if (!function_exists('gst_text')) {
+    /**
+     * Get the GST text setting
+     *
+     * @return string
+     */
+    function gst_text()
+    {
+        return setting('gst_text', 'GST');
+    }
+}
+
+if (!function_exists('default_gst_percentage')) {
+    /**
+     * Get the default GST percentage setting
+     *
+     * @return float
+     */
+    function default_gst_percentage()
+    {
+        return (float) setting('default_gst_percentage', 18);
+    }
+}
+
+if (!function_exists('delivery_charge')) {
+    /**
+     * Get the delivery charge setting
+     *
+     * @return float
+     */
+    function delivery_charge()
+    {
+        return (float) setting('delivery_charge', 0);
+    }
+}
+
+if (!function_exists('banner_image_url')) {
+    /**
+     * Get the banner image URL
+     *
+     * @return string|null
+     */
+    function banner_image_url()
+    {
+        $bannerImage = setting('banner_image');
+        if ($bannerImage) {
+            return asset('storage/' . $bannerImage);
+        }
+        return null;
+    }
+}
+
+if (!function_exists('banner_url')) {
+    /**
+     * Get the banner image URL (alias for banner_image_url)
+     *
+     * @return string|null
+     */
+    function banner_url()
+    {
+        return banner_image_url();
+    }
+}

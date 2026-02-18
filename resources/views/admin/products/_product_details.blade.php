@@ -42,6 +42,20 @@
             </div>
         </div>
         <div class="col-md-6 mb-3">
+            <label class="text-muted small mb-1">Category</label>
+            <div class="fw-medium">
+                @if($product->categories && $product->categories->isNotEmpty())
+                    @foreach($product->categories as $category)
+                        <span class="badge bg-info-subtle text-info-emphasis rounded-pill px-3 py-2 me-1">
+                            {{ $category->name }}
+                        </span>
+                    @endforeach
+                @else
+                    <span class="text-muted">No category assigned</span>
+                @endif
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
             <label class="text-muted small mb-1">Created</label>
             <div class="fw-medium">
                 @if($product->created_at)
@@ -58,18 +72,82 @@
     <h5 class="fw-bold mb-3">Description</h5>
     <div class="border rounded-3 p-3">
         @if($product->description)
-            {{ $product->description }}
+            <div class="product-description-content">
+                {!! $product->description !!}
+            </div>
         @else
             <span class="text-muted">No description provided</span>
         @endif
     </div>
 </div>
 
+<style>
+    /* Styling for product description content in modal */
+    .product-description-content {
+        line-height: 1.6;
+        color: #333;
+    }
+    .product-description-content p {
+        margin-bottom: 0.75rem;
+    }
+    .product-description-content p:last-child {
+        margin-bottom: 0;
+    }
+    .product-description-content ul,
+    .product-description-content ol {
+        margin-bottom: 0.75rem;
+        padding-left: 1.5rem;
+    }
+    .product-description-content li {
+        margin-bottom: 0.25rem;
+    }
+    .product-description-content h1,
+    .product-description-content h2,
+    .product-description-content h3,
+    .product-description-content h4,
+    .product-description-content h5,
+    .product-description-content h6 {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    .product-description-content h1 { font-size: 1.75rem; }
+    .product-description-content h2 { font-size: 1.5rem; }
+    .product-description-content h3 { font-size: 1.25rem; }
+    .product-description-content h4 { font-size: 1.1rem; }
+    .product-description-content h5 { font-size: 1rem; }
+    .product-description-content h6 { font-size: 0.9rem; }
+    .product-description-content strong,
+    .product-description-content b {
+        font-weight: 600;
+    }
+    .product-description-content em,
+    .product-description-content i {
+        font-style: italic;
+    }
+    .product-description-content u {
+        text-decoration: underline;
+    }
+    .product-description-content a {
+        color: #0d6efd;
+        text-decoration: none;
+    }
+    .product-description-content a:hover {
+        text-decoration: underline;
+    }
+    .product-description-content blockquote {
+        border-left: 3px solid #dee2e6;
+        padding-left: 1rem;
+        margin-left: 0;
+        color: #6c757d;
+    }
+</style>
+
 <div class="mb-4">
     <h5 class="fw-bold mb-3">Main Photo</h5>
     <div class="border rounded-3 p-3 text-center">
         @if($product->mainPhoto)
-            <img src="{{ $product->mainPhoto->url }}" class="img-fluid rounded" alt="{{ $product->name }}" style="max-height: 300px; object-fit: contain;">
+            <img src="{{ $product->mainPhoto->url }}" class="img-fluid rounded" alt="{{ $product->name }}" style="max-height: 200px; max-width: 200px; object-fit: contain;">
         @else
             <div class="py-5">
                 <i class="fas fa-image fa-3x text-muted mb-3"></i>

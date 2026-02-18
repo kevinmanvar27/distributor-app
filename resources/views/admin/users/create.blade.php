@@ -164,6 +164,60 @@
                                         </div>
                                     </div>
                                     
+                                    <!-- Status and Discount Row -->
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="status" class="form-label fw-medium">Status <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
+                                                        <i class="fas fa-flag text-muted"></i>
+                                                    </span>
+                                                    <select class="form-select border-0 border-bottom rounded-end-pill ps-0 py-2 @error('status') is-invalid @enderror" 
+                                                            id="status" name="status" required>
+                                                        <option value="">Select Status</option>
+                                                        @foreach(\App\Models\User::getStatusOptions() as $value => $label)
+                                                            <option value="{{ $value }}" {{ old('status', 'pending') == $value ? 'selected' : '' }}>
+                                                                {{ $label }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                @error('status')
+                                                    <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
+                                                @enderror
+                                                <div class="form-text ms-4">
+                                                    <small>
+                                                        <strong>Pending:</strong> New user awaiting review<br>
+                                                        <strong>Under Review:</strong> User account being reviewed<br>
+                                                        <strong>Approved:</strong> User can access the system<br>
+                                                        <strong>Suspended:</strong> Temporarily blocked<br>
+                                                        <strong>Blocked:</strong> Permanently blocked
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="mb-4">
+                                                <label for="discount_percentage" class="form-label fw-medium">Discount Percentage</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
+                                                        <i class="fas fa-percent text-muted"></i>
+                                                    </span>
+                                                    <input type="number" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2 @error('discount_percentage') is-invalid @enderror" 
+                                                           id="discount_percentage" name="discount_percentage" 
+                                                           value="{{ old('discount_percentage', 0) }}" 
+                                                           min="0" max="100" step="0.01" placeholder="Enter discount percentage">
+                                                </div>
+                                                <div class="form-text ms-4">Enter a discount percentage for this user (0-100%)</div>
+                                                @error('discount_percentage')
+                                                    <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-4">
@@ -198,27 +252,6 @@
                                         </div>
                                     </div>
                                     
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-4">
-                                                <label for="discount_percentage" class="form-label fw-medium">Discount Percentage</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text bg-light border-0 rounded-start-pill">
-                                                        <i class="fas fa-percent text-muted"></i>
-                                                    </span>
-                                                    <input type="number" class="form-control border-0 border-bottom rounded-end-pill ps-0 py-2 @error('discount_percentage') is-invalid @enderror" 
-                                                           id="discount_percentage" name="discount_percentage" 
-                                                           value="{{ old('discount_percentage', 0) }}" 
-                                                           min="0" max="100" step="0.01" placeholder="Enter discount percentage">
-                                                </div>
-                                                <div class="form-text ms-4">Enter a discount percentage for this user (0-100%)</div>
-                                                @error('discount_percentage')
-                                                    <div class="invalid-feedback d-block ms-4">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <div class="d-flex justify-content-between mt-5">
                                         <a href="{{ $role !== 'user' ? route('admin.users.staff') : route('admin.users.index') }}" class="btn btn-light rounded-pill px-4">
                                             <i class="fas fa-arrow-left me-2"></i> Back

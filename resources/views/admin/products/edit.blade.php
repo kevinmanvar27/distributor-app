@@ -2,6 +2,64 @@
 
 @section('title', 'Edit Product')
 
+@section('styles')
+<!-- Quill.js CSS -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+    /* Quill editor custom styling */
+    .ql-toolbar.ql-snow {
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        background: #f8f9fa;
+    }
+    .ql-container.ql-snow {
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+        font-size: 16px;
+    }
+    .ql-editor {
+        min-height: 200px;
+    }
+    /* Override Quill's default blue color with theme color */
+    .ql-snow .ql-stroke {
+        stroke: var(--theme-color, #FF6B00);
+    }
+    .ql-snow .ql-fill {
+        fill: var(--theme-color, #FF6B00);
+    }
+    .ql-snow .ql-picker-label:hover,
+    .ql-snow .ql-picker-label.ql-active,
+    .ql-snow .ql-picker-item:hover,
+    .ql-snow .ql-picker-item.ql-selected {
+        color: var(--theme-color, #FF6B00);
+    }
+    .ql-snow.ql-toolbar button:hover,
+    .ql-snow .ql-toolbar button:hover,
+    .ql-snow.ql-toolbar button:focus,
+    .ql-snow .ql-toolbar button:focus,
+    .ql-snow.ql-toolbar button.ql-active,
+    .ql-snow .ql-toolbar button.ql-active {
+        color: var(--theme-color, #FF6B00);
+    }
+    .ql-snow.ql-toolbar button:hover .ql-stroke,
+    .ql-snow .ql-toolbar button:hover .ql-stroke,
+    .ql-snow.ql-toolbar button:focus .ql-stroke,
+    .ql-snow .ql-toolbar button:focus .ql-stroke,
+    .ql-snow.ql-toolbar button.ql-active .ql-stroke,
+    .ql-snow .ql-toolbar button.ql-active .ql-stroke {
+        stroke: var(--theme-color, #FF6B00);
+    }
+    .ql-snow.ql-toolbar button:hover .ql-fill,
+    .ql-snow .ql-toolbar button:hover .ql-fill,
+    .ql-snow.ql-toolbar button:focus .ql-fill,
+    .ql-snow .ql-toolbar button:focus .ql-fill,
+    .ql-snow.ql-toolbar button.ql-active .ql-fill,
+    .ql-snow .ql-toolbar button.ql-active .ql-fill {
+        fill: var(--theme-color, #FF6B00);
+    }
+</style>
+@endsection
+
 @section('content')
 <div class="container-fluid h-100">
     <div class="row h-100">
@@ -56,7 +114,8 @@
                                             
                                             <div class="mb-4">
                                                 <label for="description" class="form-label fw-bold">Description</label>
-                                                <textarea class="form-control" id="description" name="description" rows="5" placeholder="Product description...">{{ old('description', $product->description) }}</textarea>
+                                                <div id="description-editor" style="height: 200px; background: white;"></div>
+                                                <textarea class="form-control d-none" id="description" name="description">{{ old('description', $product->description) }}</textarea>
                                             </div>
                                             
                                             <!-- Product Type Display (Read-only for edit) -->
@@ -89,9 +148,99 @@
                                             </div>
                                             @endif
                                             
-                                            <!-- Variable Product Fields -->
-                                            @if($product->isVariable())
-                                            <div id="variable-product-fields">
+                                            <!-- Stock Status - Only for Simple Products -->
+                                            @if($product->isSimple())
+                                            <div class="mb-4" id="simple-stock-fields">
+                                                <label class="form-label fw-bold">Stock Status</label>
+                                                <div class="form-check form-switch mb-2">
+                                                    <input type="hidden" name="in_stock" value="0">
+                                                    <input class="form-check-input" type="checkbox" id="in_stock" name="in_stock" value="1" {{ old('in_stock', $product->in_stock) ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="in_stock">
+                                                        <span id="stock-status-text">{{ $product->in_stock ? 'In Stock' : 'Out of Stock' }}</span>
+                                                    </label>
+                                                </div>
+                                                <div id="stock_quantity_container" class="{{ old('in_stock', $product->in_stock) ? '' : 'd-none' }}">
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="stock_quantity" class="form-label">Stock Quantity</label>
+                                                            <input type="number" class="form-control rounded-pill px-4 py-2" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', $product->stock_quantity) }}" min="0">
+                                                        </div>
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="low_quantity_threshold" class="form-label">Low Stock Alert Threshold</label>
+                                                            <input type="number" class="form-control rounded-pill px-4 py-2" id="low_quantity_threshold" name="low_quantity_threshold" value="{{ old('low_quantity_threshold', $product->low_quantity_threshold ?? 10) }}" min="0">
+                                                            <div class="form-text text-muted">
+                                                                <i class="fas fa-bell text-warning me-1"></i>
+                                                                You'll receive a notification when stock falls below this quantity
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @else
+                                            <div class="mb-4">
+                                                <div class="alert alert-info">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    Stock is managed at the variation level. Total stock: <strong>{{ $product->total_stock }}</strong>
+                                                </div>
+                                            </div>
+                                            @endif
+                                            
+                                            <div class="mb-4">
+                                                <label for="status" class="form-label fw-bold">Product Status <span class="text-danger">*</span></label>
+                                                <select class="form-select rounded-pill px-4 py-2" id="status" name="status" required>
+                                                    <option value="draft" {{ old('status', $product->status) == 'draft' ? 'selected' : '' }}>Draft</option>
+                                                    <option value="published" {{ old('status', $product->status) == 'published' ? 'selected' : '' }}>Published</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-lg-4">
+                                            <!-- Category Selection -->
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">Categories</label>
+                                                <div class="mb-2">
+                                                    <input type="text" class="form-control form-control-sm rounded-pill px-3 py-2" id="category-search" placeholder="Search categories...">
+                                                </div>
+                                                <div id="category-selection" class="border rounded-3 p-3" style="max-height: 400px; overflow-y: auto;">
+                                                    @if(isset($categories) && $categories->count() > 0)
+                                                        @foreach($categories as $category)
+                                                            <div class="form-check mb-2 category-item" data-category-id="{{ $category->id }}" data-category-name="{{ strtolower($category->name) }}">
+                                                                <input class="form-check-input category-checkbox" type="checkbox" id="category_{{ $category->id }}" value="{{ $category->id }}" name="product_categories[{{ $category->id }}][category_id]" {{ in_array($category->id, old('product_categories', $product->categories->pluck('id')->toArray()) ?? []) ? 'checked' : '' }}>
+                                                                <label class="form-check-label fw-bold" for="category_{{ $category->id }}">
+                                                                    {{ $category->name }}
+                                                                </label>
+                                                                @if($category->subCategories->count() > 0)
+                                                                    <div class="subcategory-container ms-4 mt-2 {{ in_array($category->id, old('product_categories', $product->categories->pluck('id')->toArray()) ?? []) ? '' : 'd-none' }}" id="subcategory_container_{{ $category->id }}">
+                                                                        @foreach($category->subCategories as $subcategory)
+                                                                            <div class="form-check mb-1 subcategory-item" data-subcategory-name="{{ strtolower($subcategory->name) }}">
+                                                                                <input class="form-check-input subcategory-checkbox" type="checkbox" id="subcategory_{{ $subcategory->id }}" value="{{ $subcategory->id }}" name="product_categories[{{ $category->id }}][subcategory_ids][]" data-category-id="{{ $category->id }}" {{ in_array($subcategory->id, old('product_categories.' . $category->id . '.subcategory_ids', $product->subCategories->where('category_id', $category->id)->pluck('id')->toArray()) ?? []) ? 'checked' : '' }}>
+                                                                                <label class="form-check-label" for="subcategory_{{ $subcategory->id }}">
+                                                                                    {{ $subcategory->name }}
+                                                                                </label>
+                                                                            </div>
+                                                                        @endforeach
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
+                                                    @else
+                                                        <p class="text-muted">No categories available. Please create categories first.</p>
+                                                    @endif
+                                                </div>
+                                                <div class="mt-2">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" id="manage-categories-btn">
+                                                        <i class="fas fa-plus me-1"></i> Manage Categories & Subcategories
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Variable Product Fields - Full Width -->
+                                    @if($product->isVariable())
+                                    <div id="variable-product-fields">
+                                        <div class="row">
+                                            <div class="col-12">
                                                 <!-- Display Selected Attributes -->
                                                 <div class="mb-4">
                                                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -100,7 +249,7 @@
                                                             <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill me-2" id="edit-attributes-btn">
                                                                 <i class="fas fa-edit me-1"></i> Edit Attributes
                                                             </button>
-                                                            <button type="button" class="btn btn-sm btn-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#attributeModal">
+                                                            <button type="button" class="btn btn-sm btn-theme-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#attributeModal">
                                                                 <i class="fas fa-plus me-1"></i> Add New Attribute
                                                             </button>
                                                         </div>
@@ -117,7 +266,7 @@
                                                                             <strong>{{ $attribute->name }}:</strong>
                                                                             <span class="text-muted">{{ $attribute->values->pluck('value')->join(', ') }}</span>
                                                                         </div>
-                                                                        <button type="button" class="btn btn-sm btn-link text-primary p-0 edit-attribute-btn" 
+                                                                        <button type="button" class="btn btn-sm btn-link text-theme-primary p-0 edit-attribute-btn" 
                                                                                 data-attribute-id="{{ $attribute->id }}"
                                                                                 data-bs-toggle="modal" 
                                                                                 data-bs-target="#attributeModal">
@@ -170,10 +319,10 @@
                                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                                         <label class="form-label fw-bold mb-0">Product Variations</label>
                                                         <div class="btn-group">
-                                                            <button type="button" class="btn btn-sm btn-primary rounded-pill me-2" id="auto-generate-variations-btn">
+                                                            <button type="button" class="btn btn-sm btn-theme-primary rounded-pill me-2" id="auto-generate-variations-btn">
                                                                 <i class="fas fa-magic me-1"></i> Auto-Generate Variations
                                                             </button>
-                                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" id="add-variation-btn">
+                                                            <button type="button" class="btn btn-sm btn-outline-theme-primary rounded-pill" id="add-variation-btn">
                                                                 <i class="fas fa-plus me-1"></i> Add Manual
                                                             </button>
                                                         </div>
@@ -194,7 +343,7 @@
                                                                             @endif
                                                                         </div>
                                                                         <div class="flex-grow-1">
-                                                                            <strong class="text-primary">{{ $variation->display_name }}</strong>
+                                                                            <strong class="text-theme-primary">{{ $variation->display_name }}</strong>
                                                                             <div class="small text-muted">
                                                                                 SKU: {{ $variation->sku ?? 'N/A' }} | 
                                                                                 Price: ₹{{ number_format($variation->selling_price, 2) }} | 
@@ -257,7 +406,7 @@
                                                                             <div class="col-12">
                                                                                 <div class="d-flex justify-content-between align-items-center">
                                                                                     <div>
-                                                                                        <h6 class="mb-0 fw-bold text-primary">{{ $variation->display_name }}</h6>
+                                                                                        <h6 class="mb-0 fw-bold text-theme-primary">{{ $variation->display_name }}</h6>
                                                                                         <small class="text-muted">
                                                                                             @foreach($variation->formatted_attributes as $attrName => $attrValue)
                                                                                                 <span class="badge bg-light text-dark border me-1">{{ $attrName }}: {{ $attrValue }}</span>
@@ -314,11 +463,12 @@
                                                                                         <i class="fas fa-times-circle text-danger ms-1" title="Out of Stock"></i>
                                                                                     @endif
                                                                                 </label>
-                                                                                <input type="number" class="form-control form-control-sm" 
+                                                                                <input type="number" class="form-control form-control-sm variation-stock-quantity" 
                                                                                        name="variations[{{ $index }}][stock_quantity]" 
                                                                                        value="{{ $variation->stock_quantity ?? 0 }}"
                                                                                        placeholder="Stock" 
                                                                                        min="0"
+                                                                                       data-variation-index="{{ $index }}"
                                                                                        required>
                                                                             </div>
                                                                             
@@ -336,9 +486,10 @@
                                                                             <div class="col-md-1">
                                                                                 <label class="form-label small fw-bold">Status</label>
                                                                                 <div class="form-check form-switch">
-                                                                                    <input class="form-check-input" type="checkbox" 
+                                                                                    <input class="form-check-input variation-in-stock-toggle" type="checkbox" 
                                                                                            name="variations[{{ $index }}][in_stock]" 
                                                                                            value="1"
+                                                                                           data-variation-index="{{ $index }}"
                                                                                            {{ $variation->in_stock ? 'checked' : '' }}>
                                                                                            
                                                                                 </div>
@@ -360,93 +511,14 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            @endif
-                                            
-                                            <!-- Stock Status - Only for Simple Products -->
-                                            @if($product->isSimple())
-                                            <div class="mb-4" id="simple-stock-fields">
-                                                <label class="form-label fw-bold">Stock Status</label>
-                                                <div class="form-check form-switch mb-2">
-                                                    <input type="hidden" name="in_stock" value="0">
-                                                    <input class="form-check-input" type="checkbox" id="in_stock" name="in_stock" value="1" {{ old('in_stock', $product->in_stock) ? 'checked' : '' }}>
-                                                    <label class="form-check-label" for="in_stock">
-                                                        <span id="stock-status-text">{{ $product->in_stock ? 'In Stock' : 'Out of Stock' }}</span>
-                                                    </label>
-                                                </div>
-                                                <div id="stock_quantity_container" class="{{ old('in_stock', $product->in_stock) ? '' : 'd-none' }}">
-                                                    <div class="row">
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="stock_quantity" class="form-label">Stock Quantity</label>
-                                                            <input type="number" class="form-control rounded-pill px-4 py-2" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', $product->stock_quantity) }}" min="0">
-                                                        </div>
-                                                        <div class="col-md-6 mb-3">
-                                                            <label for="low_quantity_threshold" class="form-label">Low Stock Alert Threshold</label>
-                                                            <input type="number" class="form-control rounded-pill px-4 py-2" id="low_quantity_threshold" name="low_quantity_threshold" value="{{ old('low_quantity_threshold', $product->low_quantity_threshold ?? 10) }}" min="0">
-                                                            <div class="form-text text-muted">
-                                                                <i class="fas fa-bell text-warning me-1"></i>
-                                                                You'll receive a notification when stock falls below this quantity
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            @else
-                                            <div class="mb-4">
-                                                <div class="alert alert-info">
-                                                    <i class="fas fa-info-circle me-2"></i>
-                                                    Stock is managed at the variation level. Total stock: <strong>{{ $product->total_stock }}</strong>
-                                                </div>
-                                            </div>
-                                            @endif
-                                            
-                                            <div class="mb-4">
-                                                <label for="status" class="form-label fw-bold">Product Status <span class="text-danger">*</span></label>
-                                                <select class="form-select rounded-pill px-4 py-2" id="status" name="status" required>
-                                                    <option value="draft" {{ old('status', $product->status) == 'draft' ? 'selected' : '' }}>Draft</option>
-                                                    <option value="published" {{ old('status', $product->status) == 'published' ? 'selected' : '' }}>Published</option>
-                                                </select>
-                                            </div>
                                         </div>
-                                        
-                                        <div class="col-lg-4">
-                                            <!-- Category Selection -->
-                                            <div class="mb-4">
-                                                <label class="form-label fw-bold">Categories</label>
-                                                <div id="category-selection">
-                                                    @if(isset($categories) && $categories->count() > 0)
-                                                        @foreach($categories as $category)
-                                                            <div class="form-check mb-2 category-item" data-category-id="{{ $category->id }}">
-                                                                <input class="form-check-input category-checkbox" type="checkbox" id="category_{{ $category->id }}" value="{{ $category->id }}" name="product_categories[{{ $category->id }}][category_id]" {{ in_array($category->id, old('product_categories', $product->categories->pluck('id')->toArray()) ?? []) ? 'checked' : '' }}>
-                                                                <label class="form-check-label fw-bold" for="category_{{ $category->id }}">
-                                                                    {{ $category->name }}
-                                                                </label>
-                                                                @if($category->subCategories->count() > 0)
-                                                                    <div class="subcategory-container ms-4 mt-2 {{ in_array($category->id, old('product_categories', $product->categories->pluck('id')->toArray()) ?? []) ? '' : 'd-none' }}" id="subcategory_container_{{ $category->id }}">
-                                                                        @foreach($category->subCategories as $subcategory)
-                                                                            <div class="form-check mb-1">
-                                                                                <input class="form-check-input subcategory-checkbox" type="checkbox" id="subcategory_{{ $subcategory->id }}" value="{{ $subcategory->id }}" name="product_categories[{{ $category->id }}][subcategory_ids][]" data-category-id="{{ $category->id }}" {{ in_array($subcategory->id, old('product_categories.' . $category->id . '.subcategory_ids', $product->subCategories->where('category_id', $category->id)->pluck('id')->toArray()) ?? []) ? 'checked' : '' }}>
-                                                                                <label class="form-check-label" for="subcategory_{{ $subcategory->id }}">
-                                                                                    {{ $subcategory->name }}
-                                                                                </label>
-                                                                            </div>
-                                                                        @endforeach
-                                                                    </div>
-                                                                @endif
-                                                            </div>
-                                                        @endforeach
-                                                    @else
-                                                        <p class="text-muted">No categories available. Please create categories first.</p>
-                                                    @endif
-                                                </div>
-                                                <div class="mt-2">
-                                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" id="manage-categories-btn">
-                                                        <i class="fas fa-plus me-1"></i> Manage Categories & Subcategories
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    </div>
+                                    @endif
+                                    
+                                    <!-- Photos Section - 50% Each -->
+                                    <div class="row">
                                         <input type="hidden" id="main_photo_id" name="main_photo_id" value="{{ old('main_photo_id', $product->main_photo_id) }}">
-                                        <div class="col-lg-8">
+                                        <div class="col-lg-6">
                                             <div class="mb-4">
                                                 <label class="form-label fw-bold">Main Photo</label>
                                                 <div class="border rounded-3 p-3 text-center" id="main-photo-preview">
@@ -472,7 +544,9 @@
                                                     @endif
                                                 </div>
                                             </div>
-                                            
+                                        </div>
+                                        
+                                        <div class="col-lg-6">
                                             <div class="mb-4">
                                                 <label class="form-label fw-bold">Gallery Photos</label>
                                                 <div class="border rounded-3 p-3" id="gallery-photos-container">
@@ -610,55 +684,165 @@
 @endsection
 
 @section('scripts')
+<!-- Quill.js -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
     // All JavaScript functionality has been moved to resources/js/common.js
     
     // Main Photo Change and Remove handlers for Edit page
     $(document).ready(function() {
-        // Change Main Photo button
-        $(document).on('click', '#change-main-photo', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const fileInput = $('<input type="file" accept="image/*" style="display: none;">');
-            $('body').append(fileInput);
-            
-            fileInput.on('change', function() {
-                if (this.files.length > 0) {
-                    // Use the existing handleProductImageUpload function from admin.js
-                    if (typeof handleProductImageUpload === 'function') {
-                        handleProductImageUpload(this.files[0], 'main_photo');
-                    } else {
-                        // Fallback: manually upload
-                        uploadMainPhoto(this.files[0]);
-                    }
-                }
-                fileInput.remove();
-            });
-            
-            fileInput.click();
+        // Initialize Quill Editor for Description
+        var quill = new Quill('#description-editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],        // toggled buttons
+                    ['link'],                                // link
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    ['clean']                                // remove formatting button
+                ]
+            },
+            placeholder: 'Product description...'
         });
-        
-        // Remove Main Photo button
-        $(document).on('click', '#remove-main-photo', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+
+        // Sync Quill content with hidden textarea
+        quill.on('text-change', function() {
+            var html = quill.root.innerHTML;
+            $('#description').val(html);
+        });
+
+        // Load existing content if any
+        var existingContent = $('#description').val();
+        if (existingContent) {
+            quill.root.innerHTML = existingContent;
+        }
+
+        // Stock Status Toggle Handler - Sync in_stock toggle with quantity
+        $('#in_stock').on('change', function() {
+            const isInStock = $(this).is(':checked');
+            const $stockQuantity = $('#stock_quantity');
+            const $stockContainer = $('#stock_quantity_container');
+            const $statusText = $('#stock-status-text');
             
-            if (confirm('Are you sure you want to remove the main photo?')) {
-                // Clear the main photo ID
-                $('#main_photo_id').val('');
-                
-                // Replace with upload area
-                $('#main-photo-preview').html(`
-                    <div class="upload-area" id="main-photo-upload-area" style="min-height: 200px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                        <div class="text-center">
-                            <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
-                            <p class="text-muted mb-0">Drag & drop an image here or click to select</p>
-                        </div>
-                    </div>
-                `);
+            if (isInStock) {
+                // When toggled ON, show quantity fields
+                $stockContainer.removeClass('d-none');
+                $statusText.text('In Stock');
+            } else {
+                // When toggled OFF, hide quantity fields and set quantity to 0
+                $stockContainer.addClass('d-none');
+                $stockQuantity.val(0);
+                $statusText.text('Out of Stock');
             }
         });
+        
+        // Stock Quantity Change Handler - Sync quantity with in_stock toggle
+        $('#stock_quantity').on('input change', function() {
+            const quantity = parseInt($(this).val()) || 0;
+            const $inStockToggle = $('#in_stock');
+            const $statusText = $('#stock-status-text');
+            const $stockContainer = $('#stock_quantity_container');
+            
+            if (quantity === 0) {
+                // When quantity is 0, turn off in_stock toggle
+                $inStockToggle.prop('checked', false);
+                $stockContainer.addClass('d-none');
+                $statusText.text('Out of Stock');
+            } else if (quantity > 0 && !$inStockToggle.is(':checked')) {
+                // When quantity > 0 and toggle is off, turn it on
+                $inStockToggle.prop('checked', true);
+                $stockContainer.removeClass('d-none');
+                $statusText.text('In Stock');
+            }
+        });
+
+        // Variation Stock Status Toggle Handler - Sync in_stock toggle with quantity
+        $(document).on('change', '.variation-in-stock-toggle', function() {
+            const isInStock = $(this).is(':checked');
+            const variationIndex = $(this).data('variation-index');
+            const $stockQuantity = $(`.variation-stock-quantity[data-variation-index="${variationIndex}"]`);
+            
+            if (!isInStock) {
+                // When toggled OFF, set quantity to 0
+                $stockQuantity.val(0);
+            }
+        });
+        
+        // Variation Stock Quantity Change Handler - Sync quantity with in_stock toggle
+        $(document).on('input change', '.variation-stock-quantity', function() {
+            const quantity = parseInt($(this).val()) || 0;
+            const variationIndex = $(this).data('variation-index');
+            const $inStockToggle = $(`.variation-in-stock-toggle[data-variation-index="${variationIndex}"]`);
+            
+            if (quantity === 0) {
+                // When quantity is 0, turn off in_stock toggle
+                $inStockToggle.prop('checked', false);
+            } else if (quantity > 0 && !$inStockToggle.is(':checked')) {
+                // When quantity > 0 and toggle is off, turn it on
+                $inStockToggle.prop('checked', true);
+            }
+        });
+
+        // Initialize stock status on page load for simple products
+        const initialQuantity = parseInt($('#stock_quantity').val()) || 0;
+        if (initialQuantity === 0) {
+            $('#in_stock').prop('checked', false);
+            $('#stock_quantity_container').addClass('d-none');
+            $('#stock-status-text').text('Out of Stock');
+        }
+        
+        // Category Search Functionality
+        $('#category-search').on('keyup', function() {
+            const searchTerm = $(this).val().toLowerCase();
+            
+            $('.category-item').each(function() {
+                const categoryName = $(this).data('category-name');
+                const $subcategories = $(this).find('.subcategory-item');
+                let hasVisibleSubcategory = false;
+                
+                // Check subcategories
+                $subcategories.each(function() {
+                    const subcategoryName = $(this).data('subcategory-name');
+                    if (subcategoryName && subcategoryName.includes(searchTerm)) {
+                        $(this).show();
+                        hasVisibleSubcategory = true;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+                
+                // Show/hide category based on search
+                if (categoryName.includes(searchTerm) || hasVisibleSubcategory) {
+                    $(this).show();
+                    // If subcategory matches, show the subcategory container
+                    if (hasVisibleSubcategory) {
+                        $(this).find('.subcategory-container').removeClass('d-none');
+                    }
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+        
+        // Initialize stock status for existing variations on page load
+        $('.variation-stock-quantity').each(function() {
+            const quantity = parseInt($(this).val()) || 0;
+            const variationIndex = $(this).data('variation-index');
+            const $inStockToggle = $(`.variation-in-stock-toggle[data-variation-index="${variationIndex}"]`);
+            
+            if (quantity === 0 && $inStockToggle.is(':checked')) {
+                $inStockToggle.prop('checked', false);
+            } else if (quantity > 0 && !$inStockToggle.is(':checked')) {
+                $inStockToggle.prop('checked', true);
+            }
+        });
+
+        // Change Main Photo button - Handler is in admin.js
+        // Removed duplicate handler to prevent file manager opening twice
+        
+        // Remove Main Photo button - Handler is in admin.js
+        // Removed duplicate handler to prevent conflicts
         
         // Fallback upload function if admin.js function is not available
         function uploadMainPhoto(file) {
@@ -669,7 +853,7 @@
             // Show upload indicator
             const $uploadIndicator = $(`
                 <div class="upload-progress-indicator">
-                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                    <div class="spinner-border spinner-border-sm text-theme-primary me-2" role="status"></div>
                     <span>Uploading...</span>
                 </div>
             `);
@@ -828,7 +1012,7 @@
                                 <strong>${attribute.name}:</strong>
                                 <span class="text-muted">${values}</span>
                             </div>
-                            <button type="button" class="btn btn-sm btn-link text-primary p-0 edit-attribute-btn" 
+                            <button type="button" class="btn btn-sm btn-link text-theme-primary p-0 edit-attribute-btn" 
                                     data-attribute-id="${attribute.id}"
                                     data-bs-toggle="modal" 
                                     data-bs-target="#attributeModal">
@@ -1024,7 +1208,7 @@
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <strong class="text-primary variation-display-name">${variationName}</strong>
+                                    <strong class="text-theme-primary variation-display-name">${variationName}</strong>
                                     <div class="small text-muted variation-summary">
                                         ${attributeBadges || 'New variation - configure attributes below'}
                                     </div>
@@ -1099,11 +1283,12 @@
                                     <!-- Stock Quantity -->
                                     <div class="col-md-2">
                                         <label class="form-label small fw-bold">Stock <span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control form-control-sm" 
+                                        <input type="number" class="form-control form-control-sm variation-stock-quantity" 
                                                name="variations[${index}][stock_quantity]" 
                                                value="0" 
                                                placeholder="Stock" 
                                                min="0"
+                                               data-variation-index="${index}"
                                                required>
                                     </div>
                                     
@@ -1121,9 +1306,10 @@
                                     <div class="col-md-1">
                                         <label class="form-label small fw-bold">Status</label>
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" 
+                                            <input class="form-check-input variation-in-stock-toggle" type="checkbox" 
                                                    name="variations[${index}][in_stock]" 
-                                                   value="1" checked>
+                                                   value="1" 
+                                                   data-variation-index="${index}">
                                         </div>
                                     </div>
                                     
@@ -1414,7 +1600,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save-attribute-btn">
+                <button type="button" class="btn btn-theme-primary" id="save-attribute-btn">
                     <i class="fas fa-save me-1"></i> Save Attribute
                 </button>
             </div>

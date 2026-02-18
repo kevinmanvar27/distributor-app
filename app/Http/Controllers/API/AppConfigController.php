@@ -70,6 +70,7 @@ class AppConfigController extends ApiController
             'logo_url' => $this->getLogoUrl('header_logo'),
             'footer_logo_url' => $this->getLogoUrl('footer_logo'),
             'favicon_url' => $this->getLogoUrl('favicon'),
+            'banner_image_url' => $this->getLogoUrl('banner_image'),
             'app_icon_url' => $this->getSetting('app_icon_url', null),
             'splash_screen_url' => $this->getSetting('splash_screen_url', null),
             
@@ -78,6 +79,11 @@ class AppConfigController extends ApiController
             'site_title' => $this->getSetting('site_title', config('app.name')),
             'site_description' => $this->getSetting('site_description', ''),
             'tagline' => $this->getSetting('tagline', ''),
+            
+            // Business settings
+            'gst_text' => $this->getSetting('gst_text', 'GST'),
+            'default_gst_percentage' => (float) $this->getSetting('default_gst_percentage', 18),
+            'delivery_charge' => (float) $this->getSetting('delivery_charge', 0),
         ];
 
         return $this->sendResponse($settings, 'App settings retrieved successfully.');
@@ -138,8 +144,8 @@ class AppConfigController extends ApiController
             // Tax settings
             'tax' => [
                 'enabled' => $this->getSetting('tax_enabled', 'true') === 'true',
-                'rate' => (float) $this->getSetting('tax_rate', '18'),
-                'label' => $this->getSetting('tax_label', 'GST'),
+                'rate' => (float) $this->getSetting('default_gst_percentage', '18'),
+                'label' => $this->getSetting('gst_text', 'GST'),
                 'inclusive' => $this->getSetting('tax_inclusive', 'false') === 'true',
             ],
             
@@ -233,8 +239,8 @@ class AppConfigController extends ApiController
             // Tax settings
             'tax' => [
                 'enabled' => $this->getSetting('tax_enabled', 'true') === 'true',
-                'rate' => (float) $this->getSetting('tax_rate', '18'),
-                'label' => $this->getSetting('tax_label', 'GST'),
+                'rate' => (float) $this->getSetting('default_gst_percentage', '18'),
+                'label' => $this->getSetting('gst_text', 'GST'),
                 'inclusive' => $this->getSetting('tax_inclusive', 'false') === 'true',
             ],
             
@@ -309,6 +315,9 @@ class AppConfigController extends ApiController
             'pan_number' => $this->getSetting('company_pan_number', ''),
             'cin_number' => $this->getSetting('company_cin_number', ''),
             'registration_number' => $this->getSetting('company_registration_number', ''),
+            'gst_text' => $this->getSetting('gst_text', 'GST'),
+            'default_gst_percentage' => (float) $this->getSetting('default_gst_percentage', 18),
+            'delivery_charge' => (float) $this->getSetting('delivery_charge', 0),
             
             // Bank details
             'bank_details' => [

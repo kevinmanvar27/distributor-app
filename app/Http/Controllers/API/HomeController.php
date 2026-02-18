@@ -168,9 +168,9 @@ class HomeController extends ApiController
      */
     private function getFeaturedProducts($user, $limit = 10)
     {
-        // For now, featured products are the most recently updated published products
-        // This can be enhanced with a 'is_featured' flag in the future
+        // Get products marked as featured
         $products = Product::where('status', 'published')
+            ->where('is_featured', true)
             ->where('in_stock', true)
             ->with(['mainPhoto', 'variations.image'])
             ->orderBy('updated_at', 'desc')

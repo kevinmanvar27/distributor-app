@@ -43,6 +43,7 @@ class Lead extends Model
         return match($this->status) {
             'new' => 'New',
             'contacted' => 'Contacted',
+            'followup' => 'Follow Up',
             'qualified' => 'Qualified',
             'converted' => 'Converted',
             'lost' => 'Lost',
@@ -60,7 +61,8 @@ class Lead extends Model
         return match($this->status) {
             'new' => 'bg-info-subtle text-info-emphasis',
             'contacted' => 'bg-primary-subtle text-primary-emphasis',
-            'qualified' => 'bg-warning-subtle text-warning-emphasis',
+            'followup' => 'bg-warning-subtle text-warning-emphasis',
+            'qualified' => 'bg-success-subtle text-success-emphasis',
             'converted' => 'bg-success-subtle text-success-emphasis',
             'lost' => 'bg-danger-subtle text-danger-emphasis',
             default => 'bg-secondary-subtle text-secondary-emphasis',

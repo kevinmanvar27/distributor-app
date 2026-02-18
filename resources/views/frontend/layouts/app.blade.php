@@ -650,6 +650,52 @@
             background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
             pointer-events: none;
         }
+        
+        /* ==================== Wishlist Button Styles ==================== */
+        .wishlist-btn {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .wishlist-btn:hover {
+            background: white;
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .wishlist-btn i {
+            transition: all 0.3s ease;
+        }
+        
+        .wishlist-btn.in-wishlist i {
+            color: #dc3545 !important;
+        }
+        
+        .wishlist-btn:hover i {
+            transform: scale(1.1);
+        }
+        
+        .wishlist-toggle-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .wishlist-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+        
+        .wishlist-toggle-btn.in-wishlist {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+        
+        .wishlist-toggle-btn.in-wishlist:hover {
+            background-color: #bb2d3b;
+            border-color: #bb2d3b;
+        }
     </style>
     
     @yield('styles')
@@ -770,6 +816,12 @@
                 
                 <div class="d-flex align-items-center">
                     @auth
+                        <a href="{{ route('frontend.wishlist.index') }}" class="btn btn-sm btn-outline-theme position-relative me-2 btn-ripple hover-lift" title="Wishlist">
+                            <i class="fas fa-heart"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger wishlist-count" style="display: none; font-size: 0.65rem; padding: 0.2em 0.4em;">
+                                0
+                            </span>
+                        </a>
                         <a href="{{ route('frontend.cart.index') }}" class="btn btn-sm btn-outline-theme position-relative me-3 btn-ripple hover-lift">
                             <i class="fas fa-shopping-cart"></i>
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-count">
@@ -784,6 +836,7 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{{ route('frontend.profile') }}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ route('frontend.wishlist.index') }}"><i class="fas fa-heart me-2"></i>My Wishlist</a></li>
                                 <li><a class="dropdown-item" href="{{ route('frontend.profile') }}#change-password"><i class="fas fa-key me-2"></i>Change Password</a></li>
                                 <li><a class="dropdown-item" href="{{ route('frontend.cart.proforma.invoices') }}"><i class="fas fa-file-invoice me-2"></i>Proforma Invoice</a></li>
                                 <li><hr class="dropdown-divider"></li>
@@ -903,6 +956,11 @@
     
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Wishlist JS -->
+    @auth
+    <script src="{{ asset('js/wishlist.js') }}"></script>
+    @endauth
     
     <script>
         // Header scroll effect

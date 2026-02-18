@@ -57,7 +57,7 @@ class CouponController extends Controller
         // Set defaults
         $validated['min_order_amount'] = $validated['min_order_amount'] ?? 0;
         $validated['per_user_limit'] = $validated['per_user_limit'] ?? 1;
-        $validated['is_active'] = $request->has('is_active');
+        $validated['is_active'] = (bool) ($request->input('is_active', 0));
 
         // Validate percentage doesn't exceed 100
         if ($validated['discount_type'] === 'percentage' && $validated['discount_value'] > 100) {
@@ -118,7 +118,7 @@ class CouponController extends Controller
         // Set defaults
         $validated['min_order_amount'] = $validated['min_order_amount'] ?? 0;
         $validated['per_user_limit'] = $validated['per_user_limit'] ?? 1;
-        $validated['is_active'] = $request->has('is_active');
+        $validated['is_active'] = (bool) ($request->input('is_active', 0));
 
         // Validate percentage doesn't exceed 100
         if ($validated['discount_type'] === 'percentage' && $validated['discount_value'] > 100) {

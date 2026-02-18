@@ -12,8 +12,8 @@
             @include('admin.layouts.header', ['pageTitle' => 'Without GST Invoice Details'])
             
             <div class="pt-4 pb-2 mb-3">
-                <div class="row justify-content-center">
-                    <div class="col-lg-10">
+                <div class="row">
+                    <div class="col-12">
                         <div class="card border-0 shadow-sm mb-4">
                             <div class="card-header bg-white border-0 py-3">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -234,11 +234,11 @@
                                                             </td>
                                                         </tr>
                                                         <tr>
-                                                            <td class="fw-bold">Shipping:</td>
+                                                            <td class="fw-bold">Delivery Charge:</td>
                                                             <td class="text-end">
                                                                 <div class="input-group">
                                                                     <span class="input-group-text">₹</span>
-                                                                    <input type="number" name="shipping" class="form-control shipping" value="{{ $invoiceData['shipping'] ?? 0 }}" step="0.01" min="0">
+                                                                    <input type="number" name="shipping" class="form-control shipping" value="{{ $invoiceData['shipping'] ?? delivery_charge() }}" step="0.01" min="0">
                                                                 </div>
                                                             </td>
                                                         </tr>

@@ -18,12 +18,151 @@
     <!-- Custom Styles -->
     <link href="{{ asset('assets/css/admin.css') }}" rel="stylesheet">
     <link href="{{ url('/css/dynamic.css') }}" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: {{ setting('theme_color', '#FF6B00') }};
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #ffffff 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background shapes */
+        .bg-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+        }
+        
+        .shape-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            top: -150px;
+            right: -150px;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .shape-2 {
+            width: 200px;
+            height: 200px;
+            background: var(--primary-color);
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            bottom: 10%;
+            left: 5%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+        
+        .shape-3 {
+            width: 150px;
+            height: 150px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            top: 50%;
+            right: 10%;
+            animation: float 7s ease-in-out infinite;
+        }
+        
+        .shape-4 {
+            width: 250px;
+            height: 250px;
+            background: var(--primary-color);
+            border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
+            bottom: -100px;
+            right: 20%;
+            animation: float 9s ease-in-out infinite;
+        }
+        
+        .shape-5 {
+            width: 180px;
+            height: 180px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            top: 20%;
+            left: -90px;
+            animation: float 5s ease-in-out infinite reverse;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(10deg);
+            }
+        }
+        
+        /* Card styling */
+        .login-container {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-theme {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-theme:hover {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            color: white;
+        }
+        
+        .bg-theme {
+            background: var(--primary-color);
+        }
+        
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(255, 107, 0, 0.25);
+        }
+    </style>
 </head>
-<body class="bg-background min-vh-100 d-flex align-items-center py-5">
-    <div class="container">
+<body class="min-vh-100 d-flex align-items-center py-5">
+    <!-- Animated Background Shapes -->
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+        <div class="shape shape-5"></div>
+    </div>
+    
+    <div class="container login-container">
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6">
-                <div class="card shadow-sm border-0">
+                <div class="card login-card shadow-sm border-0">
                     <div class="card-body p-5">
                         <div class="text-center mb-5">
                             @if(setting('header_logo'))

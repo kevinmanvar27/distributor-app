@@ -217,7 +217,9 @@ class MyInvoiceController extends ApiController
         $pdf = Pdf::loadView('frontend.proforma-invoice-pdf', $data);
         $pdf->setPaper('A4', 'portrait');
 
-        return $pdf->download('proforma-invoice-' . $invoice->invoice_number . '.pdf');
+        // Use 'invoice-' prefix if paid, otherwise 'proforma-invoice-'
+        $prefix = $invoice->payment_status === 'paid' ? 'invoice-' : 'proforma-invoice-';
+        return $pdf->download($prefix . $invoice->invoice_number . '.pdf');
     }
 
     /**

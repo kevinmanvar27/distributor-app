@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Users')
+@section('title', 'Deleted Users')
 
 @section('content')
 <div class="container-fluid h-100">
@@ -17,15 +17,12 @@
                             <div class="card-header bg-white border-0 py-3">
                                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 gap-md-0">
                                     <div class="mb-2 mb-md-0">
-                                        <h4 class="card-title mb-0 fw-bold h5 h4-md">User Management</h4>
-                                        <p class="mb-0 text-muted small">Manage all users and their roles</p>
+                                        <h4 class="card-title mb-0 fw-bold h5 h4-md">Deleted Users</h4>
+                                        <p class="mb-0 text-muted small">View and restore deleted users</p>
                                     </div>
                                     <div class="d-flex gap-2">
-                                        <a href="{{ route('admin.users.trashed') }}" class="btn btn-sm btn-md-normal btn-outline-danger rounded-pill px-3 px-md-4">
-                                            <i class="fas fa-trash me-1 me-md-2"></i><span class="d-none d-sm-inline">Deleted Users</span><span class="d-sm-none">Deleted</span>
-                                        </a>
-                                        <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-md-normal btn-theme rounded-pill px-3 px-md-4">
-                                            <i class="fas fa-plus me-1 me-md-2"></i><span class="d-none d-sm-inline">Add New User</span><span class="d-sm-none">Add</span>
+                                        <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-md-normal btn-primary rounded-pill px-3 px-md-4">
+                                            <i class="fas fa-arrow-left me-1 me-md-2"></i><span class="d-none d-sm-inline">Back to Active Users</span><span class="d-sm-none">Back</span>
                                         </a>
                                     </div>
                                 </div>
@@ -55,6 +52,7 @@
                                                 <th>Email</th>
                                                 <th>Role</th>
                                                 <th>Status</th>
+                                                <th>Deleted Date</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -68,9 +66,6 @@
                                                                  class="rounded-circle me-3" width="40" height="40" alt="{{ $user->name }}">
                                                             <div>
                                                                 <div class="fw-medium">{{ $user->name }}</div>
-                                                                @if(Auth::user()->id == $user->id)
-                                                                    <span class="badge bg-success-subtle text-success-emphasis rounded-pill">You</span>
-                                                                @endif
                                                             </div>
                                                         </div>
                                                     </td>
@@ -92,37 +87,36 @@
                                                         {!! $user->status_badge !!}
                                                     </td>
                                                     <td>
+                                                        <span class="text-muted">{{ $user->deleted_at?->format('M d, Y h:i A') ?? 'N/A' }}</span>
+                                                    </td>
+                                                    <td>
                                                         <div class="btn-group btn-group-sm" role="group">
-                                                            <!-- View Button -->
-                                                            <button type="button" class="btn btn-outline-info rounded-start-pill px-3 view-user-btn" data-user-id="{{ $user->id }}" data-bs-toggle="modal" data-bs-target="#userModal">
-                                                                <i class="fas fa-eye"></i>
-                                                            </button>
-                                                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-primary px-3">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
-                                                            @if(Auth::user()->id != $user->id)
-                                                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="submit" class="btn btn-outline-danger rounded-end-pill px-3">
-                                                                        <i class="fas fa-trash"></i>
-                                                                    </button>
-                                                                </form>
-                                                            @else
-                                                                <button type="button" class="btn btn-outline-secondary rounded-end-pill px-3" disabled>
-                                                                    <i class="fas fa-trash"></i>
+                                                            <!-- Restore Button -->
+                                                            <form action="{{ route('admin.users.restore', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to restore this user?');">
+                                                                @csrf
+                                                                <button type="submit" class="btn btn-outline-success rounded-start-pill px-3">
+                                                                    <i class="fas fa-undo"></i> Restore
                                                                 </button>
-                                                            @endif
+                                                            </form>
+                                                            
+                                                            <!-- Permanently Delete Button -->
+                                                            <form action="{{ route('admin.users.force-delete', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('⚠️ WARNING: This will PERMANENTLY delete this user and cannot be undone. Are you absolutely sure?');">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="btn btn-outline-danger rounded-end-pill px-3">
+                                                                    <i class="fas fa-trash-alt"></i> Delete Forever
+                                                                </button>
+                                                            </form>
                                                         </div>
                                                     </td>
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="6" class="text-center py-5">
+                                                    <td colspan="7" class="text-center py-5">
                                                         <div class="text-muted">
-                                                            <i class="fas fa-users fa-2x mb-3"></i>
-                                                            <p class="mb-0">No users found</p>
-                                                            <p class="small">Try creating a new user</p>
+                                                            <i class="fas fa-trash-restore fa-2x mb-3"></i>
+                                                            <p class="mb-0">No deleted users found</p>
+                                                            <p class="small">All users are active</p>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -142,28 +136,6 @@
     </div>
 </div>
 
-<!-- User Details Modal -->
-<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="userModalLabel">User Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="userModalBody">
-                <!-- User details will be loaded here via AJAX -->
-                <div class="text-center">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @section('scripts')
@@ -183,9 +155,9 @@
             "language": {
                 "search": "Search:",
                 "lengthMenu": "Show _MENU_ entries per page",
-                "info": "Showing _START_ to _END_ of _TOTAL_ users",
-                "infoEmpty": "Showing 0 to 0 of 0 users",
-                "infoFiltered": "(filtered from _MAX_ total users)",
+                "info": "Showing _START_ to _END_ of _TOTAL_ deleted users",
+                "infoEmpty": "Showing 0 to 0 of 0 deleted users",
+                "infoFiltered": "(filtered from _MAX_ total deleted users)",
                 "paginate": {
                     "first": "First",
                     "last": "Last",
@@ -198,38 +170,18 @@
                 null, // User
                 null, // Email
                 null, // Role
-                null, // Status
+                null, // Deleted Date
                 null  // Actions
             ],
             "preDrawCallback": function(settings) {
                 // Ensure consistent column count
                 if ($('#usersTable tbody tr').length === 0) {
-                    $('#usersTable tbody').html('<tr><td colspan="6" class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No users found</p><p class="small">Try creating a new user</p></div></td></tr>');
+                    $('#usersTable tbody').html('<tr><td colspan="6" class="text-center py-5"><div class="text-muted"><i class="fas fa-trash-restore fa-2x mb-3"></i><p class="mb-0">No deleted users found</p><p class="small">All users are active</p></div></td></tr>');
                 }
             }
         });
         // Adjust select width after DataTable initializes
         $('.dataTables_length select').css('width', '80px');
-        
-        // Handle view user button click
-        $('.view-user-btn').on('click', function() {
-            var userId = $(this).data('user-id');
-            
-            // Show loading indicator
-            $('#userModalBody').html('<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
-            
-            // Load user details via AJAX
-            $.ajax({
-                url: '/admin/users/' + userId,
-                type: 'GET',
-                success: function(data) {
-                    $('#userModalBody').html(data);
-                },
-                error: function() {
-                    $('#userModalBody').html('<div class="alert alert-danger">Failed to load user details.</div>');
-                }
-            });
-        });
     });
 </script>
 @endsection

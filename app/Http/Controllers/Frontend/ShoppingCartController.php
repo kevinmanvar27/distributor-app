@@ -64,7 +64,13 @@ class ShoppingCartController extends Controller
             return $item->price * $item->quantity;
         });
         
-        return view('frontend.cart', compact('cartItems', 'total'));
+        // Calculate estimated tax for display
+        $subtotal = $total;
+        $taxPercentage = default_gst_percentage();
+        $estimatedTax = ($subtotal * $taxPercentage) / 100;
+        $estimatedTotal = $subtotal + $estimatedTax;
+        
+        return view('frontend.cart', compact('cartItems', 'total', 'subtotal', 'taxPercentage', 'estimatedTax', 'estimatedTotal'));
     }
 
     /**
@@ -602,8 +608,15 @@ class ShoppingCartController extends Controller
             }
         }
         
-        // Calculate final total
-        $total = $subtotal - $couponDiscount;
+        // Get default GST percentage from settings
+        $defaultGstPercentage = default_gst_percentage();
+        
+        // Calculate tax
+        $taxPercentage = $defaultGstPercentage;
+        $taxAmount = ($subtotal * $taxPercentage) / 100;
+        
+        // Calculate final total (subtotal + tax - coupon discount)
+        $total = $subtotal + $taxAmount - $couponDiscount;
         
         // Generate invoice date
         $invoiceDate = now()->format('Y-m-d');
@@ -632,7 +645,10 @@ class ShoppingCartController extends Controller
                 
                 return $itemData;
             })->toArray(),
+            'gst_type' => 'with_gst',
             'subtotal' => $subtotal,
+            'tax_percentage' => $taxPercentage,
+            'tax_amount' => $taxAmount,
             'coupon' => $couponData,
             'coupon_discount' => $couponDiscount,
             'total' => $total,
@@ -1196,7 +1212,9 @@ class ShoppingCartController extends Controller
         $pdf->setPaper('A4', 'portrait');
         
         // Download the PDF with a meaningful filename
-        return $pdf->download('proforma-invoice-' . $proformaInvoice->invoice_number . '.pdf');
+        // Use 'invoice-' prefix if paid, otherwise 'proforma-invoice-'
+        $prefix = $proformaInvoice->payment_status === 'paid' ? 'invoice-' : 'proforma-invoice-';
+        return $pdf->download($prefix . $proformaInvoice->invoice_number . '.pdf');
     }
     
     /**

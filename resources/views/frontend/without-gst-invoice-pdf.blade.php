@@ -255,7 +255,7 @@
             @php
                 // Extract values from invoice data or use defaults
                 $subtotal = $invoiceData['subtotal'] ?? $total ?? 0;
-                $shipping = $invoiceData['shipping'] ?? 0;
+                $shipping = $invoiceData['shipping'] ?? setting('delivery_charge', 0);
                 $discountAmount = $invoiceData['discount_amount'] ?? 0;
                 
                 // No tax for without-GST invoices
@@ -268,7 +268,7 @@
             </tr>
 
             <tr>
-                <td>Shipping:</td>
+                <td>Delivery Charge:</td>
                 <td class="text-end">₹{{ number_format($shipping, 2) }}</td>
             </tr>
 

@@ -37,7 +37,14 @@ class SalaryController extends Controller
     {
         $userId = $request->get('user_id');
         $user = $userId ? User::findOrFail($userId) : null;
-        $staffUsers = User::where('user_role', '!=', 'user')->orderBy('name')->get();
+        
+        // Get staff users with their active salary
+        $staffUsers = User::where('user_role', '!=', 'user')
+                          ->with(['salaries' => function ($query) {
+                              $query->where('is_active', true)->orderBy('effective_from', 'desc');
+                          }])
+                          ->orderBy('name')
+                          ->get();
         
         // Get salary history for the user
         $salaryHistory = $user ? Salary::where('user_id', $user->id)

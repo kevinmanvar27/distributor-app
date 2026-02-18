@@ -241,6 +241,93 @@ h6, .h6 {
     color: var(--theme-color, var(--primary));
 }
 
+/* Theme-specific button classes */
+.btn-theme-primary {
+    background-color: var(--theme-color, var(--primary));
+    border-color: var(--theme-color, var(--primary));
+    color: white;
+}
+
+.btn-theme-primary:hover {
+    background-color: color-mix(in srgb, var(--theme-color, var(--primary)) 90%, black);
+    border-color: color-mix(in srgb, var(--theme-color, var(--primary)) 90%, black);
+    color: white;
+}
+
+.btn-outline-theme-primary {
+    color: var(--theme-color, var(--primary));
+    border-color: var(--theme-color, var(--primary));
+    background-color: transparent;
+}
+
+.btn-outline-theme-primary:hover {
+    background-color: var(--theme-color, var(--primary));
+    border-color: var(--theme-color, var(--primary));
+    color: white;
+}
+
+.text-theme-primary {
+    color: var(--theme-color, var(--primary)) !important;
+}
+
+/* Bootstrap Button Override - Use Theme Color */
+.btn-primary {
+    background-color: var(--theme-color, var(--primary)) !important;
+    border-color: var(--theme-color, var(--primary)) !important;
+    color: white !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: color-mix(in srgb, var(--theme-color, var(--primary)) 90%, black) !important;
+    border-color: color-mix(in srgb, var(--theme-color, var(--primary)) 90%, black) !important;
+    color: white !important;
+}
+
+.btn-outline-primary {
+    color: var(--theme-color, var(--primary)) !important;
+    border-color: var(--theme-color, var(--primary)) !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--theme-color, var(--primary)) !important;
+    border-color: var(--theme-color, var(--primary)) !important;
+    color: white !important;
+}
+
+/* Success and Info buttons can also use theme color or keep their original colors */
+.btn-success {
+    background-color: var(--success, #28a745) !important;
+    border-color: var(--success, #28a745) !important;
+    color: white !important;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+    background-color: color-mix(in srgb, var(--success, #28a745) 90%, black) !important;
+    border-color: color-mix(in srgb, var(--success, #28a745) 90%, black) !important;
+    color: white !important;
+}
+
+.btn-info {
+    background-color: var(--info, #17a2b8) !important;
+    border-color: var(--info, #17a2b8) !important;
+    color: white !important;
+}
+
+.btn-info:hover,
+.btn-info:focus,
+.btn-info:active {
+    background-color: color-mix(in srgb, var(--info, #17a2b8) 90%, black) !important;
+    border-color: color-mix(in srgb, var(--info, #17a2b8) 90%, black) !important;
+    color: white !important;
+}
+
 #app {
     min-height: 100vh;
     display: flex;
@@ -822,6 +909,55 @@ h6, .h6 {
     outline: none;
 }
 
+/* Form Check Inputs (Checkboxes and Radio Buttons) */
+.form-check-input {
+    border-color: var(--border);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.form-check-input:checked {
+    background-color: var(--theme-color, var(--primary)) !important;
+    border-color: var(--theme-color, var(--primary)) !important;
+}
+
+.form-check-input:focus {
+    border-color: var(--theme-color, var(--primary));
+    box-shadow: 0 0 0 0.25rem rgba(var(--theme-color-rgb, 255, 107, 0), 0.25);
+}
+
+.form-check-input[type="radio"]:checked {
+    background-color: var(--theme-color, var(--primary)) !important;
+    border-color: var(--theme-color, var(--primary)) !important;
+}
+
+/* Form Switch (Toggle) */
+.form-switch .form-check-input {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba(0,0,0,0.25)'/%3e%3c/svg%3e");
+}
+
+.form-switch .form-check-input:checked {
+    background-color: var(--theme-color, var(--primary)) !important;
+    border-color: var(--theme-color, var(--primary)) !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba(255,255,255,1.0)'/%3e%3c/svg%3e");
+}
+
+.form-switch .form-check-input:focus {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba(0,0,0,0.25)'/%3e%3c/svg%3e");
+}
+
+/* Button Check (Radio/Checkbox styled as buttons) */
+.btn-check:checked + .btn-outline-primary,
+.btn-check:active + .btn-outline-primary {
+    background-color: var(--theme-color, var(--primary)) !important;
+    border-color: var(--theme-color, var(--primary)) !important;
+    color: white !important;
+}
+
+.btn-check:focus + .btn,
+.btn-check:checked + .btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--theme-color-rgb, 255, 107, 0), 0.25);
+}
+
 .form-label {
     color: var(--label-text-color, var(--text));
     font-weight: 500;
@@ -931,6 +1067,24 @@ h6, .h6 {
     padding: 0.35em 0.65em;
 }
 
+.bg-primary,
+.badge.bg-primary {
+    background-color: var(--theme-color, var(--primary)) !important;
+    color: white !important;
+}
+
+.text-primary-emphasis {
+    color: var(--theme-color, var(--primary)) !important;
+}
+
+.bg-primary-subtle {
+    background-color: rgba(var(--theme-color-rgb, 255, 107, 0), 0.1) !important;
+}
+
+.border-primary {
+    border-color: var(--theme-color, var(--primary)) !important;
+}
+
 /* Alerts */
 .alert {
     border-radius: 0.75rem;
@@ -1022,6 +1176,22 @@ h1, h2, h3, h4, h5, h6 {
 
 .bg-secondary {
     background-color: var(--secondary) !important;
+}
+
+/* Fix badge text visibility with bg-secondary */
+.badge.bg-secondary {
+    background-color: var(--secondary) !important;
+    color: var(--text) !important;
+}
+
+/* Ensure proper contrast in light theme */
+:root .badge.bg-secondary {
+    color: #333333 !important;
+}
+
+/* Ensure proper contrast in dark theme */
+[data-theme="dark"] .badge.bg-secondary {
+    color: #FFFFFF !important;
 }
 
 .bg-success {

@@ -234,6 +234,8 @@
         <table style="width:100%;">
             @php
                 $gstType = $invoiceData['gst_type'] ?? 'with_gst';
+                $gstText = setting('gst_text', 'GST');
+                $deliveryCharge = $invoiceData['shipping'] ?? setting('delivery_charge', 0);
             @endphp
             
             @if(!empty($invoiceData['subtotal']))
@@ -245,15 +247,15 @@
 
             @if($gstType === 'with_gst' && !empty($invoiceData['tax_percentage']) && $invoiceData['tax_percentage'] > 0)
             <tr>
-                <td>GST ({{ $invoiceData['tax_percentage'] }}%):</td>
+                <td>{{ $gstText }} ({{ $invoiceData['tax_percentage'] }}%):</td>
                 <td class="text-end">₹{{ number_format($invoiceData['tax_amount'] ?? 0, 2) }}</td>
             </tr>
             @endif
 
-            @if(!empty($invoiceData['shipping']) && $invoiceData['shipping'] > 0)
+            @if(!empty($deliveryCharge) && $deliveryCharge > 0)
             <tr>
-                <td>Shipping:</td>
-                <td class="text-end">₹{{ number_format($invoiceData['shipping'], 2) }}</td>
+                <td>Delivery Charge:</td>
+                <td class="text-end">₹{{ number_format($deliveryCharge, 2) }}</td>
             </tr>
             @endif
 

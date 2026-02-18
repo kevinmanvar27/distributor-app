@@ -47,7 +47,7 @@
                                 @endif
                                 
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle" id="couponsTable">
+                                    <table class="table align-middle" id="couponsTable">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>SR No.</th>

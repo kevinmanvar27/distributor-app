@@ -1216,11 +1216,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <td class="text-end">₹${subtotal.toFixed(2)}</td>
                                     </tr>` : ''}
                                     ${(invoiceData.gst_type !== 'without_gst' && taxPercentage > 0) ? `<tr>
-                                        <td class="fw-bold">GST (${taxPercentage.toFixed(2)}%):</td>
+                                        <td class="fw-bold">{{ gst_text() }} (${taxPercentage.toFixed(2)}%):</td>
                                         <td class="text-end">₹${taxAmount.toFixed(2)}</td>
                                     </tr>` : ''}
                                     ${shipping > 0 ? `<tr>
-                                        <td class="fw-bold">Shipping:</td>
+                                        <td class="fw-bold">Delivery Charge:</td>
                                         <td class="text-end">₹${shipping.toFixed(2)}</td>
                                     </tr>` : ''}
                                     ${discountAmount > 0 ? `<tr>

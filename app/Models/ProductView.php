@@ -23,6 +23,7 @@ class ProductView extends Model
         'referrer',
         'device_type',
         'browser',
+        'source',
         'country',
         'country_code',
         'region',

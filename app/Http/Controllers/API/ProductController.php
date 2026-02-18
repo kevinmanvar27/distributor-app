@@ -4,8 +4,11 @@ namespace App\Http\Controllers\API;
 
 use App\Models\Product;
 use App\Models\ProductVariation;
+use App\Models\ProductView;
 use App\Models\Wishlist;
+use App\Services\GeoLocationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @OA\Tag(
@@ -278,6 +281,9 @@ class ProductController extends ApiController
         if (is_null($product)) {
             return $this->sendError('Product not found.');
         }
+
+        // Track product view from mobile application
+        $this->trackProductView($product, request());
 
         // Get authenticated user (may be null for public access)
         $user = auth('sanctum')->user();
@@ -583,5 +589,54 @@ class ProductController extends ApiController
         $product->delete();
 
         return $this->sendResponse(null, 'Product deleted successfully.');
+    }
+
+    /**
+     * Track product view from mobile application
+     *
+     * @param Product $product
+     * @param Request $request
+     * @return void
+     */
+    private function trackProductView(Product $product, Request $request)
+    {
+        try {
+            // Get or create session ID
+            $sessionId = $request->header('X-Session-ID') ?? session()->getId();
+            $userAgent = $request->userAgent();
+            $ipAddress = $request->ip();
+            
+            // Prevent duplicate views from same session within 30 minutes
+            $recentView = ProductView::where('product_id', $product->id)
+                ->where('session_id', $sessionId)
+                ->where('created_at', '>=', now()->subMinutes(30))
+                ->exists();
+            
+            if (!$recentView) {
+                // Get location data from IP
+                $location = GeoLocationService::getLocation($ipAddress);
+                
+                ProductView::create([
+                    'product_id' => $product->id,
+                    'user_id' => auth('sanctum')->id(),
+                    'session_id' => $sessionId,
+                    'ip_address' => $ipAddress,
+                    'user_agent' => $userAgent,
+                    'referrer' => $request->header('referer'),
+                    'device_type' => ProductView::detectDeviceType($userAgent),
+                    'browser' => ProductView::detectBrowser($userAgent),
+                    'source' => 'application', // Track that this view came from mobile app
+                    'country' => $location['country'],
+                    'country_code' => $location['country_code'],
+                    'region' => $location['region'],
+                    'city' => $location['city'],
+                    'latitude' => $location['latitude'],
+                    'longitude' => $location['longitude'],
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Silently fail - don't break API response if tracking fails
+            Log::error('Product view tracking failed (API): ' . $e->getMessage());
+        }
     }
 }

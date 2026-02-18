@@ -27,6 +27,7 @@ class Product extends Model
         'stock_quantity',
         'low_quantity_threshold', // Added for low stock alerts
         'status',
+        'is_featured',
         'main_photo_id',
         'product_gallery',
         'product_categories',
@@ -43,6 +44,7 @@ class Product extends Model
      */
     protected $casts = [
         'in_stock' => 'boolean',
+        'is_featured' => 'boolean',
         'product_gallery' => 'array',
         'product_categories' => 'array',
         'product_attributes' => 'array',
@@ -275,5 +277,24 @@ class Product extends Model
     public function getUniqueViewCountAttribute()
     {
         return $this->views()->distinct('session_id')->count('session_id');
+    }
+
+    /**
+     * Get the wishlist items for this product.
+     */
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    /**
+     * Check if product is in user's wishlist.
+     *
+     * @param int $userId
+     * @return bool
+     */
+    public function isInWishlist($userId)
+    {
+        return $this->wishlists()->where('user_id', $userId)->exists();
     }
 }

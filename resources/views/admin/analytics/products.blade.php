@@ -3,14 +3,16 @@
 @section('title', 'Product Analytics - ' . config('app.name', 'Laravel'))
 
 @section('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
     .stat-card {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background: #ffffff;
     }
     .stat-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
     }
     .stat-icon {
         width: 48px;
@@ -19,6 +21,13 @@
         align-items: center;
         justify-content: center;
         font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    .card {
+        background: #ffffff;
+    }
+    .card-body {
+        background: #ffffff;
     }
     .chart-container {
         position: relative;
@@ -39,7 +48,6 @@
     }
     .device-icon {
         font-size: 1.5rem;
-        opacity: 0.7;
     }
     .filter-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -95,7 +103,7 @@
                         <div class="card border-0 shadow-sm stat-card h-100">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
-                                    <div class="stat-icon bg-primary bg-opacity-10 text-primary rounded-circle me-3">
+                                    <div class="stat-icon bg-primary text-white rounded-circle me-3">
                                         <i class="fas fa-eye"></i>
                                     </div>
                                     <div>
@@ -110,7 +118,7 @@
                         <div class="card border-0 shadow-sm stat-card h-100">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
-                                    <div class="stat-icon bg-success bg-opacity-10 text-success rounded-circle me-3">
+                                    <div class="stat-icon bg-success text-white rounded-circle me-3">
                                         <i class="fas fa-users"></i>
                                     </div>
                                     <div>
@@ -125,7 +133,7 @@
                         <div class="card border-0 shadow-sm stat-card h-100">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
-                                    <div class="stat-icon bg-info bg-opacity-10 text-info rounded-circle me-3">
+                                    <div class="stat-icon bg-info text-white rounded-circle me-3">
                                         <i class="fas fa-box"></i>
                                     </div>
                                     <div>
@@ -280,15 +288,56 @@
                         <div class="card border-0 shadow-sm stat-card h-100">
                             <div class="card-body">
                                 <h6 class="text-secondary mb-3">
+                                    <i class="fas fa-window-restore text-primary me-2"></i>Traffic Source
+                                </h6>
+                                <div class="row">
+                                    <div class="col-4 text-center border-end">
+                                        <h4 class="fw-bold text-info mb-1">{{ number_format($websiteViews) }}</h4>
+                                        <small class="text-secondary"><i class="fas fa-globe me-1"></i>Website</small>
+                                    </div>
+                                    <div class="col-4 text-center border-end">
+                                        <h4 class="fw-bold text-success mb-1">{{ number_format($applicationViews) }}</h4>
+                                        <small class="text-secondary"><i class="fas fa-mobile-alt me-1"></i>App</small>
+                                    </div>
+                                    <div class="col-4 text-center">
+                                        <h4 class="fw-bold text-muted mb-1">{{ number_format($unknownSourceViews) }}</h4>
+                                        <small class="text-secondary"><i class="fas fa-question-circle me-1"></i>Unknown</small>
+                                    </div>
+                                </div>
+                                <div class="progress mt-3" style="height: 8px;">
+                                    @php
+                                        $websitePercent = $totalViews > 0 ? ($websiteViews / $totalViews) * 100 : 0;
+                                        $appPercent = $totalViews > 0 ? ($applicationViews / $totalViews) * 100 : 0;
+                                        $unknownPercent = 100 - $websitePercent - $appPercent;
+                                    @endphp
+                                    <div class="progress-bar bg-info" style="width: {{ $websitePercent }}%"></div>
+                                    <div class="progress-bar bg-success" style="width: {{ $appPercent }}%"></div>
+                                    <div class="progress-bar bg-secondary" style="width: {{ $unknownPercent }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Views by Category -->
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm stat-card h-100">
+                            <div class="card-body">
+                                <h6 class="text-secondary mb-3">
                                     <i class="fas fa-tags text-info me-2"></i>Views by Category
                                 </h6>
                                 @if(count($viewsByCategory) > 0)
-                                    @foreach(array_slice($viewsByCategory, 0, 5, true) as $categoryId => $catData)
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="text-truncate" style="max-width: 200px;">{{ $catData['name'] }}</span>
-                                        <span class="badge bg-info">{{ number_format($catData['views']) }} views</span>
+                                    <div class="row">
+                                        @foreach(array_slice($viewsByCategory, 0, 5, true) as $categoryId => $catData)
+                                        <div class="col-md-4 mb-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-truncate me-2" style="max-width: 200px;">{{ $catData['name'] }}</span>
+                                                <span class="badge bg-info">{{ number_format($catData['views']) }}</span>
+                                            </div>
+                                        </div>
+                                        @endforeach
                                     </div>
-                                    @endforeach
                                 @else
                                     <p class="text-muted mb-0">No category data available</p>
                                 @endif
@@ -324,16 +373,24 @@
                                                     <div class="d-flex align-items-center">
                                                         <span class="badge bg-{{ $index < 3 ? 'warning' : 'secondary' }} me-2">{{ $index + 1 }}</span>
                                                         @if($item->product && $item->product->mainPhoto)
-                                                            <img src="{{ asset('storage/' . $item->product->mainPhoto->file_path) }}" alt="{{ $item->product->name }}" class="product-thumb me-2">
+                                                            <img src="{{ asset('storage/' . $item->product->mainPhoto->file_path) }}" 
+                                                                 alt="{{ $item->product->name }}" 
+                                                                 class="product-thumb me-2"
+                                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                            <div class="product-thumb bg-light align-items-center justify-content-center me-2" style="display: none;">
+                                                                <i class="fas fa-image text-muted"></i>
+                                                            </div>
                                                         @else
                                                             <div class="product-thumb bg-light d-flex align-items-center justify-content-center me-2">
                                                                 <i class="fas fa-image text-muted"></i>
                                                             </div>
                                                         @endif
-                                                        <div>
-                                                            <span class="fw-medium">{{ Str::limit($item->product->name ?? 'Unknown', 30) }}</span>
+                                                        <div class="flex-grow-1">
+                                                            <div class="fw-medium text-truncate" style="max-width: 200px;">
+                                                                {{ $item->product->name ?? 'Unknown' }}
+                                                            </div>
                                                             @if($item->product && $item->product->selling_price)
-                                                                <br><small class="text-muted">₹{{ number_format($item->product->selling_price, 2) }}</small>
+                                                                <small class="text-muted">₹{{ number_format($item->product->selling_price, 2) }}</small>
                                                             @endif
                                                         </div>
                                                     </div>
@@ -389,13 +446,23 @@
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         @if($item->product && $item->product->mainPhoto)
-                                                            <img src="{{ asset('storage/' . $item->product->mainPhoto->file_path) }}" alt="{{ $item->product->name }}" class="product-thumb me-2">
+                                                            <img src="{{ asset('storage/' . $item->product->mainPhoto->file_path) }}" 
+                                                                 alt="{{ $item->product->name }}" 
+                                                                 class="product-thumb me-2"
+                                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                            <div class="product-thumb bg-light align-items-center justify-content-center me-2" style="display: none;">
+                                                                <i class="fas fa-image text-muted"></i>
+                                                            </div>
                                                         @else
                                                             <div class="product-thumb bg-light d-flex align-items-center justify-content-center me-2">
                                                                 <i class="fas fa-image text-muted"></i>
                                                             </div>
                                                         @endif
-                                                        <span class="fw-medium">{{ Str::limit($item->product->name ?? 'Unknown', 30) }}</span>
+                                                        <div class="flex-grow-1">
+                                                            <div class="fw-medium text-truncate" style="max-width: 200px;">
+                                                                {{ $item->product->name ?? 'Unknown' }}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td class="text-center">
@@ -441,13 +508,19 @@
                                     <div class="col-md-3 col-sm-6">
                                         <div class="border rounded p-2 d-flex align-items-center">
                                             @if($product->mainPhoto)
-                                                <img src="{{ asset('storage/' . $product->mainPhoto->file_path) }}" alt="{{ $product->name }}" class="product-thumb me-2">
+                                                <img src="{{ asset('storage/' . $product->mainPhoto->file_path) }}" 
+                                                     alt="{{ $product->name }}" 
+                                                     class="product-thumb me-2"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="product-thumb bg-light align-items-center justify-content-center me-2" style="display: none;">
+                                                    <i class="fas fa-image text-muted"></i>
+                                                </div>
                                             @else
                                                 <div class="product-thumb bg-light d-flex align-items-center justify-content-center me-2">
                                                     <i class="fas fa-image text-muted"></i>
                                                 </div>
                                             @endif
-                                            <span class="small text-truncate">{{ $product->name }}</span>
+                                            <span class="small text-truncate flex-grow-1">{{ $product->name }}</span>
                                         </div>
                                     </div>
                                     @endforeach
@@ -510,7 +583,7 @@
                                 </div>
                                 @else
                                 <div class="text-center text-muted py-4">
-                                    <i class="fas fa-globe fa-2x mb-2 opacity-50"></i>
+                                    <i class="fas fa-globe fa-2x mb-2"></i>
                                     <p class="mb-0">No location data available yet</p>
                                 </div>
                                 @endif
@@ -565,7 +638,7 @@
                                 </div>
                                 @else
                                 <div class="text-center text-muted py-4">
-                                    <i class="fas fa-city fa-2x mb-2 opacity-50"></i>
+                                    <i class="fas fa-city fa-2x mb-2"></i>
                                     <p class="mb-0">No city data available yet</p>
                                 </div>
                                 @endif
@@ -601,13 +674,19 @@
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         @if($data['product']->mainPhoto)
-                                                            <img src="{{ asset('storage/' . $data['product']->mainPhoto->file_path) }}" alt="{{ $data['product']->name }}" class="product-thumb me-2">
+                                                            <img src="{{ asset('storage/' . $data['product']->mainPhoto->file_path) }}" 
+                                                                 alt="{{ $data['product']->name }}" 
+                                                                 class="product-thumb me-2"
+                                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                            <div class="product-thumb bg-light align-items-center justify-content-center me-2" style="display: none;">
+                                                                <i class="fas fa-image text-muted"></i>
+                                                            </div>
                                                         @else
                                                             <div class="product-thumb bg-light d-flex align-items-center justify-content-center me-2">
                                                                 <i class="fas fa-image text-muted"></i>
                                                             </div>
                                                         @endif
-                                                        <span class="fw-medium">{{ Str::limit($data['product']->name, 40) }}</span>
+                                                        <span class="fw-medium text-truncate" style="max-width: 250px;">{{ $data['product']->name }}</span>
                                                     </div>
                                                 </td>
                                                 <td class="text-center">{{ number_format($data['views']) }}</td>
@@ -644,6 +723,7 @@
                                             <tr>
                                                 <th class="border-0">Product</th>
                                                 <th class="border-0">Visitor</th>
+                                                <th class="border-0">Source</th>
                                                 <th class="border-0">Device</th>
                                                 <th class="border-0">Browser</th>
                                                 <th class="border-0">Time</th>
@@ -655,7 +735,7 @@
                                                 <td>
                                                     @if($view->product)
                                                         <a href="{{ route('admin.analytics.products.show', $view->product) }}" class="text-decoration-none">
-                                                            {{ Str::limit($view->product->name, 30) }}
+                                                            <span class="text-truncate d-inline-block" style="max-width: 200px;">{{ $view->product->name }}</span>
                                                         </a>
                                                     @else
                                                         <span class="text-muted">Deleted Product</span>
@@ -666,6 +746,15 @@
                                                         <span class="badge bg-primary">{{ $view->user->name }}</span>
                                                     @else
                                                         <span class="badge bg-secondary">Guest</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($view->source == 'website')
+                                                        <span class="badge bg-info"><i class="fas fa-globe me-1"></i>Website</span>
+                                                    @elseif($view->source == 'application')
+                                                        <span class="badge bg-success"><i class="fas fa-mobile-alt me-1"></i>App</span>
+                                                    @else
+                                                        <span class="badge bg-secondary"><i class="fas fa-question me-1"></i>Unknown</span>
                                                     @endif
                                                 </td>
                                                 <td>
@@ -687,7 +776,7 @@
                                             </tr>
                                             @empty
                                             <tr>
-                                                <td colspan="5" class="text-center text-muted py-4">
+                                                <td colspan="6" class="text-center text-muted py-4">
                                                     No recent views
                                                 </td>
                                             </tr>

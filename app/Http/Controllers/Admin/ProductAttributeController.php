@@ -14,14 +14,15 @@ class ProductAttributeController extends Controller
     /**
      * Display a listing of the attributes.
      */
-    public function index()
+    public function index(Request $request)
     {
         // Check if user has permission to view products (attributes are part of product management)
         if (!auth()->user()->hasPermission('viewAny_product')) {
             abort(403, 'Unauthorized action.');
         }
         
-        $attributes = ProductAttribute::with('values')->orderBy('sort_order')->paginate(20);
+        // Get all attributes with values - DataTables will handle pagination and sorting
+        $attributes = ProductAttribute::with('values')->orderBy('sort_order', 'asc')->get();
         
         return view('admin.attributes.index', compact('attributes'));
     }
@@ -183,6 +184,7 @@ class ProductAttributeController extends Controller
                 'name' => $request->name,
                 'description' => $request->description,
                 'sort_order' => $request->sort_order ?? 0,
+                'is_active' => $request->has('is_active') ? (bool)$request->is_active : false,
             ]);
             
             // Delete existing values

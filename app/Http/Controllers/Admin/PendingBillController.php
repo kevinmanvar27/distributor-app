@@ -23,9 +23,12 @@ class PendingBillController extends Controller
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
 
-        // Build query
-        $query = ProformaInvoice::with('user')
-            ->where('status', '!=', 'Return'); // Exclude returned invoices
+        // Build query - Only show pending bills (unpaid and partial)
+        $query = ProformaInvoice::with(['user' => function($query) {
+                $query->withTrashed(); // Include soft-deleted users
+            }])
+            ->where('status', '!=', 'Return') // Exclude returned invoices
+            ->whereIn('payment_status', ['unpaid', 'partial']); // Only pending bills
 
         // Apply filters
         if ($userId) {
@@ -85,9 +88,12 @@ class PendingBillController extends Controller
      */
     public function userBills($userId)
     {
-        $user = User::findOrFail($userId);
+        // Include soft-deleted users to preserve user details
+        $user = User::withTrashed()->findOrFail($userId);
         
-        $invoices = ProformaInvoice::with('user')
+        $invoices = ProformaInvoice::with(['user' => function($query) {
+                $query->withTrashed();
+            }])
             ->where('user_id', $userId)
             ->where('status', '!=', 'Return')
             ->orderBy('created_at', 'desc')
@@ -200,7 +206,9 @@ class PendingBillController extends Controller
                 DB::raw('SUM(paid_amount) as total_paid'),
                 DB::raw('SUM(total_amount - paid_amount) as total_pending')
             )
-            ->with('user')
+            ->with(['user' => function($query) {
+                $query->withTrashed(); // Include soft-deleted users
+            }])
             ->where('status', '!=', 'Return')
             ->groupBy('user_id')
             ->having('total_pending', '>', 0)

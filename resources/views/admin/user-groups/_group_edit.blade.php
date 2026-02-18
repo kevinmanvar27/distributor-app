@@ -73,7 +73,9 @@
                                                 </div>
                                                 <div class="small">
                                                     @if($user->userGroups->count() > 0)
-                                                        <span class="badge bg-info">Group: {{ $user->userGroups->first()->name }}</span>
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-users me-1"></i>Group: {{ $user->userGroups->first()->name }}
+                                                        </span>
                                                     @else
                                                         <span class="badge bg-secondary">No group assigned</span>
                                                     @endif
@@ -130,6 +132,8 @@
 
 <script>
 $(document).ready(function() {
+    let conflictingUsers = [];
+    
     // Handle user search
     $('#user-search').on('input', function() {
         const searchTerm = $(this).val().toLowerCase();
@@ -219,8 +223,52 @@ $(document).ready(function() {
         e.preventDefault();
         
         const form = $(this);
+        const selectedUsers = [];
+        
+        $('.user-checkbox:checked').each(function() {
+            selectedUsers.push($(this).val());
+        });
+        
+        if (selectedUsers.length === 0) {
+            // No users selected, submit normally
+            submitForm(form);
+            return;
+        }
+        
+        // Check for conflicts
+        $.ajax({
+            url: '{{ route("admin.user-groups.check-conflicts") }}',
+            method: 'POST',
+            data: {
+                user_ids: selectedUsers,
+                current_group_id: {{ $userGroup->id }},
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.has_conflicts) {
+                    conflictingUsers = response.conflicts;
+                    showConflictWarning(response.conflicts, form);
+                } else {
+                    // No conflicts, submit form
+                    submitForm(form);
+                }
+            },
+            error: function(xhr) {
+                console.error('Error checking conflicts:', xhr);
+                // Submit anyway on error
+                submitForm(form);
+            }
+        });
+    });
+    
+    // Submit form via AJAX
+    function submitForm(form, forceAdd = false) {
         const url = form.attr('action');
-        const formData = form.serialize();
+        let formData = form.serialize();
+        
+        if (forceAdd) {
+            formData += '&force_add=1';
+        }
         
         $.ajax({
             url: url,
@@ -255,7 +303,68 @@ $(document).ready(function() {
                 }
             }
         });
-    });
+    }
+    
+    // Show conflict warning modal
+    function showConflictWarning(conflicts, form) {
+        let conflictList = '';
+        conflicts.forEach(function(conflict) {
+            conflictList += `<li class="mb-2">
+                <strong>${conflict.user_name}</strong> is already in group 
+                <span class="badge bg-warning text-dark">${conflict.existing_group_name}</span>
+            </li>`;
+        });
+        
+        const modalHtml = `
+            <div class="modal fade" id="conflictWarningModal" tabindex="-1" aria-labelledby="conflictWarningModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title" id="conflictWarningModalLabel">
+                                <i class="fas fa-exclamation-triangle me-2"></i>User Group Conflict Warning
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-3">The following users are already assigned to other groups:</p>
+                            <ul class="list-unstyled">
+                                ${conflictList}
+                            </ul>
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                If you proceed, these users will be removed from their existing groups and added to this group.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </button>
+                            <button type="button" class="btn btn-warning rounded-pill px-4" id="proceedWithConflicts">
+                                <i class="fas fa-check me-1"></i> Proceed Anyway
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        $('#conflictWarningModal').remove();
+        
+        // Add modal to body
+        $('body').append(modalHtml);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('conflictWarningModal'));
+        modal.show();
+        
+        // Handle proceed button
+        $('#proceedWithConflicts').on('click', function() {
+            // Close modal and submit form with force flag
+            modal.hide();
+            submitForm(form, true);
+        });
+    }
     
     // Function to show alerts
     function showAlert(type, message) {

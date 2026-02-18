@@ -14,6 +14,14 @@
                 <div class="position-absolute top-0 end-0 m-2">
                     <span class="badge bg-success text-white status-badge">{{ ucfirst($product->status) }}</span>
                 </div>
+                @auth
+                <button class="btn btn-sm btn-light position-absolute top-0 start-0 m-2 wishlist-btn {{ $product->isInWishlist(Auth::id()) ? 'in-wishlist' : '' }}" 
+                        data-product-id="{{ $product->id }}"
+                        title="{{ $product->isInWishlist(Auth::id()) ? 'Remove from wishlist' : 'Add to wishlist' }}"
+                        style="border-radius: 50%; width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                    <i class="fas fa-heart {{ $product->isInWishlist(Auth::id()) ? 'text-danger' : '' }}"></i>
+                </button>
+                @endauth
                 <div class="product-overlay">
                     <a href="{{ route('frontend.product.show', $product->slug) }}" class="btn btn-light btn-sm quick-view-btn">
                         <i class="fas fa-eye me-1"></i>Quick View

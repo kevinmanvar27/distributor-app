@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'address',
         'mobile_number',
         'is_approved',
+        'status',
         'discount_percentage',
     ];
 
@@ -54,6 +56,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'date_of_birth' => 'date',
             'discount_percentage' => 'decimal:2',
+            'deleted_at' => 'datetime',
         ];
     }
 
@@ -223,6 +226,50 @@ class User extends Authenticatable
     public function isApproved()
     {
         return $this->is_approved;
+    }
+    
+    /**
+     * Get the status badge HTML.
+     *
+     * @return string
+     */
+    public function getStatusBadgeAttribute()
+    {
+        $badges = [
+            'pending' => '<span class="badge bg-warning text-dark">Pending</span>',
+            'under_review' => '<span class="badge bg-info">Under Review</span>',
+            'approved' => '<span class="badge bg-success">Approved</span>',
+            'suspended' => '<span class="badge bg-secondary">Suspended</span>',
+            'blocked' => '<span class="badge bg-danger">Blocked</span>',
+        ];
+        
+        return $badges[$this->status] ?? '<span class="badge bg-secondary">Unknown</span>';
+    }
+    
+    /**
+     * Check if user can access the system.
+     *
+     * @return bool
+     */
+    public function canAccess()
+    {
+        return in_array($this->status, ['approved', 'under_review']);
+    }
+    
+    /**
+     * Get available status options.
+     *
+     * @return array
+     */
+    public static function getStatusOptions()
+    {
+        return [
+            'pending' => 'Pending',
+            'under_review' => 'Under Review',
+            'approved' => 'Approved',
+            'suspended' => 'Suspended',
+            'blocked' => 'Blocked',
+        ];
     }
     
     /**

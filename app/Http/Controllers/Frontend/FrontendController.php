@@ -300,6 +300,7 @@ class FrontendController extends Controller
                     'referrer' => $request->header('referer'),
                     'device_type' => ProductView::detectDeviceType($userAgent),
                     'browser' => ProductView::detectBrowser($userAgent),
+                    'source' => 'website', // Track that this view came from website
                     'country' => $location['country'],
                     'country_code' => $location['country_code'],
                     'region' => $location['region'],

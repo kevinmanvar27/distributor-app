@@ -233,7 +233,7 @@
                     <div class="mb-3">
                         <div class="d-flex justify-content-between mb-2 summary-row">
                             <span>Subtotal:</span>
-                            <span class="fw-bold cart-subtotal">₹{{ number_format($total, 2) }}</span>
+                            <span class="fw-bold cart-subtotal">₹{{ number_format($subtotal, 2) }}</span>
                         </div>
                         
                         <!-- Coupon Discount Row (hidden by default) -->
@@ -245,12 +245,14 @@
                         </div>
                         
                         <div class="d-flex justify-content-between mb-2 summary-row">
-                            <span>Shipping:</span>
-                            <span class="fw-bold text-success">Free</span>
+                            <span>Delivery Charge:</span>
+                            <span class="fw-bold {{ delivery_charge() > 0 ? '' : 'text-success' }}">
+                                {{ delivery_charge() > 0 ? '₹' . number_format(delivery_charge(), 2) : 'Free' }}
+                            </span>
                         </div>
                         <div class="d-flex justify-content-between mb-2 summary-row">
-                            <span>Tax:</span>
-                            <span class="fw-bold">₹0.00</span>
+                            <span>{{ setting('gst_text', 'GST') }} ({{ number_format($taxPercentage, 2) }}%):</span>
+                            <span class="fw-bold">₹{{ number_format($estimatedTax, 2) }}</span>
                         </div>
                     </div>
                     
@@ -258,8 +260,8 @@
                     
                     <!-- Total -->
                     <div class="d-flex justify-content-between mb-4 total-row">
-                        <h5>Total:</h5>
-                        <h5 class="fw-bold cart-total text-success">₹{{ number_format($total, 2) }}</h5>
+                        <h5>Estimated Total:</h5>
+                        <h5 class="fw-bold cart-total text-success">₹{{ number_format($estimatedTotal, 2) }}</h5>
                     </div>
                 </div>
             </div>

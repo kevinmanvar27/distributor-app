@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\UserGroup;
 use App\Models\User;
+use App\Models\UserGroupMember;
 use Illuminate\Validation\Rule;
 
 class UserGroupController extends Controller
@@ -46,6 +47,7 @@ class UserGroupController extends Controller
             'discount_percentage' => ['required', 'numeric', 'between:0,100'],
             'users' => ['nullable', 'array'],
             'users.*' => ['exists:users,id'],
+            'force_add' => ['nullable', 'boolean'], // Allow force adding users
         ]);
 
         $userGroup = UserGroup::create([
@@ -56,6 +58,14 @@ class UserGroupController extends Controller
 
         // Attach selected users to the group
         if ($request->has('users')) {
+            // If force_add is true, remove users from their existing groups
+            if ($request->force_add) {
+                foreach ($request->users as $userId) {
+                    // Remove user from all other groups
+                    UserGroupMember::where('user_id', $userId)->delete();
+                }
+            }
+            
             $userGroup->users()->attach($request->users);
         }
 
@@ -117,6 +127,7 @@ class UserGroupController extends Controller
             'discount_percentage' => ['required', 'numeric', 'between:0,100'],
             'users' => ['nullable', 'array'],
             'users.*' => ['exists:users,id'],
+            'force_add' => ['nullable', 'boolean'], // Allow force adding users
         ]);
 
         $userGroup->update([
@@ -127,6 +138,16 @@ class UserGroupController extends Controller
 
         // Sync selected users with the group
         if ($request->has('users')) {
+            // If force_add is true, remove users from their existing groups (except current group)
+            if ($request->force_add) {
+                foreach ($request->users as $userId) {
+                    // Remove user from all other groups except the current one
+                    UserGroupMember::where('user_id', $userId)
+                        ->where('user_group_id', '!=', $userGroup->id)
+                        ->delete();
+                }
+            }
+            
             $userGroup->users()->sync($request->users);
         } else {
             $userGroup->users()->sync([]);
@@ -156,5 +177,48 @@ class UserGroupController extends Controller
         }
 
         return redirect()->route('admin.user-groups.index')->with('success', 'User group deleted successfully.');
+    }
+
+    /**
+     * Check if users are already in other groups.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkUserConflicts(Request $request)
+    {
+        $request->validate([
+            'user_ids' => ['required', 'array'],
+            'user_ids.*' => ['exists:users,id'],
+            'current_group_id' => ['nullable', 'exists:user_groups,id'],
+        ]);
+
+        $conflicts = [];
+        $currentGroupId = $request->current_group_id;
+
+        foreach ($request->user_ids as $userId) {
+            // Find if user is in any group (excluding the current group if editing)
+            $existingMembership = UserGroupMember::with('userGroup')
+                ->where('user_id', $userId)
+                ->when($currentGroupId, function ($query) use ($currentGroupId) {
+                    return $query->where('user_group_id', '!=', $currentGroupId);
+                })
+                ->first();
+
+            if ($existingMembership) {
+                $user = User::find($userId);
+                $conflicts[] = [
+                    'user_id' => $userId,
+                    'user_name' => $user->name,
+                    'existing_group_id' => $existingMembership->user_group_id,
+                    'existing_group_name' => $existingMembership->userGroup->name,
+                ];
+            }
+        }
+
+        return response()->json([
+            'has_conflicts' => count($conflicts) > 0,
+            'conflicts' => $conflicts,
+        ]);
     }
 }

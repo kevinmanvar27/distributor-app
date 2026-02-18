@@ -97,22 +97,27 @@
                                             <td>
                                                 @if($summary->user)
                                                     <div class="d-flex align-items-center">
-                                                        @if($summary->user->avatar)
-                                                            <img src="{{ asset('storage/' . $summary->user->avatar) }}" 
-                                                                 class="rounded-circle me-2" width="32" height="32">
-                                                        @else
-                                                            <div class="bg-theme rounded-circle d-flex align-items-center justify-content-center me-2" 
-                                                                 style="width: 32px; height: 32px;">
-                                                                <span class="text-white small">{{ substr($summary->user->name, 0, 1) }}</span>
-                                                            </div>
-                                                        @endif
-                                                        {{ $summary->user->name }}
+                                                        <img src="{{ $summary->user->avatar_url }}" 
+                                                             class="rounded-circle me-2" width="32" height="32" 
+                                                             alt="{{ $summary->user->name }}"
+                                                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($summary->user->name) }}&background=0D8ABC&color=fff';">
+                                                        <div>
+                                                            <span>{{ $summary->user->name }}</span>
+                                                            @if($summary->user->trashed())
+                                                                <span class="badge bg-danger ms-1" style="font-size: 0.65rem;">Deleted</span>
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 @else
-                                                    Guest
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="https://ui-avatars.com/api/?name=Unknown&background=6c757d&color=fff" 
+                                                             class="rounded-circle me-2" width="32" height="32" 
+                                                             alt="Unknown">
+                                                        <span class="text-muted">Unknown User</span>
+                                                    </div>
                                                 @endif
                                             </td>
-                                            <td>{{ $summary->user->mobile ?? '-' }}</td>
+                                            <td>{{ $summary->user->mobile_number ?? '-' }}</td>
                                             <td><span class="badge bg-primary">{{ $summary->total_bills }}</span></td>
                                             <td>₹{{ number_format($summary->total_amount, 2) }}</td>
                                             <td class="text-success">₹{{ number_format($summary->total_paid, 2) }}</td>

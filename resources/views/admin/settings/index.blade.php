@@ -179,6 +179,24 @@
                                             @endif
                                         </div>
                                         
+                                        <!-- Banner Image -->
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-medium">Banner Image</label>
+                                            <input type="file" name="banner_image" class="form-control">
+                                            <div class="form-text">Upload a banner image for your site</div>
+                                            @if($setting->banner_image)
+                                                <div class="mt-2">
+                                                    <img src="{{ asset('storage/' . $setting->banner_image) }}" alt="Banner Image" class="img-fluid rounded" style="max-height: 100px;">
+                                                    <div class="form-check mt-2">
+                                                        <input class="form-check-input" type="checkbox" name="remove_banner_image" id="removeBannerImage">
+                                                        <label class="form-check-label" for="removeBannerImage">
+                                                            Remove banner image
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        
                                         <!-- Footer Text -->
                                         <div class="col-md-6">
                                             <label class="form-label fw-medium">Footer Text</label>
@@ -195,6 +213,27 @@
                                         <div class="col-md-6">
                                             <label class="form-label fw-medium">GST Number</label>
                                             <input type="text" name="gst_number" value="{{ old('gst_number', $setting->gst_number) }}" class="form-control" placeholder="Enter GST number">
+                                        </div>
+                                        
+                                        <!-- GST Text -->
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-medium">GST Text</label>
+                                            <input type="text" name="gst_text" value="{{ old('gst_text', $setting->gst_text ?? 'GST') }}" class="form-control" placeholder="Enter GST text (e.g., GST, VAT, Tax)">
+                                            <div class="form-text">This text will be displayed on invoices and throughout the site</div>
+                                        </div>
+                                        
+                                        <!-- Default GST Percentage -->
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-medium">Default GST Percentage (%)</label>
+                                            <input type="number" step="0.01" min="0" max="100" name="default_gst_percentage" value="{{ old('default_gst_percentage', $setting->default_gst_percentage ?? 18) }}" class="form-control" placeholder="Enter default GST percentage">
+                                            <div class="form-text">Default GST/Tax percentage for invoices (e.g., 18 for 18%)</div>
+                                        </div>
+                                        
+                                        <!-- Delivery Charge -->
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-medium">Delivery Charge</label>
+                                            <input type="number" step="0.01" name="delivery_charge" value="{{ old('delivery_charge', $setting->delivery_charge ?? 0) }}" class="form-control" placeholder="Enter delivery charge">
+                                            <div class="form-text">Default delivery charge amount (in your currency)</div>
                                         </div>
                                         
                                         <!-- Authorized Signatory -->

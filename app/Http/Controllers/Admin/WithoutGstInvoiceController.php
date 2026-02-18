@@ -18,7 +18,9 @@ class WithoutGstInvoiceController extends Controller
      */
     public function index()
     {
-        $withoutGstInvoices = WithoutGstInvoice::with('user')->orderBy('created_at', 'desc')->get();
+        $withoutGstInvoices = WithoutGstInvoice::with(['user' => function($query) {
+            $query->withTrashed(); // Include soft-deleted users
+        }])->orderBy('created_at', 'desc')->get();
         
         return view('admin.without-gst-invoice.index', compact('withoutGstInvoices'));
     }
@@ -28,7 +30,9 @@ class WithoutGstInvoiceController extends Controller
      */
     public function show($id)
     {
-        $invoice = WithoutGstInvoice::with('user')->findOrFail($id);
+        $invoice = WithoutGstInvoice::with(['user' => function($query) {
+            $query->withTrashed(); // Include soft-deleted users
+        }])->findOrFail($id);
         
         $invoiceData = $invoice->invoice_data;
         
@@ -243,7 +247,9 @@ class WithoutGstInvoiceController extends Controller
      */
     public function downloadPDF($id)
     {
-        $invoice = WithoutGstInvoice::with('user')->findOrFail($id);
+        $invoice = WithoutGstInvoice::with(['user' => function($query) {
+            $query->withTrashed(); // Include soft-deleted users
+        }])->findOrFail($id);
         
         $invoiceData = $invoice->invoice_data;
         

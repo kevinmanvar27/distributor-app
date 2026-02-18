@@ -60,9 +60,14 @@
                                                     </td>
                                                     <td>
                                                         @if($invoice->user)
-                                                            {{ $invoice->user->name }}
+                                                            <div class="d-flex align-items-center gap-1">
+                                                                {{ $invoice->user->name }}
+                                                                @if($invoice->user->trashed())
+                                                                    <span class="badge bg-danger" style="font-size: 0.65rem;">Deleted</span>
+                                                                @endif
+                                                            </div>
                                                         @else
-                                                            Guest ({{ substr($invoice->session_id, 0, 8) }}...)
+                                                            <span class="text-muted">Unknown User</span>
                                                         @endif
                                                     </td>
                                                     <td>{{ $invoice->created_at->format('Y-m-d') }}</td>

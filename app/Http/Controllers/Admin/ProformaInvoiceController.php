@@ -20,12 +20,77 @@ class ProformaInvoiceController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Get all proforma invoices with user information
-        $proformaInvoices = ProformaInvoice::with('user')->orderBy('created_at', 'desc')->get();
+        // Start building the query
+        $query = ProformaInvoice::with(['user' => function($query) {
+            $query->withTrashed(); // Include soft-deleted users
+        }]);
         
-        return view('admin.proforma-invoice.index', compact('proformaInvoices'));
+        // Filter by client/user
+        if ($request->filled('client_id')) {
+            $query->where('user_id', $request->client_id);
+        }
+        
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        
+        // Get filtered invoices
+        $proformaInvoices = $query->orderBy('created_at', 'desc')->get();
+        
+        // Calculate summary statistics
+        $summary = [
+            'total_invoices' => $proformaInvoices->count(),
+            'total_amount' => $proformaInvoices->sum('total_amount'),
+            'draft_count' => $proformaInvoices->where('status', 'Draft')->count(),
+            'approved_count' => $proformaInvoices->where('status', 'Approved')->count(),
+            'dispatch_count' => $proformaInvoices->where('status', 'Dispatch')->count(),
+            'out_for_delivery_count' => $proformaInvoices->where('status', 'Out for Delivery')->count(),
+            'delivered_count' => $proformaInvoices->where('status', 'Delivered')->count(),
+            'return_count' => $proformaInvoices->where('status', 'Return')->count(),
+            'average_amount' => $proformaInvoices->count() > 0 ? $proformaInvoices->avg('total_amount') : 0,
+        ];
+        
+        // User-wise summary (top 10 clients by invoice count)
+        $userSummary = $proformaInvoices->groupBy('user_id')
+            ->map(function ($invoices, $userId) {
+                $user = $invoices->first()->user;
+                return [
+                    'user_id' => $userId,
+                    'user_name' => $user ? $user->name : 'Guest',
+                    'user_email' => $user ? $user->email : 'N/A',
+                    'invoice_count' => $invoices->count(),
+                    'total_amount' => $invoices->sum('total_amount'),
+                    'average_amount' => $invoices->avg('total_amount'),
+                    'draft_count' => $invoices->where('status', 'Draft')->count(),
+                    'approved_count' => $invoices->where('status', 'Approved')->count(),
+                    'delivered_count' => $invoices->where('status', 'Delivered')->count(),
+                ];
+            })
+            ->sortByDesc('invoice_count')
+            ->take(10)
+            ->values();
+        
+        // Get all unique clients for filter dropdown
+        $clients = \App\Models\User::whereHas('proformaInvoices')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+        
+        // Get all status options
+        $statusOptions = ProformaInvoice::STATUS_OPTIONS;
+        
+        return view('admin.proforma-invoice.index', compact('proformaInvoices', 'summary', 'userSummary', 'clients', 'statusOptions'));
     }
     
     /**
@@ -36,7 +101,9 @@ class ProformaInvoiceController extends Controller
      */
     public function show($id)
     {
-        $proformaInvoice = ProformaInvoice::with('user')->findOrFail($id);
+        $proformaInvoice = ProformaInvoice::with(['user' => function($query) {
+            $query->withTrashed(); // Include soft-deleted users
+        }])->findOrFail($id);
         
         // Get invoice data (handle both array and JSON string, including double-encoded)
         $invoiceData = $proformaInvoice->invoice_data;
@@ -175,7 +242,7 @@ class ProformaInvoiceController extends Controller
             $invoiceData['tax_percentage'] = 0;
             $invoiceData['tax_amount'] = 0;
         } else {
-            $invoiceData['tax_percentage'] = (float) $request->input('tax_percentage', $invoiceData['tax_percentage'] ?? 18);
+            $invoiceData['tax_percentage'] = (float) $request->input('tax_percentage', $invoiceData['tax_percentage'] ?? default_gst_percentage());
             $invoiceData['tax_amount'] = (float) $request->input('tax_amount', $invoiceData['tax_amount'] ?? 0);
         }
         
@@ -373,7 +440,9 @@ class ProformaInvoiceController extends Controller
      */
     public function downloadPDF($id)
     {
-        $proformaInvoice = ProformaInvoice::with('user')->findOrFail($id);
+        $proformaInvoice = ProformaInvoice::with(['user' => function($query) {
+            $query->withTrashed(); // Include soft-deleted users
+        }])->findOrFail($id);
         
         // Get invoice data (handle both array and JSON string, including double-encoded)
         $invoiceData = $proformaInvoice->invoice_data;
@@ -428,7 +497,9 @@ class ProformaInvoiceController extends Controller
         $pdf->setPaper('A4', 'portrait');
         
         // Download the PDF with a meaningful filename
-        return $pdf->download('proforma-invoice-' . $proformaInvoice->invoice_number . '.pdf');
+        // Use 'invoice-' prefix if paid, otherwise 'proforma-invoice-'
+        $prefix = $proformaInvoice->payment_status === 'paid' ? 'invoice-' : 'proforma-invoice-';
+        return $pdf->download($prefix . $proformaInvoice->invoice_number . '.pdf');
     }
     
     /**

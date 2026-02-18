@@ -99,22 +99,22 @@ function setMinDateTime() {
                                 
                                 <ul class="nav nav-tabs mb-4" id="notificationTab" role="tablist">
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link active rounded-pill px-4" id="user-tab" data-bs-toggle="tab" data-bs-target="#user" type="button" role="tab" aria-controls="user" aria-selected="true">
+                                        <button class="nav-link active px-4" id="user-tab" data-bs-toggle="tab" data-bs-target="#user" type="button" role="tab" aria-controls="user" aria-selected="true">
                                             <i class="fas fa-user me-2"></i>Send to User
                                         </button>
                                     </li>
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link rounded-pill px-4" id="group-tab" data-bs-toggle="tab" data-bs-target="#group" type="button" role="tab" aria-controls="group" aria-selected="false">
+                                        <button class="nav-link px-4" id="group-tab" data-bs-toggle="tab" data-bs-target="#group" type="button" role="tab" aria-controls="group" aria-selected="false">
                                             <i class="fas fa-users me-2"></i>Send to Group
                                         </button>
                                     </li>
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link rounded-pill px-4" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="false">
+                                        <button class="nav-link px-4" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="false">
                                             <i class="fas fa-globe me-2"></i>Send to All
                                         </button>
                                     </li>
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link rounded-pill px-4" id="token-tab" data-bs-toggle="tab" data-bs-target="#token" type="button" role="tab" aria-controls="token" aria-selected="false">
+                                        <button class="nav-link px-4" id="token-tab" data-bs-toggle="tab" data-bs-target="#token" type="button" role="tab" aria-controls="token" aria-selected="false">
                                             <i class="fas fa-mobile-alt me-2"></i>Send to Device Token
                                         </button>
                                     </li>
@@ -1298,4 +1298,91 @@ function setMinDateTime() {
         });
     }
 </script>
+
+<style>
+    /* Custom styling for notification tabs to match theme */
+    #notificationTab .nav-link {
+        color: var(--text-secondary, #6c757d);
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    #notificationTab .nav-link:hover {
+        color: var(--theme-color, #FF6B00);
+    }
+    
+    #notificationTab .nav-link.active {
+        color: var(--theme-color, #FF6B00);
+        border-bottom-color: var(--theme-color, #FF6B00);
+    }
+    
+    /* Enhance form controls focus to match theme */
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--theme-color, #FF6B00);
+        box-shadow: 0 0 0 0.25rem rgba(255, 107, 0, 0.25);
+    }
+    
+    /* Radio button styling for schedule options */
+    .form-check-input:checked {
+        background-color: var(--theme-color, #FF6B00);
+        border-color: var(--theme-color, #FF6B00);
+    }
+    
+    .form-check-input:focus {
+        border-color: var(--theme-color, #FF6B00);
+        box-shadow: 0 0 0 0.25rem rgba(255, 107, 0, 0.25);
+    }
+    
+    /* DataTables styling to match theme */
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: var(--theme-color, #FF6B00) !important;
+        border-color: var(--theme-color, #FF6B00) !important;
+        color: white !important;
+    }
+    
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background: rgba(255, 107, 0, 0.1) !important;
+        border-color: var(--theme-color, #FF6B00) !important;
+        color: var(--theme-color, #FF6B00) !important;
+    }
+    
+    /* Badge styling for status indicators */
+    .badge.bg-warning {
+        background-color: #ffc107 !important;
+    }
+    
+    .badge.bg-info {
+        background-color: #0dcaf0 !important;
+    }
+    
+    /* Alert styling to match theme */
+    .alert-info {
+        background-color: rgba(255, 107, 0, 0.1);
+        border-left: 4px solid var(--theme-color, #FF6B00);
+    }
+    
+    /* Card hover effect */
+    .card:hover {
+        box-shadow: 0 10px 25px -5px rgba(255, 107, 0, 0.1), 0 8px 10px -6px rgba(255, 107, 0, 0.1);
+    }
+    
+    /* Button loading state */
+    .btn:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        #notificationTab .nav-link {
+            font-size: 0.875rem;
+            padding: 0.5rem 0.75rem !important;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+    }
+</style>
 @endsection

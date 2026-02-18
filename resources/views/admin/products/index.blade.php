@@ -64,6 +64,7 @@
                                                 <th>Selling Price</th>
                                                 <th>Stock Status</th>
                                                 <th>Status</th>
+                                                <th>Featured</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -129,6 +130,17 @@
                                                                 Draft
                                                             </span>
                                                         @endif
+                                                    </td>
+                                                    <td>
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input featured-toggle" type="checkbox" role="switch" 
+                                                                   id="featuredToggle{{ $product->id }}" 
+                                                                   data-product-id="{{ $product->id }}"
+                                                                   {{ $product->is_featured ? 'checked' : '' }}
+                                                                   style="cursor: pointer;">
+                                                            <label class="form-check-label" for="featuredToggle{{ $product->id }}" style="cursor: pointer;">
+                                                            </label>
+                                                        </div>
                                                     </td>
                                                     <td>
                                                         <div class="btn-group btn-group-sm" role="group">
@@ -200,7 +212,7 @@
             "info": true,
             "paging": true,
             "columnDefs": [
-                { "orderable": false, "targets": [6] } // Disable sorting on Actions column
+                { "orderable": false, "targets": [6, 7] } // Disable sorting on Featured and Actions columns
             ],
             "language": {
                 "search": "Search:",
@@ -222,12 +234,13 @@
                 null, // Selling Price
                 null, // Stock Status
                 null, // Status
+                null, // Featured
                 null  // Actions
             ],
             "preDrawCallback": function(settings) {
                 // Ensure consistent column count
                 if ($('#productsTable tbody tr').length === 0) {
-                    $('#productsTable tbody').html('<tr><td colspan="7" class="text-center py-5"><div class="text-muted"><i class="fas fa-box-open fa-2x mb-3"></i><p class="mb-0">No products found</p><p class="small">Try creating a new product</p></div></td></tr>');
+                    $('#productsTable tbody').html('<tr><td colspan="8" class="text-center py-5"><div class="text-muted"><i class="fas fa-box-open fa-2x mb-3"></i><p class="mb-0">No products found</p><p class="small">Try creating a new product</p></div></td></tr>');
                 }
             },
             "drawCallback": function(settings) {
@@ -237,7 +250,55 @@
         });
         // Adjust select width after DataTable initializes
         $('.dataTables_length select').css('width', '80px');
+        
+        // Handle featured toggle
+        $(document).on('change', '.featured-toggle', function() {
+            const productId = $(this).data('product-id');
+            const isFeatured = $(this).is(':checked');
+            const toggleElement = $(this);
+            
+            $.ajax({
+                url: '/admin/products/' + productId + '/toggle-featured',
+                type: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    is_featured: isFeatured ? 1 : 0
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Show success message
+                        const message = isFeatured ? 'Product marked as featured' : 'Product removed from featured';
+                        showToast('success', message);
+                    }
+                },
+                error: function(xhr) {
+                    // Revert toggle on error
+                    toggleElement.prop('checked', !isFeatured);
+                    showToast('error', 'Error updating featured status');
+                }
+            });
+        });
     });
+    
+    // Toast notification function
+    function showToast(type, message) {
+        const bgColor = type === 'success' ? 'bg-success' : 'bg-danger';
+        const toast = `
+            <div class="position-fixed top-0 end-0 p-3" style="z-index: 11000">
+                <div class="toast show ${bgColor} text-white" role="alert">
+                    <div class="toast-body">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>${message}
+                    </div>
+                </div>
+            </div>
+        `;
+        $('body').append(toast);
+        setTimeout(function() {
+            $('.toast').fadeOut(function() {
+                $(this).parent().remove();
+            });
+        }, 3000);
+    }
     
     // Function to show product details in modal
     function showProductDetails(productId) {

@@ -151,8 +151,8 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-0 py-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
                         <div>
-                            <h4 class="card-title mb-0 fw-bold">All Bills</h4>
-                            <p class="mb-0 text-muted small">Manage bill payments</p>
+                            <h4 class="card-title mb-0 fw-bold">Pending Bills</h4>
+                            <p class="mb-0 text-muted small">Manage pending bill payments (Unpaid & Partial)</p>
                         </div>
                         <a href="{{ route('admin.pending-bills.user-summary') }}" class="btn btn-outline-primary rounded-pill btn-sm">
                             <i class="fas fa-users me-1"></i> User Summary
@@ -204,11 +204,16 @@
                                             </td>
                                             <td class="d-none d-md-table-cell">
                                                 @if($invoice->user)
-                                                    <a href="{{ route('admin.pending-bills.user', $invoice->user_id) }}" class="text-decoration-none">
-                                                        {{ $invoice->user->name }}
-                                                    </a>
+                                                    <div class="d-flex align-items-center gap-1">
+                                                        <a href="{{ route('admin.pending-bills.user', $invoice->user_id) }}" class="text-decoration-none">
+                                                            {{ $invoice->user->name }}
+                                                        </a>
+                                                        @if($invoice->user->trashed())
+                                                            <span class="badge bg-danger" style="font-size: 0.65rem;">Deleted</span>
+                                                        @endif
+                                                    </div>
                                                 @else
-                                                    Guest
+                                                    <span class="text-muted">Unknown User</span>
                                                 @endif
                                             </td>
                                             <td class="d-none d-lg-table-cell">{{ $invoice->created_at->format('d M Y') }}</td>
@@ -276,17 +281,18 @@
                                                                 <div class="input-group">
                                                                     <span class="input-group-text">₹</span>
                                                                     <input type="number" name="amount" class="form-control" 
+                                                                           id="paymentAmount{{ $invoice->id }}"
                                                                            step="0.01" min="0.01" max="{{ $pendingAmount }}"
                                                                            placeholder="Enter amount" required>
                                                                 </div>
                                                                 <small class="text-muted">Max: ₹{{ number_format($pendingAmount, 2) }}</small>
                                                             </div>
-                                                            <!-- <div class="d-grid gap-2">
-                                                                <button type="button" class="btn btn-outline-secondary btn-sm"
-                                                                        onclick="this.closest('form').querySelector('input[name=amount]').value = '{{ number_format($pendingAmount, 2, '.', '') }}'">
-                                                                    Pay Full Amount (₹{{ number_format($pendingAmount, 2) }})
+                                                            <div class="d-grid gap-2 mb-3">
+                                                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                                                        onclick="document.getElementById('paymentAmount{{ $invoice->id }}').value = '{{ number_format($pendingAmount, 2, '.', '') }}'">
+                                                                    <i class="fas fa-money-bill-wave me-1"></i> Pay Full Amount (₹{{ number_format($pendingAmount, 2) }})
                                                                 </button>
-                                                            </div> -->
+                                                            </div>
                                                         </div>
                                                         <div class="modal-footer">
                                                             <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>

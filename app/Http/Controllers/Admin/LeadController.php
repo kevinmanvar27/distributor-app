@@ -41,6 +41,7 @@ class LeadController extends Controller
         $statuses = [
             'new' => 'New',
             'contacted' => 'Contacted',
+            'followup' => 'Follow Up',
             'qualified' => 'Qualified',
             'converted' => 'Converted',
             'lost' => 'Lost',
@@ -76,7 +77,7 @@ class LeadController extends Controller
             'name' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
             'note' => 'nullable|string',
-            'status' => 'required|in:new,contacted,qualified,converted,lost',
+            'status' => 'required|in:new,contacted,followup,qualified,converted,lost',
         ]);
 
         Lead::create($validated);
@@ -125,7 +126,7 @@ class LeadController extends Controller
             'name' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
             'note' => 'nullable|string',
-            'status' => 'required|in:new,contacted,qualified,converted,lost',
+            'status' => 'required|in:new,contacted,followup,qualified,converted,lost',
         ]);
 
         $lead->update($validated);
@@ -182,6 +183,7 @@ class LeadController extends Controller
         $statuses = [
             'new' => 'New',
             'contacted' => 'Contacted',
+            'followup' => 'Follow Up',
             'qualified' => 'Qualified',
             'converted' => 'Converted',
             'lost' => 'Lost',

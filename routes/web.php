@@ -26,6 +26,7 @@ use App\Http\Controllers\Frontend\RegisterController;
 use App\Http\Controllers\Frontend\ShoppingCartController;
 use App\Http\Controllers\Frontend\PageController as FrontendPageController;
 use App\Http\Controllers\Frontend\AccountDeletionController;
+use App\Http\Controllers\Frontend\WishlistController as FrontendWishlistController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\SalaryController;
 use App\Http\Controllers\Admin\ProductAnalyticsController;
@@ -108,6 +109,16 @@ Route::middleware(['frontend.access', 'auth'])->group(function () {
     Route::post('/cart/coupon/apply', [ShoppingCartController::class, 'applyCoupon'])->name('frontend.cart.coupon.apply');
     Route::post('/cart/coupon/remove', [ShoppingCartController::class, 'removeCoupon'])->name('frontend.cart.coupon.remove');
     Route::get('/cart/coupon/applied', [ShoppingCartController::class, 'getAppliedCoupon'])->name('frontend.cart.coupon.applied');
+
+    // Wishlist Routes
+    Route::get('/wishlist', [FrontendWishlistController::class, 'index'])->name('frontend.wishlist.index');
+    Route::post('/wishlist/add', [FrontendWishlistController::class, 'add'])->name('frontend.wishlist.add');
+    Route::post('/wishlist/remove', [FrontendWishlistController::class, 'remove'])->name('frontend.wishlist.remove');
+    Route::post('/wishlist/toggle', [FrontendWishlistController::class, 'toggle'])->name('frontend.wishlist.toggle');
+    Route::post('/wishlist/check', [FrontendWishlistController::class, 'check'])->name('frontend.wishlist.check');
+    Route::get('/wishlist/count', [FrontendWishlistController::class, 'count'])->name('frontend.wishlist.count');
+    Route::post('/wishlist/{id}/move-to-cart', [FrontendWishlistController::class, 'moveToCart'])->name('frontend.wishlist.move-to-cart');
+    Route::delete('/wishlist/clear', [FrontendWishlistController::class, 'clear'])->name('frontend.wishlist.clear');
 
 });
 
@@ -230,7 +241,11 @@ Route::middleware('auth')->group(function () {
         // Regular users management
         Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
         Route::get('/users/staff', [UserController::class, 'staff'])->name('admin.users.staff');
+        Route::get('/users/trashed', [UserController::class, 'trashed'])->name('admin.users.trashed');
+        Route::post('/users/{id}/restore', [UserController::class, 'restore'])->name('admin.users.restore');
+        Route::delete('/users/{id}/force-delete', [UserController::class, 'forceDelete'])->name('admin.users.force-delete');
         Route::post('/users/{user}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
+        Route::post('/users/{user}/status', [UserController::class, 'updateStatus'])->name('admin.users.status.update');
         
         Route::resource('users', UserController::class)->except(['index'])->names([
             'create' => 'admin.users.create',
@@ -268,6 +283,7 @@ Route::middleware('auth')->group(function () {
         });
             
         // User Group Management Routes
+        Route::post('user-groups/check-conflicts', [UserGroupController::class, 'checkUserConflicts'])->name('admin.user-groups.check-conflicts');
         Route::resource('user-groups', UserGroupController::class)->names([
             'index' => 'admin.user-groups.index',
             'create' => 'admin.user-groups.create',
@@ -323,6 +339,7 @@ Route::middleware('auth')->group(function () {
         
         // Additional product routes
         Route::get('/products/{product}/details', [ProductController::class, 'showDetails'])->name('admin.products.details');
+        Route::post('/products/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('admin.products.toggle-featured');
         
         // Product Analytics Routes
         Route::get('/analytics/products', [ProductAnalyticsController::class, 'index'])->name('admin.analytics.products');

@@ -11,8 +11,8 @@
             @include('admin.layouts.header', ['pageTitle' => 'Proforma Invoice Details'])
             
             <div class="pt-4 pb-2 mb-3">
-                <div class="row justify-content-center">
-                    <div class="col-lg-10">
+                <div class="row">
+                    <div class="col-12">
                         <!-- Payment Status Card -->
                         @php
                             $pendingAmount = $proformaInvoice->total_amount - $proformaInvoice->paid_amount;
@@ -24,35 +24,59 @@
                             <div class="card-body">
                                 <div class="row text-center">
                                     <div class="col-md-3">
-                                        <div class="p-3 bg-light rounded">
-                                            <small class="text-muted d-block">Total Amount</small>
-                                            <h5 class="mb-0 fw-bold">₹{{ number_format($proformaInvoice->total_amount, 2) }}</h5>
+                                        <div class="p-3 bg-primary rounded">
+                                            <small class="text-white d-block fw-semibold">Total Amount</small>
+                                            <h5 class="mb-0 fw-bold text-white">₹{{ number_format($proformaInvoice->total_amount, 2) }}</h5>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <div class="p-3 bg-success rounded">
-                                            <small class="text-white d-block">Paid Amount</small>
-                                            <h5 class="mb-0 fw-bold text-white">₹{{ number_format($proformaInvoice->paid_amount, 2) }}</h5>
+                                        <div class="p-3 {{ $proformaInvoice->paid_amount > 0 ? 'bg-success' : 'bg-light' }} rounded">
+                                            <small class="{{ $proformaInvoice->paid_amount > 0 ? 'text-white' : 'text-muted' }} d-block fw-semibold">Paid Amount</small>
+                                            <h5 class="mb-0 fw-bold {{ $proformaInvoice->paid_amount > 0 ? 'text-white' : 'text-dark' }}">₹{{ number_format($proformaInvoice->paid_amount, 2) }}</h5>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <div class="p-3 bg-danger rounded">
-                                            <small class="text-white d-block">Pending Amount</small>
-                                            <h5 class="mb-0 fw-bold text-white">₹{{ number_format($pendingAmount, 2) }}</h5>
+                                        <div class="p-3 {{ $pendingAmount > 0 ? 'bg-danger' : 'bg-light' }} rounded">
+                                            <small class="{{ $pendingAmount > 0 ? 'text-white' : 'text-muted' }} d-block fw-semibold">Pending Amount</small>
+                                            <h5 class="mb-0 fw-bold {{ $pendingAmount > 0 ? 'text-white' : 'text-dark' }}">₹{{ number_format($pendingAmount, 2) }}</h5>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <div class="p-3 rounded">
-                                            <small class="text-muted d-block">Payment Status</small>
+                                        <div class="p-3 
                                             @switch($proformaInvoice->payment_status)
                                                 @case('unpaid')
-                                                    <span class="badge bg-secondary fs-6">Unpaid</span>
+                                                    bg-secondary
                                                     @break
                                                 @case('partial')
-                                                    <span class="badge bg-warning fs-6">Partial</span>
+                                                    bg-warning
                                                     @break
                                                 @case('paid')
-                                                    <span class="badge bg-success fs-6">Paid</span>
+                                                    bg-success
+                                                    @break
+                                            @endswitch
+                                            rounded">
+                                            <small class="
+                                                @switch($proformaInvoice->payment_status)
+                                                    @case('unpaid')
+                                                        text-white
+                                                        @break
+                                                    @case('partial')
+                                                        text-dark
+                                                        @break
+                                                    @case('paid')
+                                                        text-white
+                                                        @break
+                                                @endswitch
+                                                d-block fw-semibold">Payment Status</small>
+                                            @switch($proformaInvoice->payment_status)
+                                                @case('unpaid')
+                                                    <span class="badge bg-dark fs-6 mt-2">Unpaid</span>
+                                                    @break
+                                                @case('partial')
+                                                    <span class="badge bg-dark fs-6 mt-2">Partial</span>
+                                                    @break
+                                                @case('paid')
+                                                    <span class="badge bg-white text-success fs-6 mt-2">Paid</span>
                                                     @break
                                             @endswitch
                                         </div>
@@ -293,10 +317,10 @@
                                                             </td>
                                                         </tr>
                                                         <tr class="gst-row" style="{{ ($invoiceData['gst_type'] ?? 'with_gst') == 'without_gst' ? 'display: none;' : '' }}">
-                                                            <td class="fw-bold">GST (%):</td>
+                                                            <td class="fw-bold">{{ gst_text() }} (%):</td>
                                                             <td class="text-end">
                                                                 <div class="input-group">
-                                                                    <input type="number" name="tax_percentage" class="form-control tax-percentage" value="{{ ($invoiceData['gst_type'] ?? 'with_gst') == 'without_gst' ? 0 : ($invoiceData['tax_percentage'] ?? 18) }}" step="0.01" min="0" max="100">
+                                                                    <input type="number" name="tax_percentage" class="form-control tax-percentage" value="{{ ($invoiceData['gst_type'] ?? 'with_gst') == 'without_gst' ? 0 : ($invoiceData['tax_percentage'] ?? default_gst_percentage()) }}" step="0.01" min="0" max="100">
                                                                     <span class="input-group-text">%</span>
                                                                 </div>
                                                             </td>
@@ -311,11 +335,11 @@
                                                             </td>
                                                         </tr>
                                                         <tr>
-                                                            <td class="fw-bold">Shipping:</td>
+                                                            <td class="fw-bold">Delivery Charge:</td>
                                                             <td class="text-end">
                                                                 <div class="input-group">
                                                                     <span class="input-group-text">₹</span>
-                                                                    <input type="number" name="shipping" class="form-control shipping" value="{{ $invoiceData['shipping'] ?? 0 }}" step="0.01" min="0">
+                                                                    <input type="number" name="shipping" class="form-control shipping" value="{{ $invoiceData['shipping'] ?? delivery_charge() }}" step="0.01" min="0">
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -457,7 +481,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const taxAmountInput = document.querySelector('.tax-amount');
     
     // Store original tax percentage for restoration
-    let originalTaxPercentage = parseFloat(taxPercentageInput.value) || 18;
+    let originalTaxPercentage = parseFloat(taxPercentageInput.value) || {{ default_gst_percentage() }};
     
     // GST Type toggle functionality
     gstTypeSelect.addEventListener('change', function() {

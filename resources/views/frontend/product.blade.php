@@ -239,6 +239,11 @@
                                 <button type="button" class="btn btn-outline-theme btn-lg add-to-cart-btn btn-ripple hover-lift" data-product-id="{{ $product->id }}" disabled id="add-to-cart-btn">
                                     <i class="fas fa-shopping-cart me-2"></i>Add to Cart
                                 </button>
+                                @auth
+                                <button type="button" class="btn btn-outline-danger btn-lg wishlist-toggle-btn hover-lift {{ $product->isInWishlist(Auth::id()) ? 'in-wishlist' : '' }}" data-product-id="{{ $product->id }}">
+                                    <i class="fas fa-heart me-2"></i><span class="wishlist-text">{{ $product->isInWishlist(Auth::id()) ? 'Remove from Wishlist' : 'Add to Wishlist' }}</span>
+                                </button>
+                                @endauth
                             </div>
                         @else
                             @if($product->in_stock)
@@ -249,6 +254,11 @@
                                     <button type="button" class="btn btn-outline-theme btn-lg add-to-cart-btn btn-ripple hover-lift" data-product-id="{{ $product->id }}" id="add-to-cart-btn">
                                         <i class="fas fa-shopping-cart me-2"></i>Add to Cart
                                     </button>
+                                    @auth
+                                    <button type="button" class="btn btn-outline-danger btn-lg wishlist-toggle-btn hover-lift {{ $product->isInWishlist(Auth::id()) ? 'in-wishlist' : '' }}" data-product-id="{{ $product->id }}">
+                                        <i class="fas fa-heart me-2"></i><span class="wishlist-text">{{ $product->isInWishlist(Auth::id()) ? 'Remove from Wishlist' : 'Add to Wishlist' }}</span>
+                                    </button>
+                                    @endauth
                                 </div>
                             @else
                                 <button type="button" class="btn btn-secondary btn-lg" disabled>
@@ -967,6 +977,42 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     @endif
+    
+    // Wishlist toggle button handler
+    const wishlistToggleBtn = document.querySelector('.wishlist-toggle-btn');
+    if (wishlistToggleBtn) {
+        wishlistToggleBtn.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            const btn = this;
+            const icon = btn.querySelector('i');
+            const text = btn.querySelector('.wishlist-text');
+            const isInWishlist = btn.classList.contains('in-wishlist');
+            
+            // Disable button during request
+            btn.disabled = true;
+            
+            toggleWishlist(productId).then(response => {
+                if (response.success) {
+                    if (isInWishlist) {
+                        btn.classList.remove('in-wishlist');
+                        text.textContent = 'Add to Wishlist';
+                        showToast('Removed from wishlist', 'info');
+                    } else {
+                        btn.classList.add('in-wishlist');
+                        text.textContent = 'Remove from Wishlist';
+                        showToast('Added to wishlist', 'success');
+                    }
+                } else {
+                    showToast(response.message || 'Failed to update wishlist', 'error');
+                }
+            }).catch(error => {
+                console.error('Wishlist error:', error);
+                showToast('An error occurred', 'error');
+            }).finally(() => {
+                btn.disabled = false;
+            });
+        });
+    }
 });
 </script>
 

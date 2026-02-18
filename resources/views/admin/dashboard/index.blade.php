@@ -285,7 +285,16 @@
                                                     <br>
                                                     <small class="text-muted d-none d-sm-inline">{{ $order->created_at->format('M d, Y') }}</small>
                                                 </td>
-                                                <td class="d-none d-md-table-cell small">{{ $order->user->name ?? 'Guest' }}</td>
+                                                <td class="d-none d-md-table-cell small">
+                                                    @if($order->user)
+                                                        {{ $order->user->name }}
+                                                        @if($order->user->trashed())
+                                                            <span class="badge bg-danger ms-1" style="font-size: 0.55rem;">Deleted</span>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-muted">Unknown</span>
+                                                    @endif
+                                                </td>
                                                 <td class="fw-medium small">₹{{ number_format($order->total_amount, 2) }}</td>
                                                 <td>
                                                     @php

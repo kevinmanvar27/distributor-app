@@ -36,6 +36,9 @@ class SettingsController extends Controller
             'company_email' => null,
             'company_phone' => null,
             'gst_number' => null,
+            'gst_text' => 'GST',
+            'default_gst_percentage' => 18,
+            'delivery_charge' => 0,
             'authorized_signatory' => null,
             'theme_color' => '#FF6B00',
             'background_color' => '#FFFFFF',
@@ -128,6 +131,7 @@ class SettingsController extends Controller
             'header_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'footer_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,ico|max:2048',
+            'banner_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'site_title' => 'nullable|string|max:255',
             'site_description' => 'nullable|string',
             'tagline' => 'nullable|string|max:255',
@@ -136,6 +140,9 @@ class SettingsController extends Controller
             'company_email' => 'nullable|email|max:255',
             'company_phone' => 'nullable|string|max:20',
             'gst_number' => 'nullable|string|max:15',
+            'gst_text' => 'nullable|string|max:50',
+            'default_gst_percentage' => 'nullable|numeric|min:0|max:100',
+            'delivery_charge' => 'nullable|numeric|min:0',
             'authorized_signatory' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'theme_color' => 'nullable|string|max:7',
             'background_color' => 'nullable|string|max:7',
@@ -220,6 +227,10 @@ class SettingsController extends Controller
             $this->removeImage($setting, 'favicon');
         }
         
+        if ($request->has('remove_banner_image')) {
+            $this->removeImage($setting, 'banner_image');
+        }
+        
         // Handle authorized signatory removal
         if ($request->has('remove_authorized_signatory')) {
             $this->removeFile($setting, 'authorized_signatory');
@@ -229,6 +240,7 @@ class SettingsController extends Controller
         $this->handleImageUpload($request, $setting, 'header_logo');
         $this->handleImageUpload($request, $setting, 'footer_logo');
         $this->handleImageUpload($request, $setting, 'favicon');
+        $this->handleImageUpload($request, $setting, 'banner_image');
         
         // Handle authorized signatory file upload
         if ($request->hasFile('authorized_signatory')) {
@@ -251,6 +263,9 @@ class SettingsController extends Controller
         $setting->company_email = $request->company_email;
         $setting->company_phone = $request->company_phone;
         $setting->gst_number = $request->gst_number;
+        $setting->gst_text = $request->gst_text;
+        $setting->default_gst_percentage = $request->default_gst_percentage ?? 18;
+        $setting->delivery_charge = $request->delivery_charge ?? 0;
         $setting->theme_color = $request->theme_color;
         $setting->background_color = $request->background_color;
         $setting->font_color = $request->font_color;
@@ -459,7 +474,7 @@ class SettingsController extends Controller
         $setting = Setting::first();
         if ($setting) {
             // Delete existing images and files
-            $fileFields = ['header_logo', 'footer_logo', 'favicon', 'authorized_signatory'];
+            $fileFields = ['header_logo', 'footer_logo', 'favicon', 'banner_image', 'authorized_signatory'];
             foreach ($fileFields as $field) {
                 if ($setting->$field) {
                     Storage::disk('public')->delete($setting->$field);
@@ -476,6 +491,8 @@ class SettingsController extends Controller
                 'company_email' => null,
                 'company_phone' => null,
                 'gst_number' => null,
+                'gst_text' => 'GST',
+                'delivery_charge' => 0,
                 'authorized_signatory' => null,
                 'theme_color' => '#FF6B00',
                 'background_color' => '#FFFFFF',
@@ -498,6 +515,7 @@ class SettingsController extends Controller
                 'header_logo' => null,
                 'footer_logo' => null,
                 'favicon' => null,
+                'banner_image' => null,
                 'facebook_url' => null,
                 'twitter_url' => null,
                 'instagram_url' => null,

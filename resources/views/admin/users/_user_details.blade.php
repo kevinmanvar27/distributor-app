@@ -52,6 +52,42 @@
             </div>
             
             <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Status</label>
+                <p class="form-control-plaintext">
+                    {!! $user->status_badge !!}
+                </p>
+                
+                <!-- Quick Status Change Form -->
+                <form action="{{ route('admin.users.status.update', $user) }}" method="POST" class="mt-2">
+                    @csrf
+                    <div class="input-group input-group-sm">
+                        <select name="status" class="form-select form-select-sm" required>
+                            <option value="">Change Status...</option>
+                            @foreach(\App\Models\User::getStatusOptions() as $value => $label)
+                                <option value="{{ $value }}" {{ $user->status == $value ? 'disabled' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="fas fa-check"></i> Update
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Discount Percentage</label>
+                <p class="form-control-plaintext">
+                    @if($user->discount_percentage)
+                        {{ $user->discount_percentage }}%
+                    @else
+                        <span class="text-muted">0%</span>
+                    @endif
+                </p>
+            </div>
+            
+            <div class="col-md-6 mb-3">
                 <label class="form-label fw-bold">Address</label>
                 <p class="form-control-plaintext">
                     @if($user->address)

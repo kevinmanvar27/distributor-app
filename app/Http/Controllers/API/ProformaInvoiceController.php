@@ -79,7 +79,9 @@ class ProformaInvoiceController extends ApiController
      */
     public function index(Request $request)
     {
-        $query = ProformaInvoice::with('user');
+        $query = ProformaInvoice::with(['user' => function($query) {
+            $query->withTrashed(); // Include soft-deleted users
+        }]);
         
         // Filter by status if provided
         if ($request->has('status') && in_array($request->status, ProformaInvoice::STATUS_OPTIONS)) {
@@ -277,7 +279,9 @@ class ProformaInvoiceController extends ApiController
      */
     public function show($id)
     {
-        $invoice = ProformaInvoice::with('user')->find($id);
+        $invoice = ProformaInvoice::with(['user' => function($query) {
+            $query->withTrashed(); // Include soft-deleted users
+        }])->find($id);
 
         if (is_null($invoice)) {
             return $this->sendError('Proforma invoice not found.');

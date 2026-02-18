@@ -37,6 +37,7 @@
                                     <table class="table table-hover align-middle" id="pages-table">
                                         <thead class="table-light">
                                             <tr>
+                                                <th>S.No.</th>
                                                 <th>Title</th>
                                                 <th>Slug</th>
                                                 <th>Priority</th>
@@ -47,6 +48,7 @@
                                         <tbody>
                                             @forelse($pages as $page)
                                             <tr>
+                                                <td>{{ $loop->iteration }}</td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <div>
@@ -84,7 +86,7 @@
                                             </tr>
                                             @empty
                                             <tr>
-                                                <td colspan="5" class="text-center py-5">
+                                                <td colspan="6" class="text-center py-5">
                                                     <div class="text-muted">
                                                         <i class="fas fa-file-alt fa-2x mb-3"></i>
                                                         <p class="mb-0">No pages found</p>
@@ -126,9 +128,9 @@
             "info": true,
             "paging": true,
             "columnDefs": [
-                { "orderable": false, "targets": [4] }
+                { "orderable": false, "targets": [0, 5] }
             ],
-            "order": [[2, "asc"]], // Order by priority by default
+            "order": [[3, "asc"]], // Order by priority by default
             "language": {
                 "search": "Search:",
                 "lengthMenu": "Show _MENU_ entries per page",
@@ -143,6 +145,7 @@
                 }
             },
             "aoColumns": [
+                null, // S.No.
                 null, // Title
                 null, // Slug
                 null, // Priority
@@ -152,7 +155,7 @@
             "preDrawCallback": function(settings) {
                 // Ensure consistent column count
                 if ($('#pages-table tbody tr').length === 0) {
-                    $('#pages-table tbody').html('<tr><td colspan="5" class="text-center py-5"><div class="text-muted"><i class="fas fa-file-alt fa-2x mb-3"></i><p class="mb-0">No pages found</p><p class="small">Get started by creating a new page</p></div></td></tr>');
+                    $('#pages-table tbody').html('<tr><td colspan="6" class="text-center py-5"><div class="text-muted"><i class="fas fa-file-alt fa-2x mb-3"></i><p class="mb-0">No pages found</p><p class="small">Get started by creating a new page</p></div></td></tr>');
                 }
             }
         });

@@ -1265,4 +1265,29 @@ class ProductController extends Controller
             return redirect()->back()->with('error', 'Failed to download template: ' . $e->getMessage());
         }
     }
+    
+    /**
+     * Toggle featured status of a product
+     */
+    public function toggleFeatured(Request $request, Product $product)
+    {
+        try {
+            $this->authorize('update', $product);
+            
+            $product->is_featured = $request->is_featured ? true : false;
+            $product->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => $product->is_featured ? 'Product marked as featured' : 'Product removed from featured',
+                'is_featured' => $product->is_featured
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to toggle featured status:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update featured status'
+            ], 500);
+        }
+    }
 }

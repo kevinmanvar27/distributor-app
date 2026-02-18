@@ -71,6 +71,7 @@
                                                         <select class="form-select rounded-pill" id="status" name="status" required>
                                                             <option value="new" {{ old('status', 'new') == 'new' ? 'selected' : '' }}>New</option>
                                                             <option value="contacted" {{ old('status') == 'contacted' ? 'selected' : '' }}>Contacted</option>
+                                                            <option value="followup" {{ old('status') == 'followup' ? 'selected' : '' }}>Follow Up</option>
                                                             <option value="qualified" {{ old('status') == 'qualified' ? 'selected' : '' }}>Qualified</option>
                                                             <option value="converted" {{ old('status') == 'converted' ? 'selected' : '' }}>Converted</option>
                                                             <option value="lost" {{ old('status') == 'lost' ? 'selected' : '' }}>Lost</option>

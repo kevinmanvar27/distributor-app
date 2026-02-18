@@ -25,9 +25,16 @@
                                         <h4 class="card-title mb-0 fw-bold h5 h4-md">Staff Members</h4>
                                         <p class="mb-0 text-muted small">Manage administrative staff (Super Admins, Admins, Editors)</p>
                                     </div>
-                                    <a href="{{ route('admin.users.create', ['role' => 'staff']) }}" class="btn btn-sm btn-md-normal btn-theme rounded-pill px-3 px-md-4">
-                                        <i class="fas fa-plus me-1 me-md-2"></i><span class="d-none d-sm-inline">Add New Staff</span><span class="d-sm-none">Add</span>
-                                    </a>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @if(auth()->user()->hasPermission('viewAny_salary') || auth()->user()->isSuperAdmin())
+                                        <a href="{{ route('admin.salary.payments') }}" class="btn btn-sm btn-md-normal btn-outline-success rounded-pill px-3 px-md-4">
+                                            <i class="fas fa-file-invoice-dollar me-1 me-md-2"></i><span class="d-none d-sm-inline">Payroll</span><span class="d-sm-none">Pay</span>
+                                        </a>
+                                        @endif
+                                        <a href="{{ route('admin.users.create', ['role' => 'staff']) }}" class="btn btn-sm btn-md-normal btn-theme rounded-pill px-3 px-md-4">
+                                            <i class="fas fa-plus me-1 me-md-2"></i><span class="d-none d-sm-inline">Add New Staff</span><span class="d-sm-none">Add</span>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -46,6 +53,21 @@
                                     </div>
                                 @endif
                                 
+                                <!-- Info Box -->
+                                <div class="alert alert-info border-0 shadow-sm mb-4" role="alert">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-info-circle me-3 mt-1 fs-5"></i>
+                                        <div>
+                                            <h6 class="alert-heading mb-2">Staff Management & Salary</h6>
+                                            <p class="mb-0 small">
+                                                This page displays all staff members (Super Admins, Admins, and Editors). 
+                                                You can manage their salaries directly from here using the <i class="fas fa-money-bill-wave text-success"></i> button. 
+                                                Staff members with unset salaries are marked with a <span class="badge bg-warning-subtle text-warning-emphasis">Not Set</span> badge.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle" id="staffTable">
                                         <thead class="table-light">
@@ -54,14 +76,16 @@
                                                 <th>Staff Member</th>
                                                 <th>Email</th>
                                                 <th>Role</th>
-                                                <th>Address</th>
-                                                <th>Mobile</th>
-                                                <th>Date of Birth</th>
+                                                <th>Current Salary</th>
+                                                <th>Status</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @forelse($staff as $index => $user)
+                                                @php
+                                                    $activeSalary = $user->activeSalary;
+                                                @endphp
                                                 <tr>
                                                     <td class="fw-bold">{{ $index + 1 }}</td>
                                                     <td>
@@ -90,33 +114,42 @@
                                                             {{ ucfirst(str_replace('_', ' ', $user->user_role)) }}
                                                         </span>
                                                     </td>
-                                                    <td>{{ $user->address ?? 'N/A' }}</td>
-                                                    <td>{{ $user->mobile_number ?? 'N/A' }}</td>
                                                     <td>
-                                                        @if($user->date_of_birth)
-                                                            <span class="text-muted">{{ $user->date_of_birth->format('M d, Y') }}</span>
+                                                        @if($activeSalary)
+                                                            <div class="d-flex flex-column">
+                                                                <span class="fw-bold text-success">₹{{ number_format($activeSalary->base_salary, 2) }}</span>
+                                                                <small class="text-muted">Daily: ₹{{ number_format($activeSalary->daily_rate, 2) }}</small>
+                                                            </div>
                                                         @else
-                                                            <span class="text-muted">N/A</span>
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">Not Set</span>
                                                         @endif
                                                     </td>
                                                     <td>
+                                                        {!! $user->status_badge !!}
+                                                    </td>
+                                                    <td>
                                                         <div class="btn-group btn-group-sm" role="group">
-                                                            <button type="button" class="btn btn-outline-info rounded-start-pill px-3" data-user-id="{{ $user->id }}" onclick="showUserDetails(this.getAttribute('data-user-id'))">
+                                                            <button type="button" class="btn btn-outline-info rounded-start-pill px-3" data-user-id="{{ $user->id }}" onclick="showUserDetails(this.getAttribute('data-user-id'))" title="View Details">
                                                                 <i class="fas fa-eye"></i>
                                                             </button>
-                                                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-secondary px-3">
+                                                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-secondary px-3" title="Edit User">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
+                                                            @if(auth()->user()->hasPermission('create_salary') || auth()->user()->hasPermission('update_salary') || auth()->user()->isSuperAdmin())
+                                                            <a href="{{ route('admin.salary.create', ['user_id' => $user->id]) }}" class="btn btn-outline-success px-3" title="Manage Salary">
+                                                                <i class="fas fa-money-bill-wave"></i>
+                                                            </a>
+                                                            @endif
                                                             @if(Auth::user()->id != $user->id)
-                                                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this staff member? This action cannot be undone.');">
+                                                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this staff member? This action cannot be undone.');" class="d-inline">
                                                                     @csrf
                                                                     @method('DELETE')
-                                                                    <button type="submit" class="btn btn-outline-danger rounded-end-pill px-3">
+                                                                    <button type="submit" class="btn btn-outline-danger rounded-end-pill px-3" title="Delete User">
                                                                         <i class="fas fa-trash"></i>
                                                                     </button>
                                                                 </form>
                                                             @else
-                                                                <button type="button" class="btn btn-outline-secondary rounded-end-pill px-3" disabled>
+                                                                <button type="button" class="btn btn-outline-secondary rounded-end-pill px-3" disabled title="Cannot delete yourself">
                                                                     <i class="fas fa-trash"></i>
                                                                 </button>
                                                             @endif
@@ -171,7 +204,7 @@
             "info": true,
             "paging": true,
             "columnDefs": [
-                { "orderable": false, "targets": [7] } // Disable sorting on Actions column
+                { "orderable": false, "targets": [6] } // Disable sorting on Actions column
             ],
             "language": {
                 "search": "Search:",
@@ -191,15 +224,14 @@
                 null, // Staff Member
                 null, // Email
                 null, // Role
-                null, // Address
-                null, // Mobile
-                null, // Date of Birth
+                null, // Current Salary
+                null, // Status
                 null  // Actions
             ],
             "preDrawCallback": function(settings) {
                 // Ensure consistent column count
                 if ($('#staffTable tbody tr').length === 0) {
-                    $('#staffTable tbody').html('<tr><td colspan="8" class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No staff members found</p><p class="small">Try creating a new staff member</p></div></td></tr>');
+                    $('#staffTable tbody').html('<tr><td colspan="7" class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No staff members found</p><p class="small">Try creating a new staff member</p></div></td></tr>');
                 }
             }
         });

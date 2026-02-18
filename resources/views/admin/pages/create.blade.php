@@ -45,7 +45,8 @@
                                             
                                             <div class="mb-3">
                                                 <label for="slug" class="form-label">Page Slug</label>
-                                                <input type="text" class="form-control rounded-pill" id="slug" name="slug" value="{{ old('slug') }}" required>
+                                                <input type="text" class="form-control rounded-pill" id="slug" name="slug" value="{{ old('slug') }}" required readonly>
+                                                <div class="form-text">Automatically generated from page title</div>
                                                 @error('slug')
                                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                                 @enderror
@@ -104,6 +105,20 @@
 <script>
   CKEDITOR.replace('content', {
     versionCheck: false
+  });
+
+  // Auto-generate slug from title
+  document.getElementById('title').addEventListener('input', function() {
+    const title = this.value;
+    const slug = title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-')      // Replace spaces with hyphens
+      .replace(/-+/g, '-')       // Replace multiple hyphens with single hyphen
+      .replace(/^-+|-+$/g, '');  // Remove leading/trailing hyphens
+    
+    document.getElementById('slug').value = slug;
   });
 </script>
 @endsection

@@ -55,7 +55,8 @@
                                             
                                             <div class="mb-4">
                                                 <label for="description" class="form-label fw-bold">Description</label>
-                                                <textarea class="form-control" id="description" name="description" rows="5" placeholder="Product description...">{{ old('description') }}</textarea>
+                                                <div id="description-editor" style="height: 200px; background: white;"></div>
+                                                <textarea class="form-control d-none" id="description" name="description">{{ old('description') }}</textarea>
                                             </div>
                                             
                                             <!-- Product Type Selection -->
@@ -90,65 +91,6 @@
                                                         <label for="selling_price" class="form-label fw-bold">Selling Price (₹)</label>
                                                         <input type="number" class="form-control rounded-pill px-4 py-2" id="selling_price" name="selling_price" value="{{ old('selling_price') }}" step="0.01" min="0">
                                                         <div class="form-text">Must be less than or equal to MRP</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Variable Product Fields -->
-                                            <div id="variable-product-fields" class="{{ old('product_type') == 'variable' ? '' : 'd-none' }}">
-                                                <!-- Attribute Selection -->
-                                                <div class="mb-4">
-                                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                                        <label class="form-label fw-bold mb-0">Product Attributes <span class="text-danger">*</span></label>
-                                                        <button type="button" class="btn btn-sm btn-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#attributeModal">
-                                                            <i class="fas fa-plus me-1"></i> Add New Attribute
-                                                        </button>
-                                                    </div>
-                                                    <p class="text-muted small">Select attributes for this variable product (e.g., Size, Color)</p>
-                                                    <div id="attribute-selection" class="border rounded-3 p-3">
-                                                        @if(isset($attributes) && $attributes->count() > 0)
-                                                            @foreach($attributes as $attribute)
-                                                                <div class="form-check mb-2 attribute-item" data-attribute-id="{{ $attribute->id }}">
-                                                                    <input class="form-check-input attribute-checkbox" type="checkbox" 
-                                                                           id="attribute_{{ $attribute->id }}" 
-                                                                           value="{{ $attribute->id }}" 
-                                                                           data-attribute-name="{{ $attribute->name }}"
-                                                                           data-attribute-values='@json($attribute->values->pluck('value', 'id'))'>
-                                                                    <label class="form-check-label" for="attribute_{{ $attribute->id }}">
-                                                                        <strong>{{ $attribute->name }}</strong>
-                                                                        <small class="text-muted d-block">
-                                                                            Values: {{ $attribute->values->pluck('value')->join(', ') }}
-                                                                        </small>
-                                                                    </label>
-                                                                    <button type="button" class="btn btn-sm btn-link text-primary p-0 ms-2 edit-attribute-btn" 
-                                                                            data-attribute-id="{{ $attribute->id }}"
-                                                                            data-bs-toggle="modal" 
-                                                                            data-bs-target="#attributeModal">
-                                                                        <i class="fas fa-edit"></i>
-                                                                    </button>
-                                                                </div>
-                                                            @endforeach
-                                                        @else
-                                                            <p class="text-muted mb-0" id="no-attributes-message">No attributes available. Click "Add New Attribute" to create one.</p>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Variations Accordion -->
-                                                <div class="mb-4" id="variations-container" style="display: none;">
-                                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                                        <label class="form-label fw-bold mb-0">Product Variations</label>
-                                                        <div class="btn-group">
-                                                            <button type="button" class="btn btn-sm btn-primary rounded-pill me-2" id="generate-variations-btn">
-                                                                <i class="fas fa-magic me-1"></i> Auto-Generate All
-                                                            </button>
-                                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" id="add-variation-manually-btn">
-                                                                <i class="fas fa-plus me-1"></i> Add Manual
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div class="accordion" id="variationsAccordion">
-                                                        <!-- Variation accordion items will be added here dynamically -->
                                                     </div>
                                                 </div>
                                             </div>
@@ -194,10 +136,13 @@
                                             <!-- Category Selection -->
                                             <div class="mb-4">
                                                 <label class="form-label fw-bold">Categories</label>
-                                                <div id="category-selection">
+                                                <div class="mb-2">
+                                                    <input type="text" class="form-control form-control-sm rounded-pill px-3 py-2" id="category-search" placeholder="Search categories...">
+                                                </div>
+                                                <div id="category-selection" class="border rounded-3 p-3" style="max-height: 400px; overflow-y: auto;">
                                                     @if(isset($categories) && $categories->count() > 0)
                                                         @foreach($categories as $category)
-                                                            <div class="form-check mb-2 category-item" data-category-id="{{ $category->id }}">
+                                                            <div class="form-check mb-2 category-item" data-category-id="{{ $category->id }}" data-category-name="{{ strtolower($category->name) }}">
                                                                 <input class="form-check-input category-checkbox" type="checkbox" id="category_{{ $category->id }}" value="{{ $category->id }}" name="product_categories[{{ $category->id }}][category_id]">
                                                                 <label class="form-check-label fw-bold" for="category_{{ $category->id }}">
                                                                     {{ $category->name }}
@@ -205,7 +150,7 @@
                                                                 @if($category->subCategories->count() > 0)
                                                                     <div class="subcategory-container ms-4 mt-2 d-none" id="subcategory_container_{{ $category->id }}">
                                                                         @foreach($category->subCategories as $subcategory)
-                                                                            <div class="form-check mb-1">
+                                                                            <div class="form-check mb-1 subcategory-item" data-subcategory-name="{{ strtolower($subcategory->name) }}">
                                                                                 <input class="form-check-input subcategory-checkbox" type="checkbox" id="subcategory_{{ $subcategory->id }}" value="{{ $subcategory->id }}" name="product_categories[{{ $category->id }}][subcategory_ids][]" data-category-id="{{ $category->id }}">
                                                                                 <label class="form-check-label" for="subcategory_{{ $subcategory->id }}">
                                                                                     {{ $subcategory->name }}
@@ -227,8 +172,75 @@
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                    
+                                    <!-- Variable Product Fields - Full Width -->
+                                    <div id="variable-product-fields" class="{{ old('product_type') == 'variable' ? '' : 'd-none' }}">
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <!-- Attribute Selection -->
+                                                <div class="mb-4">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <label class="form-label fw-bold mb-0">Product Attributes <span class="text-danger">*</span></label>
+                                                        <button type="button" class="btn btn-sm btn-theme-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#attributeModal">
+                                                            <i class="fas fa-plus me-1"></i> Add New Attribute
+                                                        </button>
+                                                    </div>
+                                                    <p class="text-muted small">Select attributes for this variable product (e.g., Size, Color)</p>
+                                                    <div id="attribute-selection" class="border rounded-3 p-3">
+                                                        @if(isset($attributes) && $attributes->count() > 0)
+                                                            @foreach($attributes as $attribute)
+                                                                <div class="form-check mb-2 attribute-item" data-attribute-id="{{ $attribute->id }}">
+                                                                    <input class="form-check-input attribute-checkbox" type="checkbox" 
+                                                                           id="attribute_{{ $attribute->id }}" 
+                                                                           value="{{ $attribute->id }}" 
+                                                                           data-attribute-name="{{ $attribute->name }}"
+                                                                           data-attribute-values='@json($attribute->values->pluck('value', 'id'))'>
+                                                                    <label class="form-check-label" for="attribute_{{ $attribute->id }}">
+                                                                        <strong>{{ $attribute->name }}</strong>
+                                                                        <small class="text-muted d-block">
+                                                                            Values: {{ $attribute->values->pluck('value')->join(', ') }}
+                                                                        </small>
+                                                                    </label>
+                                                                    <button type="button" class="btn btn-sm btn-link text-theme-primary p-0 ms-2 edit-attribute-btn" 
+                                                                            data-attribute-id="{{ $attribute->id }}"
+                                                                            data-bs-toggle="modal" 
+                                                                            data-bs-target="#attributeModal">
+                                                                        <i class="fas fa-edit"></i>
+                                                                    </button>
+                                                                </div>
+                                                            @endforeach
+                                                        @else
+                                                            <p class="text-muted mb-0" id="no-attributes-message">No attributes available. Click "Add New Attribute" to create one.</p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Variations Accordion -->
+                                                <div class="mb-4" id="variations-container" style="display: none;">
+                                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                                        <label class="form-label fw-bold mb-0">Product Variations</label>
+                                                        <div class="btn-group">
+                                                            <button type="button" class="btn btn-sm btn-theme-primary rounded-pill me-2" id="generate-variations-btn">
+                                                                <i class="fas fa-magic me-1"></i> Auto-Generate All
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-theme-primary rounded-pill" id="add-variation-manually-btn">
+                                                                <i class="fas fa-plus me-1"></i> Add Manual
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="accordion" id="variationsAccordion">
+                                                        <!-- Variation accordion items will be added here dynamically -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Photos Section - 50% Each -->
+                                    <div class="row">
                                         <input type="hidden" id="main_photo_id" name="main_photo_id" value="{{ old('main_photo_id') }}">
-                                        <div class="col-lg-8">
+                                        <div class="col-lg-6">
                                             <div class="mb-4">
                                                 <label class="form-label fw-bold">Main Photo</label>
                                                 <div class="border rounded-3 p-3 text-center" id="main-photo-preview">
@@ -240,7 +252,9 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+                                        </div>
+                                        
+                                        <div class="col-lg-6">
                                             <div class="mb-4">
                                                 <label class="form-label fw-bold">Gallery Photos</label>
                                                 <div class="border rounded-3 p-3" id="gallery-photos-container">
@@ -335,7 +349,7 @@
                                         </select>
                                         <div class="input-group">
                                             <input type="text" class="form-control rounded-pill" id="new-subcategory-name" placeholder="Enter subcategory name">
-                                            <button class="btn btn-outline-primary rounded-pill" type="button" id="add-subcategory-btn" disabled>
+                                            <button class="btn btn-outline-theme-primary rounded-pill" type="button" id="add-subcategory-btn" disabled>
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
@@ -362,7 +376,67 @@
 </div>
 @endsection
 
+@section('styles')
+<!-- Quill.js CSS -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+    /* Quill editor custom styling */
+    .ql-toolbar.ql-snow {
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        background: #f8f9fa;
+    }
+    .ql-container.ql-snow {
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+        font-size: 16px;
+    }
+    .ql-editor {
+        min-height: 200px;
+    }
+    /* Override Quill's default blue color with theme color */
+    .ql-snow .ql-stroke {
+        stroke: var(--theme-color, #FF6B00);
+    }
+    .ql-snow .ql-fill {
+        fill: var(--theme-color, #FF6B00);
+    }
+    .ql-snow .ql-picker-label:hover,
+    .ql-snow .ql-picker-label.ql-active,
+    .ql-snow .ql-picker-item:hover,
+    .ql-snow .ql-picker-item.ql-selected {
+        color: var(--theme-color, #FF6B00);
+    }
+    .ql-snow.ql-toolbar button:hover,
+    .ql-snow .ql-toolbar button:hover,
+    .ql-snow.ql-toolbar button:focus,
+    .ql-snow .ql-toolbar button:focus,
+    .ql-snow.ql-toolbar button.ql-active,
+    .ql-snow .ql-toolbar button.ql-active {
+        color: var(--theme-color, #FF6B00);
+    }
+    .ql-snow.ql-toolbar button:hover .ql-stroke,
+    .ql-snow .ql-toolbar button:hover .ql-stroke,
+    .ql-snow.ql-toolbar button:focus .ql-stroke,
+    .ql-snow .ql-toolbar button:focus .ql-stroke,
+    .ql-snow.ql-toolbar button.ql-active .ql-stroke,
+    .ql-snow .ql-toolbar button.ql-active .ql-stroke {
+        stroke: var(--theme-color, #FF6B00);
+    }
+    .ql-snow.ql-toolbar button:hover .ql-fill,
+    .ql-snow .ql-toolbar button:hover .ql-fill,
+    .ql-snow.ql-toolbar button:focus .ql-fill,
+    .ql-snow .ql-toolbar button:focus .ql-fill,
+    .ql-snow.ql-toolbar button.ql-active .ql-fill,
+    .ql-snow .ql-toolbar button.ql-active .ql-fill {
+        fill: var(--theme-color, #FF6B00);
+    }
+</style>
+@endsection
+
 @section('scripts')
+<!-- Quill.js -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
     // All JavaScript functionality has been moved to resources/js/common.js
     
@@ -371,6 +445,33 @@
     let variationCounter = 0;
     
     $(document).ready(function() {
+        // Initialize Quill Editor for Description
+        var quill = new Quill('#description-editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],        // toggled buttons
+                    ['link'],                                // link
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    ['clean']                                // remove formatting button
+                ]
+            },
+            placeholder: 'Product description...'
+        });
+
+        // Sync Quill content with hidden textarea
+        quill.on('text-change', function() {
+            var html = quill.root.innerHTML;
+            $('#description').val(html);
+        });
+
+        // Load existing content if any
+        var existingContent = $('#description').val();
+        if (existingContent) {
+            quill.root.innerHTML = existingContent;
+        }
+
         // Product Type Toggle
         $('input[name="product_type"]').on('change', function() {
             const productType = $(this).val();
@@ -380,16 +481,96 @@
                 $('#simple-stock-fields').removeClass('d-none');
                 $('#variable-product-fields').addClass('d-none');
                 
-                // Make simple product fields required
-                $('#mrp, #selling_price').prop('required', true);
+                // Make simple product fields required (selling_price is optional)
+                $('#mrp').prop('required', true);
             } else {
                 $('#simple-product-fields').addClass('d-none');
                 $('#simple-stock-fields').addClass('d-none');
                 $('#variable-product-fields').removeClass('d-none');
                 
                 // Remove required from simple product fields
-                $('#mrp, #selling_price').prop('required', false);
+                $('#mrp').prop('required', false);
             }
+        });
+        
+        // Stock Status Toggle Handler - Sync in_stock toggle with quantity
+        $('#in_stock').on('change', function() {
+            const isInStock = $(this).is(':checked');
+            const $stockQuantity = $('#stock_quantity');
+            const $stockContainer = $('#stock_quantity_container');
+            const $statusText = $('#stock-status-text');
+            
+            if (isInStock) {
+                // When toggled ON, show quantity fields
+                $stockContainer.removeClass('d-none');
+                $statusText.text('In Stock');
+            } else {
+                // When toggled OFF, hide quantity fields and set quantity to 0
+                $stockContainer.addClass('d-none');
+                $stockQuantity.val(0);
+                $statusText.text('Out of Stock');
+            }
+        });
+        
+        // Stock Quantity Change Handler - Sync quantity with in_stock toggle
+        $('#stock_quantity').on('input change', function() {
+            const quantity = parseInt($(this).val()) || 0;
+            const $inStockToggle = $('#in_stock');
+            const $statusText = $('#stock-status-text');
+            const $stockContainer = $('#stock_quantity_container');
+            
+            if (quantity === 0) {
+                // When quantity is 0, turn off in_stock toggle
+                $inStockToggle.prop('checked', false);
+                $stockContainer.addClass('d-none');
+                $statusText.text('Out of Stock');
+            } else if (quantity > 0 && !$inStockToggle.is(':checked')) {
+                // When quantity > 0 and toggle is off, turn it on
+                $inStockToggle.prop('checked', true);
+                $stockContainer.removeClass('d-none');
+                $statusText.text('In Stock');
+            }
+        });
+        
+        // Initialize stock status on page load
+        const initialQuantity = parseInt($('#stock_quantity').val()) || 0;
+        if (initialQuantity === 0) {
+            $('#in_stock').prop('checked', false);
+            $('#stock_quantity_container').addClass('d-none');
+            $('#stock-status-text').text('Out of Stock');
+        }
+        
+        // Category Search Functionality
+        $('#category-search').on('keyup', function() {
+            const searchTerm = $(this).val().toLowerCase();
+            
+            $('.category-item').each(function() {
+                const categoryName = $(this).data('category-name');
+                const $subcategories = $(this).find('.subcategory-item');
+                let hasVisibleSubcategory = false;
+                
+                // Check subcategories
+                $subcategories.each(function() {
+                    const subcategoryName = $(this).data('subcategory-name');
+                    if (subcategoryName && subcategoryName.includes(searchTerm)) {
+                        $(this).show();
+                        hasVisibleSubcategory = true;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+                
+                // Show/hide category based on search
+                if (categoryName.includes(searchTerm) || hasVisibleSubcategory) {
+                    $(this).show();
+                    // If subcategory matches, show the subcategory container
+                    if (hasVisibleSubcategory) {
+                        $(this).find('.subcategory-container').removeClass('d-none');
+                    }
+                } else {
+                    $(this).hide();
+                }
+            });
         });
         
         // Attribute Selection
@@ -553,7 +734,7 @@
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <strong class="text-primary">${variationName}</strong>
+                                    <strong class="text-theme-primary">${variationName}</strong>
                                     <div class="small text-muted">
                                         ${attributeBadges || 'New variation'}
                                     </div>
@@ -629,11 +810,12 @@
                                     <!-- Stock Quantity -->
                                     <div class="col-md-2">
                                         <label class="form-label small fw-bold">Stock <span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control form-control-sm" 
+                                        <input type="number" class="form-control form-control-sm variation-stock-quantity" 
                                                name="variations[${index}][stock_quantity]" 
                                                value="0" 
                                                placeholder="Stock" 
                                                min="0"
+                                               data-variation-index="${index}"
                                                required>
                                     </div>
                                     
@@ -651,9 +833,10 @@
                                     <div class="col-md-1">
                                         <label class="form-label small fw-bold">Status</label>
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" 
+                                            <input class="form-check-input variation-in-stock-toggle" type="checkbox" 
                                                    name="variations[${index}][in_stock]" 
-                                                   value="1" checked>
+                                                   value="1" 
+                                                   data-variation-index="${index}">
                                         </div>
                                     </div>
                                     
@@ -807,11 +990,12 @@
                                     <!-- Stock Quantity -->
                                     <div class="col-md-2">
                                         <label class="form-label small fw-bold">Stock <span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control form-control-sm" 
+                                        <input type="number" class="form-control form-control-sm variation-stock-quantity" 
                                                name="variations[${index}][stock_quantity]" 
                                                value="0" 
                                                placeholder="Stock" 
                                                min="0"
+                                               data-variation-index="${index}"
                                                required>
                                     </div>
                                     
@@ -829,9 +1013,10 @@
                                     <div class="col-md-1">
                                         <label class="form-label small fw-bold">Status</label>
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" 
+                                            <input class="form-check-input variation-in-stock-toggle" type="checkbox" 
                                                    name="variations[${index}][in_stock]" 
-                                                   value="1" checked>
+                                                   value="1" 
+                                                   data-variation-index="${index}">
                                         </div>
                                     </div>
                                     
@@ -897,6 +1082,33 @@
         $(document).on('click', '.remove-variation-btn', function() {
             if (confirm('Are you sure you want to remove this variation?')) {
                 $(this).closest('.variation-card').remove();
+            }
+        });
+        
+        // Variation Stock Status Toggle Handler - Sync in_stock toggle with quantity
+        $(document).on('change', '.variation-in-stock-toggle', function() {
+            const isInStock = $(this).is(':checked');
+            const variationIndex = $(this).data('variation-index');
+            const $stockQuantity = $(`.variation-stock-quantity[data-variation-index="${variationIndex}"]`);
+            
+            if (!isInStock) {
+                // When toggled OFF, set quantity to 0
+                $stockQuantity.val(0);
+            }
+        });
+        
+        // Variation Stock Quantity Change Handler - Sync quantity with in_stock toggle
+        $(document).on('input change', '.variation-stock-quantity', function() {
+            const quantity = parseInt($(this).val()) || 0;
+            const variationIndex = $(this).data('variation-index');
+            const $inStockToggle = $(`.variation-in-stock-toggle[data-variation-index="${variationIndex}"]`);
+            
+            if (quantity === 0) {
+                // When quantity is 0, turn off in_stock toggle
+                $inStockToggle.prop('checked', false);
+            } else if (quantity > 0 && !$inStockToggle.is(':checked')) {
+                // When quantity > 0 and toggle is off, turn it on
+                $inStockToggle.prop('checked', true);
             }
         });
         
@@ -1097,7 +1309,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save-attribute-btn">
+                <button type="button" class="btn btn-theme-primary" id="save-attribute-btn">
                     <i class="fas fa-save me-1"></i> Save Attribute
                 </button>
             </div>
@@ -1293,7 +1505,7 @@ $(document).ready(function() {
                                         Values: ${valuesStr}
                                     </small>
                                 </label>
-                                <button type="button" class="btn btn-sm btn-link text-primary p-0 ms-2 edit-attribute-btn" 
+                                <button type="button" class="btn btn-sm btn-link text-theme-primary p-0 ms-2 edit-attribute-btn" 
                                         data-attribute-id="${attribute.id}"
                                         data-bs-toggle="modal" 
                                         data-bs-target="#attributeModal">

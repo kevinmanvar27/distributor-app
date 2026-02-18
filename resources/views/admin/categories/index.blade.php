@@ -355,6 +355,7 @@
 <script>
     let currentMediaTarget = null;
     let currentCategoryId = null;
+    let currentCategoryName = null;
     
     $(document).ready(function() {
         
@@ -796,15 +797,23 @@
             type: 'GET',
             success: function(data) {
                 // Set parent category name
-                $('#subcategoryParentName').text('Subcategories for ' + data.data[0]?.category?.name || 'Category');
+                const parentCategoryName = data.data[0]?.category?.name || 'Category';
+                currentCategoryName = parentCategoryName;
+                $('#subcategoryParentName').text('Subcategories for ' + parentCategoryName);
                 
                 // Populate table
                 let html = '';
                 if (data.data.length > 0) {
-                    data.data.forEach(function(subcategory) {
+                    // Calculate starting serial number based on pagination
+                    let startingSerialNumber = (data.current_page - 1) * data.per_page;
+                    
+                    data.data.forEach(function(subcategory, index) {
+                        // Calculate serial number for current row
+                        let serialNumber = startingSerialNumber + index + 1;
+                        
                         html += `
                             <tr>
-                                <td>${subcategory.id}</td>
+                                <td>${serialNumber}</td>
                                 <td>
                                     <div class="d-flex align-items-center">
                                         ${subcategory.image ? 
@@ -895,7 +904,8 @@
     
     // Show subcategory modal for creating new subcategory
     function showSubCategoryModal() {
-        $('#subcategoryModalLabel').text('Add New Subcategory');
+        const categoryName = currentCategoryName || 'Category';
+        $('#subcategoryModalLabel').text('Add New Subcategory Of ' + categoryName);
         $('#subcategoryForm')[0].reset();
         $('#subcategoryId').val('');
         $('#subcategoryMethod').val('');
@@ -915,7 +925,8 @@
             url: '/admin/subcategories/' + id,
             type: 'GET',
             success: function(data) {
-                $('#subcategoryModalLabel').text('Edit Subcategory');
+                const categoryName = currentCategoryName || 'Category';
+                $('#subcategoryModalLabel').text('Edit Subcategory Of ' + categoryName);
                 $('#subcategoryId').val(data.id);
                 $('#subcategoryMethod').val('PUT');
                 $('#subcategoryCategoryId').val(data.category_id);

@@ -123,6 +123,18 @@ class ProductAnalyticsController extends Controller
             ->count();
         $guestViews = $totalViews - $loggedInViews;
 
+        // Views by source (website vs application)
+        $viewsBySource = ProductView::select('source', DB::raw('COUNT(*) as count'))
+            ->whereBetween('created_at', [$startDateTime, $endDateTime])
+            ->groupBy('source')
+            ->get();
+        
+        $websiteViews = $viewsBySource->where('source', 'website')->first()->count ?? 0;
+        $applicationViews = $viewsBySource->where('source', 'application')->first()->count ?? 0;
+        $unknownSourceViews = $viewsBySource->whereNull('source')->first()->count ?? 
+                              $viewsBySource->where('source', null)->first()->count ?? 
+                              ($totalViews - $websiteViews - $applicationViews);
+
         // Recent views
         $recentViews = ProductView::with(['product:id,name,slug', 'user:id,name'])
             ->orderByDesc('created_at')
@@ -168,6 +180,9 @@ class ProductAnalyticsController extends Controller
             'viewsByCity',
             'loggedInViews',
             'guestViews',
+            'websiteViews',
+            'applicationViews',
+            'unknownSourceViews',
             'recentViews',
             'leastViewedProducts',
             'productsWithNoViews',

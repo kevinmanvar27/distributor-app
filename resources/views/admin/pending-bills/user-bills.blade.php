@@ -23,20 +23,20 @@
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-auto">
-                                @if($user->avatar)
-                                    <img src="{{ asset('storage/' . $user->avatar) }}" 
-                                         class="rounded-circle" width="64" height="64">
-                                @else
-                                    <div class="bg-theme rounded-circle d-flex align-items-center justify-content-center" 
-                                         style="width: 64px; height: 64px;">
-                                        <span class="text-white fs-4">{{ substr($user->name, 0, 1) }}</span>
-                                    </div>
-                                @endif
+                                <img src="{{ $user->avatar_url }}" 
+                                     class="rounded-circle" width="64" height="64" 
+                                     alt="{{ $user->name }}"
+                                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=0D8ABC&color=fff';">
                             </div>
                             <div class="col">
-                                <h4 class="mb-1">{{ $user->name }}</h4>
+                                <h4 class="mb-1">
+                                    {{ $user->name }}
+                                    @if($user->trashed())
+                                        <span class="badge bg-danger ms-2">Deleted User</span>
+                                    @endif
+                                </h4>
                                 <p class="mb-0 text-muted">
-                                    <i class="fas fa-phone me-1"></i> {{ $user->mobile ?? 'N/A' }}
+                                    <i class="fas fa-phone me-1"></i> {{ $user->mobile_number ?? 'N/A' }}
                                     @if($user->email)
                                         <span class="mx-2">|</span>
                                         <i class="fas fa-envelope me-1"></i> {{ $user->email }}
@@ -78,7 +78,12 @@
                 <!-- Bills Table -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-0 py-3">
-                        <h4 class="card-title mb-0 fw-bold">{{ $user->name }}'s Bills</h4>
+                        <h4 class="card-title mb-0 fw-bold">
+                            {{ $user->name }}'s Bills
+                            @if($user->trashed())
+                                <span class="badge bg-danger ms-2">Deleted User</span>
+                            @endif
+                        </h4>
                         <p class="mb-0 text-muted">All invoices for this customer</p>
                     </div>
                     

@@ -246,16 +246,17 @@
             @php
                 // Extract values from invoice data or use defaults
                 $subtotal = $invoiceData['subtotal'] ?? $total ?? 0;
-                $shipping = $invoiceData['shipping'] ?? 0;
+                $shipping = $invoiceData['shipping'] ?? setting('delivery_charge', 0);
                 $discountAmount = $invoiceData['discount_amount'] ?? 0;
                 $gstType = $invoiceData['gst_type'] ?? 'with_gst';
+                $gstText = setting('gst_text', 'GST');
                 
                 // Handle GST based on type
                 if ($gstType === 'without_gst') {
                     $taxPercentage = 0;
                     $taxAmount = 0;
                 } else {
-                    $taxPercentage = $invoiceData['tax_percentage'] ?? 18;
+                    $taxPercentage = $invoiceData['tax_percentage'] ?? default_gst_percentage();
                     $taxAmount = $invoiceData['tax_amount'] ?? ($subtotal * $taxPercentage / 100);
                 }
                 
@@ -271,13 +272,13 @@
 
             @if($gstType === 'with_gst')
             <tr>
-                <td>GST ({{ $taxPercentage }}%):</td>
+                <td>{{ $gstText }} ({{ $taxPercentage }}%):</td>
                 <td class="text-end">₹{{ number_format($taxAmount, 2) }}</td>
             </tr>
             @endif
 
             <tr>
-                <td>Shipping:</td>
+                <td>Delivery Charge:</td>
                 <td class="text-end">₹{{ number_format($shipping, 2) }}</td>
             </tr>
 

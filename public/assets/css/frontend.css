@@ -215,6 +215,74 @@ body {
     }
 }
 
+/* Bootstrap Button Override - Use Theme Color */
+.btn-primary {
+    background: linear-gradient(135deg, var(--theme-color) 0%, var(--link-hover-color) 100%) !important;
+    border-color: var(--theme-color) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.25);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background: linear-gradient(135deg, var(--link-hover-color) 0%, var(--primary-dark) 100%) !important;
+    border-color: var(--link-hover-color) !important;
+    color: white !important;
+    box-shadow: 0 6px 20px rgba(255, 107, 0, 0.35);
+    transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+    color: var(--theme-color) !important;
+    border-color: var(--theme-color) !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--theme-color) !important;
+    border-color: var(--theme-color) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.25);
+}
+
+/* Success and Info buttons styling */
+.btn-success {
+    background-color: var(--success-color) !important;
+    border-color: var(--success-color) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.25);
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+    background-color: #218838 !important;
+    border-color: #1e7e34 !important;
+    color: white !important;
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.35);
+    transform: translateY(-2px);
+}
+
+.btn-info {
+    background-color: var(--info-color) !important;
+    border-color: var(--info-color) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.25);
+}
+
+.btn-info:hover,
+.btn-info:focus,
+.btn-info:active {
+    background-color: #138496 !important;
+    border-color: #117a8b !important;
+    color: white !important;
+    box-shadow: 0 6px 20px rgba(23, 162, 184, 0.35);
+    transform: translateY(-2px);
+}
+
 /* ==================== ENHANCED HEADER STYLES ==================== */
 .site-header {
     background: var(--white);
@@ -225,6 +293,31 @@ body {
     transition: all var(--transition-base);
     backdrop-filter: blur(10px);
     background: rgba(255, 255, 255, 0.95);
+}
+
+/* Badge and Alert Styles */
+.badge.bg-primary,
+.bg-primary {
+    background-color: var(--theme-color) !important;
+    color: white !important;
+}
+
+.text-primary-emphasis {
+    color: var(--theme-color) !important;
+}
+
+.bg-primary-subtle {
+    background-color: rgba(255, 107, 0, 0.1) !important;
+}
+
+.border-primary {
+    border-color: var(--theme-color) !important;
+}
+
+.alert-primary {
+    background-color: rgba(255, 107, 0, 0.1);
+    color: var(--theme-color);
+    border-color: var(--theme-color);
 }
 
 .site-header.scrolled {
@@ -426,6 +519,11 @@ body {
 
 .badge.bg-info {
     background: var(--info-color) !important;
+}
+
+.badge.bg-secondary {
+    background: var(--gray-300) !important;
+    color: var(--gray-800) !important;
 }
 
 /* ==================== TABLE STYLES ==================== */
@@ -1002,6 +1100,84 @@ body {
 ::-moz-selection {
     background: var(--theme-color);
     color: white;
+}
+
+/* ==================== FORM CONTROLS (CHECKBOXES, RADIOS, TOGGLES) ==================== */
+/* Form Check Inputs (Checkboxes and Radio Buttons) */
+.form-check-input {
+    border-color: var(--gray-400);
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: var(--theme-color) !important;
+    border-color: var(--theme-color) !important;
+}
+
+.form-check-input:focus {
+    border-color: var(--theme-color);
+    box-shadow: 0 0 0 0.25rem rgba(255, 107, 0, 0.25);
+    outline: none;
+}
+
+.form-check-input:hover:not(:disabled):not(:checked) {
+    border-color: var(--theme-color);
+}
+
+.form-check-input[type="radio"]:checked {
+    background-color: var(--theme-color) !important;
+    border-color: var(--theme-color) !important;
+}
+
+.form-check-input[type="checkbox"]:checked {
+    background-color: var(--theme-color) !important;
+    border-color: var(--theme-color) !important;
+}
+
+/* Form Switch (Toggle) */
+.form-switch .form-check-input {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba(0,0,0,0.25)'/%3e%3c/svg%3e");
+    cursor: pointer;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: var(--theme-color) !important;
+    border-color: var(--theme-color) !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba(255,255,255,1.0)'/%3e%3c/svg%3e");
+}
+
+.form-switch .form-check-input:focus {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba(0,0,0,0.25)'/%3e%3c/svg%3e");
+    box-shadow: 0 0 0 0.25rem rgba(255, 107, 0, 0.25);
+}
+
+.form-switch .form-check-input:hover:not(:disabled):not(:checked) {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba(0,0,0,0.35)'/%3e%3c/svg%3e");
+}
+
+/* Form Check Label */
+.form-check-label {
+    cursor: pointer;
+    user-select: none;
+}
+
+.form-check-input:disabled ~ .form-check-label {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Button Check (Radio/Checkbox styled as buttons) */
+.btn-check:checked + .btn-outline-primary,
+.btn-check:active + .btn-outline-primary {
+    background-color: var(--theme-color) !important;
+    border-color: var(--theme-color) !important;
+    color: white !important;
+}
+
+.btn-check:focus + .btn,
+.btn-check:checked + .btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(255, 107, 0, 0.25);
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */

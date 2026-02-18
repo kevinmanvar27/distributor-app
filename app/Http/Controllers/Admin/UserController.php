@@ -34,8 +34,9 @@ class UserController extends Controller
      */
     public function staff()
     {
-        // Fetch all users except those with the 'user' role
+        // Fetch all users except those with the 'user' role, with their active salary
         $staff = User::where('user_role', '!=', 'user')
+                    ->with(['activeSalary'])
                     ->orderBy('user_role')
                     ->orderBy('created_at', 'desc')
                     ->paginate(10);
@@ -51,6 +52,12 @@ class UserController extends Controller
     public function create()
     {
         $role = request('role', 'user');
+        
+        // If 'staff' is passed, default to 'admin' role
+        if ($role === 'staff') {
+            $role = 'admin';
+        }
+        
         // Ensure the role is valid
         $validRoles = ['super_admin', 'admin', 'editor', 'user'];
         if (!in_array($role, $validRoles)) {
@@ -78,6 +85,7 @@ class UserController extends Controller
             'mobile_number' => ['nullable', 'string', 'max:20'],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
             'discount_percentage' => ['nullable', 'numeric', 'between:0,100'],
+            'status' => ['nullable', 'string', Rule::in(['pending', 'under_review', 'approved', 'suspended', 'blocked'])],
         ]);
 
         // Get the frontend access permission setting
@@ -93,6 +101,7 @@ class UserController extends Controller
             'address' => $request->address,
             'mobile_number' => $request->mobile_number,
             'discount_percentage' => $request->discount_percentage ?? 0,
+            'status' => $request->status ?? 'pending',
             // Users are never approved by default when created by admin
             'is_approved' => false
         ]);
@@ -161,6 +170,7 @@ class UserController extends Controller
             'mobile_number' => ['nullable', 'string', 'max:20'],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
             'discount_percentage' => ['nullable', 'numeric', 'between:0,100'],
+            'status' => ['nullable', 'string', Rule::in(['pending', 'under_review', 'approved', 'suspended', 'blocked'])],
         ]);
 
         $user->name = $request->name;
@@ -170,6 +180,7 @@ class UserController extends Controller
         $user->address = $request->address;
         $user->mobile_number = $request->mobile_number;
         $user->discount_percentage = $request->discount_percentage ?? $user->discount_percentage;
+        $user->status = $request->status ?? $user->status;
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
@@ -306,5 +317,73 @@ class UserController extends Controller
         }
 
         return redirect()->back()->with('success', 'Profile picture removed successfully.');
+    }
+
+    /**
+     * Display a listing of trashed (soft-deleted) users.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function trashed()
+    {
+        $users = User::onlyTrashed()
+                    ->orderBy('deleted_at', 'desc')
+                    ->paginate(10);
+        return view('admin.users.trashed', compact('users'));
+    }
+
+    /**
+     * Restore a soft-deleted user.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function restore($id)
+    {
+        $user = User::onlyTrashed()->findOrFail($id);
+        $user->restore();
+
+        return redirect()->route('admin.users.trashed')->with('success', 'User restored successfully.');
+    }
+
+    /**
+     * Permanently delete a soft-deleted user.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function forceDelete($id)
+    {
+        $user = User::onlyTrashed()->findOrFail($id);
+        
+        // Delete user avatar if exists
+        if ($user->avatar) {
+            Storage::disk('public')->delete('avatars/' . $user->avatar);
+        }
+
+        $user->forceDelete();
+
+        return redirect()->route('admin.users.trashed')->with('success', 'User permanently deleted.');
+    }
+
+    /**
+     * Update user status.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateStatus(Request $request, User $user)
+    {
+        $request->validate([
+            'status' => ['required', 'string', Rule::in(['pending', 'under_review', 'approved', 'suspended', 'blocked'])],
+        ]);
+
+        $user->status = $request->status;
+        $user->save();
+
+        $statusLabel = ucfirst(str_replace('_', ' ', $request->status));
+        
+        return redirect()->back()->with('success', "User status updated to {$statusLabel} successfully.");
     }
 }
