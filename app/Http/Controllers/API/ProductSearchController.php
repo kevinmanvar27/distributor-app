@@ -134,6 +134,11 @@ class ProductSearchController extends ApiController
                         
                         $variation->formatted_attributes = $variation->formatted_attributes;
                         
+                        // Ensure image URL is included
+                        if ($variation->image) {
+                            $variation->image_url = $variation->image->url;
+                        }
+                        
                         return $variation;
                     });
                 }
@@ -312,6 +317,11 @@ class ProductSearchController extends ApiController
                             : $priceToUse;
                         
                         $variation->formatted_attributes = $variation->formatted_attributes;
+                        
+                        // Ensure image URL is included
+                        if ($variation->image) {
+                            $variation->image_url = $variation->image->url;
+                        }
                         
                         return $variation;
                     });
@@ -504,6 +514,11 @@ class ProductSearchController extends ApiController
                             : $priceToUse;
                         
                         $variation->formatted_attributes = $variation->formatted_attributes;
+                        
+                        // Ensure image URL is included
+                        if ($variation->image) {
+                            $variation->image_url = $variation->image->url;
+                        }
                         
                         return $variation;
                     });

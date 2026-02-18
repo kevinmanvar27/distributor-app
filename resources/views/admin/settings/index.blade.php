@@ -821,40 +821,9 @@
                                             <h4 class="mb-4">Database Operations</h4>
                                             
                                             <div class="row g-4">
-                                                <!-- Clean Database Section -->
-                                                <div class="col-md-6">
-                                                    <div class="card border-0 shadow-sm h-100">
-                                                        <div class="card-body">
-                                                            <h5 class="card-title mb-3">
-                                                                <i class="fas fa-broom text-danger me-2"></i>Clean Database
-                                                            </h5>
-                                                            <p class="card-text">
-                                                                Remove all user data while preserving essential records.
-                                                                This operation will permanently delete all user data, bookings, transactions, and notifications. 
-                                                                Subscription plans, features, and settings will be preserved.
-                                                            </p>
-                                                            
-                                                            <div class="alert alert-warning">
-                                                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                                                <strong>Warning:</strong> This action cannot be undone!
-                                                            </div>
-                                                            
-                                                            @if(Auth::user()->isSuperAdmin())
-                                                            <button type="button" class="btn btn-danger w-100" data-action="clean-database" onclick="return confirm('Are you sure you want to clean the database? This action cannot be undone!')">
-                                                                <i class="fas fa-trash-alt me-1"></i> Clean Database
-                                                            </button>
-                                                            @else
-                                                            <button type="button" class="btn btn-secondary w-100" disabled title="Only super administrators can clean the database">
-                                                                <i class="fas fa-lock me-1"></i> Super Admin Only
-                                                            </button>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
                                                 <!-- Export Database Section -->
-                                                <div class="col-md-6">
-                                                    <div class="card border-0 shadow-sm h-100">
+                                                <div class="col-md-8 mx-auto">
+                                                    <div class="card border-0 shadow-sm">
                                                         <div class="card-body">
                                                             <h5 class="card-title mb-3">
                                                                 <i class="fas fa-file-export text-primary me-2"></i>Export Full Database
@@ -981,11 +950,8 @@
                             </div>
                         </form>
                         
-                        <!-- Hidden forms for database management (outside the main form) -->
+                        <!-- Hidden form for database export (outside the main form) -->
                         <div style="display: none;">
-                            <form id="cleanDatabaseForm" action="{{ route('admin.settings.database.clean') }}" method="POST">
-                                @csrf
-                            </form>
                             <form id="exportDatabaseForm" action="{{ route('admin.settings.database.export') }}" method="POST">
                                 @csrf
                             </form>
@@ -1081,18 +1047,8 @@
             }
         }
         
-        // Add event listeners for database management buttons
-        const cleanDatabaseButton = document.querySelector('[data-action="clean-database"]');
+        // Add event listener for database export button
         const exportDatabaseButton = document.querySelector('[data-action="export-database"]');
-        
-        if (cleanDatabaseButton) {
-            cleanDatabaseButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (confirm('Are you sure you want to clean the database? This action cannot be undone!')) {
-                    document.getElementById('cleanDatabaseForm').submit();
-                }
-            });
-        }
         
         if (exportDatabaseButton) {
             exportDatabaseButton.addEventListener('click', function(e) {

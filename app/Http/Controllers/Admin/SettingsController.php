@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Setting;
 use App\Models\User;
 
@@ -546,21 +549,189 @@ class SettingsController extends Controller
     
     /**
      * Clean the database by removing all user data
+     * 
+     * DISABLED: This feature has been removed from the UI
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function cleanDatabase(Request $request)
     {
+        // This feature has been disabled and removed from the settings UI
+        return redirect()->back()->with('error', 'This feature has been disabled.');
+        
+        /* ORIGINAL CODE KEPT FOR REFERENCE - NOT EXECUTED
+        // Check permission - Only super admin can clean database
         // Check permission - Only super admin can clean database
         if (!Auth::user()->isSuperAdmin()) {
             return redirect()->back()->with('error', 'Only super administrators can perform database cleaning.');
         }
         
-        // Add database cleaning logic here
-        // This is a placeholder implementation
-        
-        return redirect()->back()->with('success', 'Database cleaned successfully.');
+        try {
+            DB::beginTransaction();
+            
+            $currentUserId = Auth::id();
+            $deletedCounts = [];
+            
+            // Helper function to safely delete from table if it exists
+            $safeDelete = function($table, $callback = null) use (&$deletedCounts) {
+                try {
+                    if (Schema::hasTable($table)) {
+                        if ($callback) {
+                            $deletedCounts[$table] = $callback();
+                        } else {
+                            $deletedCounts[$table] = DB::table($table)->delete();
+                        }
+                    } else {
+                        $deletedCounts[$table] = 0; // Table doesn't exist
+                    }
+                } catch (\Exception $e) {
+                    Log::warning("Could not delete from table: {$table}", ['error' => $e->getMessage()]);
+                    $deletedCounts[$table] = 0;
+                }
+                return $deletedCounts[$table] ?? 0;
+            };
+            
+            // Get super admin IDs first (needed for multiple operations)
+            $superAdminIds = DB::table('users')
+                ->where('user_role', 'super_admin')
+                ->pluck('id')
+                ->toArray();
+            
+            // 1. Delete user-related data (shopping carts, wishlists)
+            $safeDelete('shopping_cart_items');
+            $safeDelete('wishlists');
+            
+            // 2. Delete all invoices and related data
+            $safeDelete('proforma_invoices');
+            $safeDelete('without_gst_invoices');
+            
+            // 3. Delete all notifications
+            $safeDelete('notifications');
+            $safeDelete('scheduled_notifications');
+            
+            // 4. Delete leads
+            $safeDelete('leads');
+            
+            // 5. Delete coupon usage records
+            $safeDelete('coupon_usage');
+            
+            // 6. Delete attendance records
+            $safeDelete('attendance');
+            
+            // 7. Delete salary payments and salaries
+            $safeDelete('salary_payments');
+            $safeDelete('salaries');
+            
+            // 8. Delete product views/analytics
+            $safeDelete('product_views');
+            
+            // 9. Delete media files (except system/default ones)
+            $safeDelete('media', function() {
+                return DB::table('media')
+                    ->where('collection_name', '!=', 'default')
+                    ->where('collection_name', '!=', 'system')
+                    ->delete();
+            });
+            
+            // 10. Delete user groups and memberships (except super admin's groups)
+            $safeDelete('user_group_members', function() use ($superAdminIds) {
+                return DB::table('user_group_members')
+                    ->whereNotIn('user_id', $superAdminIds)
+                    ->delete();
+            });
+            
+            $safeDelete('user_groups', function() use ($superAdminIds) {
+                return DB::table('user_groups')
+                    ->whereNotIn('created_by', $superAdminIds)
+                    ->delete();
+            });
+            
+            // 11. Reset user permissions (except super admins)
+            $safeDelete('user_permissions', function() use ($superAdminIds) {
+                return DB::table('user_permissions')
+                    ->whereNotIn('user_id', $superAdminIds)
+                    ->delete();
+            });
+            
+            // 12. Delete all users except super admins
+            $safeDelete('users', function() {
+                return DB::table('users')
+                    ->where('user_role', '!=', 'super_admin')
+                    ->delete();
+            });
+            
+            // 13. Delete personal access tokens (except current super admin's)
+            $safeDelete('personal_access_tokens', function() use ($superAdminIds) {
+                return DB::table('personal_access_tokens')
+                    ->whereNotIn('tokenable_id', $superAdminIds)
+                    ->where('tokenable_type', 'App\\Models\\User')
+                    ->delete();
+            });
+            
+            // 14. Clear cache tables
+            if (Schema::hasTable('cache')) {
+                DB::table('cache')->truncate();
+            }
+            if (Schema::hasTable('cache_locks')) {
+                DB::table('cache_locks')->truncate();
+            }
+            
+            // 15. Clear failed jobs
+            $safeDelete('failed_jobs');
+            
+            // 16. Clear pending jobs and job batches
+            $safeDelete('jobs');
+            $safeDelete('job_batches');
+            
+            // 17. Clear password reset tokens (except super admins)
+            $safeDelete('password_reset_tokens', function() use ($superAdminIds) {
+                $superAdminEmails = DB::table('users')
+                    ->where('user_role', 'super_admin')
+                    ->pluck('email')
+                    ->toArray();
+                
+                return DB::table('password_reset_tokens')
+                    ->whereNotIn('email', $superAdminEmails)
+                    ->delete();
+            });
+            
+            // 18. Clear sessions (except current user's session)
+            $safeDelete('sessions', function() use ($superAdminIds) {
+                $currentSessionId = session()->getId();
+                return DB::table('sessions')
+                    ->where('id', '!=', $currentSessionId)
+                    ->whereNotIn('user_id', $superAdminIds)
+                    ->delete();
+            });
+            
+            DB::commit();
+            
+            // Log the cleaning operation
+            Log::info('Database cleaned successfully', [
+                'user_id' => $currentUserId,
+                'deleted_counts' => $deletedCounts,
+                'timestamp' => now()
+            ]);
+            
+            // Create a summary message
+            $totalDeleted = array_sum($deletedCounts);
+            $message = "Database cleaned successfully! Removed {$totalDeleted} records total.";
+            
+            return redirect()->back()->with('success', $message);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Database cleaning failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return redirect()->back()->with('error', 'Database cleaning failed: ' . $e->getMessage());
+        }
+        */ // END OF DISABLED CODE
     }
     
     /**
@@ -576,9 +747,102 @@ class SettingsController extends Controller
             return redirect()->back()->with('error', 'Only super administrators can export the database.');
         }
         
-        // Add database export logic here
-        // This is a placeholder implementation
-        
-        return response()->download(public_path('sample.sql'), 'database_export.sql');
+        try {
+            // Get database configuration
+            $database = Config::get('database.connections.mysql.database');
+            $username = Config::get('database.connections.mysql.username');
+            $password = Config::get('database.connections.mysql.password');
+            $host = Config::get('database.connections.mysql.host');
+            $port = Config::get('database.connections.mysql.port', 3306);
+            
+            // Create a unique filename with timestamp
+            $filename = 'database_export_' . date('Y-m-d_His') . '.sql';
+            $filepath = storage_path('app/temp/' . $filename);
+            
+            // Create temp directory if it doesn't exist
+            if (!file_exists(storage_path('app/temp'))) {
+                mkdir(storage_path('app/temp'), 0755, true);
+            }
+            
+            // Determine mysqldump path (check common locations)
+            $mysqldumpPath = 'mysqldump'; // Default to system PATH
+            
+            // Check for XAMPP installation on macOS
+            if (file_exists('/Applications/XAMPP/xamppfiles/bin/mysqldump')) {
+                $mysqldumpPath = '/Applications/XAMPP/xamppfiles/bin/mysqldump';
+            }
+            // Check for XAMPP installation on Windows
+            elseif (file_exists('C:/xampp/mysql/bin/mysqldump.exe')) {
+                $mysqldumpPath = 'C:/xampp/mysql/bin/mysqldump.exe';
+            }
+            // Check for XAMPP installation on Linux
+            elseif (file_exists('/opt/lampp/bin/mysqldump')) {
+                $mysqldumpPath = '/opt/lampp/bin/mysqldump';
+            }
+            
+            // Build mysqldump command
+            if (empty($password)) {
+                $command = sprintf(
+                    '%s --user=%s --host=%s --port=%s --single-transaction --routines --triggers %s > %s',
+                    escapeshellarg($mysqldumpPath),
+                    escapeshellarg($username),
+                    escapeshellarg($host),
+                    escapeshellarg($port),
+                    escapeshellarg($database),
+                    escapeshellarg($filepath)
+                );
+            } else {
+                $command = sprintf(
+                    '%s --user=%s --password=%s --host=%s --port=%s --single-transaction --routines --triggers %s > %s',
+                    escapeshellarg($mysqldumpPath),
+                    escapeshellarg($username),
+                    escapeshellarg($password),
+                    escapeshellarg($host),
+                    escapeshellarg($port),
+                    escapeshellarg($database),
+                    escapeshellarg($filepath)
+                );
+            }
+            
+            // Execute the command
+            $output = [];
+            $returnVar = 0;
+            exec($command . ' 2>&1', $output, $returnVar);
+            
+            // Check if the export was successful
+            if ($returnVar !== 0 || !file_exists($filepath) || filesize($filepath) === 0) {
+                Log::error('Database export failed', [
+                    'return_code' => $returnVar,
+                    'output' => $output,
+                    'file_exists' => file_exists($filepath),
+                    'file_size' => file_exists($filepath) ? filesize($filepath) : 0
+                ]);
+                
+                // Clean up empty file if it exists
+                if (file_exists($filepath)) {
+                    unlink($filepath);
+                }
+                
+                return redirect()->back()->with('error', 'Database export failed. Please ensure mysqldump is installed and accessible.');
+            }
+            
+            // Log successful export
+            Log::info('Database exported successfully', [
+                'user_id' => Auth::id(),
+                'filename' => $filename,
+                'size' => filesize($filepath)
+            ]);
+            
+            // Download the file and then delete it
+            return response()->download($filepath, $filename)->deleteFileAfterSend(true);
+            
+        } catch (\Exception $e) {
+            Log::error('Database export exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()->with('error', 'An error occurred while exporting the database: ' . $e->getMessage());
+        }
     }
 }

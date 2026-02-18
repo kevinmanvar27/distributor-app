@@ -278,7 +278,7 @@ Route::middleware('auth')->group(function () {
     });
     
     // Database Management Routes (Super Admin Only)
-    Route::post('/admin/settings/database/clean', [SettingsController::class, 'cleanDatabase'])->name('admin.settings.database.clean');
+    // Route::post('/admin/settings/database/clean', [SettingsController::class, 'cleanDatabase'])->name('admin.settings.database.clean'); // Removed - Clean database feature disabled
     Route::post('/admin/settings/database/export', [SettingsController::class, 'exportDatabase'])->name('admin.settings.database.export');
     
     // Firebase Configuration Test Route
