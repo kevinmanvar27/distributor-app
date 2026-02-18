@@ -240,6 +240,13 @@
                                                                                    name="variations[{{ $index }}][remove_image]" 
                                                                                    value="0"
                                                                                    class="remove-image-flag">
+                                                                            <!-- Hidden field to preserve image_id -->
+                                                                            @if($variation->image_id)
+                                                                            <input type="hidden" 
+                                                                                   name="variations[{{ $index }}][image_id]" 
+                                                                                   value="{{ $variation->image_id }}"
+                                                                                   class="variation-image-id">
+                                                                            @endif
                                                                         </div>
                                                                     </div>
                                                                     
