@@ -6,7 +6,10 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use App\Mail\WelcomeMail;
 
 /**
  * @OA\Tag(
@@ -131,6 +134,15 @@ class AuthController extends ApiController
             'is_approved' => false,
             'device_token' => $request->device_token,
         ]);
+
+        // Send welcome email
+        try {
+            Mail::to($user->email)->send(new WelcomeMail($user, true));
+            Log::info('Welcome email sent successfully to: ' . $user->email);
+        } catch (\Exception $e) {
+            Log::error('Failed to send welcome email: ' . $e->getMessage());
+            // Continue with registration even if email fails
+        }
 
         $token = $user->createToken('API Token')->plainTextToken;
 

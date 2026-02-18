@@ -91,10 +91,14 @@ class PasswordResetController extends ApiController
         if ($user) {
             try {
                 $this->sendOtpEmail($user, $otp);
+                \Log::info('Password reset OTP sent successfully to: ' . $user->email);
             } catch (\Exception $e) {
                 \Log::error('Password reset OTP email failed: ' . $e->getMessage());
+                \Log::error('Stack trace: ' . $e->getTraceAsString());
                 // Don't return error - still show success for security
             }
+        } else {
+            \Log::info('Password reset requested for non-existent email: ' . $request->email);
         }
 
         // Always return success response (prevents email enumeration)

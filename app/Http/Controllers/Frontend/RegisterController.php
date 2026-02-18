@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\Setting;
+use App\Mail\WelcomeMail;
 
 class RegisterController extends Controller
 {
@@ -64,6 +67,16 @@ class RegisterController extends Controller
             'user_role' => 'user',
             'is_approved' => $isApproved,
         ]);
+
+        // Send welcome email
+        try {
+            $requiresApproval = ($accessPermission === 'admin_approval_required');
+            Mail::to($user->email)->send(new WelcomeMail($user, $requiresApproval));
+            Log::info('Welcome email sent successfully to: ' . $user->email);
+        } catch (\Exception $e) {
+            Log::error('Failed to send welcome email: ' . $e->getMessage());
+            // Continue with registration even if email fails
+        }
 
         // Always redirect to login page with appropriate message
         if ($accessPermission === 'admin_approval_required') {

@@ -28,10 +28,13 @@ class PreventRequestsDuringMaintenance
      * @var array<int, string>
      */
     protected $except = [
-        '/admin/*',           // Admin panel routes (login, dashboard, etc.)
-        '/super-admin/*',     // Super admin specific routes
-        '/api/admin/*',       // Admin API routes
-        '/logout',            // Logout route for admin users
+        'admin',             // Admin root path
+        'admin/*',           // Admin panel routes (login, dashboard, etc.)
+        'admin/login',       // Admin login page (explicit)
+        'super-admin/*',     // Super admin specific routes
+        'api/admin/*',       // Admin API routes
+        'logout',            // Logout route for admin users
+        'css/dynamic.css',   // Dynamic CSS for admin panel styling
     ];
 
     /**
@@ -63,6 +66,7 @@ class PreventRequestsDuringMaintenance
      */
     public function handle($request, Closure $next)
     {
+        // First check if the request path is in the exception list
         if ($this->inExceptArray($request)) {
             return $next($request);
         }
