@@ -197,6 +197,13 @@
                                             @endif
                                         </div>
                                         
+                                        <!-- Banner Page Redirect URL -->
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-medium">Banner Page Redirect URL</label>
+                                            <input type="url" name="banner_page_redirect_url" value="{{ old('banner_page_redirect_url', $setting->banner_page_redirect_url) }}" class="form-control" placeholder="https://example.com/page">
+                                            <div class="form-text">URL to redirect when banner is clicked</div>
+                                        </div>
+                                        
                                         <!-- Footer Text -->
                                         <div class="col-md-6">
                                             <label class="form-label fw-medium">Footer Text</label>

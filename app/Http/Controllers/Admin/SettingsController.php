@@ -61,6 +61,7 @@ class SettingsController extends Controller
             'header_logo' => null,
             'footer_logo' => null,
             'favicon' => null,
+            'banner_page_redirect_url' => null,
             'facebook_url' => null,
             'twitter_url' => null,
             'instagram_url' => null,
@@ -132,6 +133,7 @@ class SettingsController extends Controller
             'footer_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,ico|max:2048',
             'banner_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'banner_page_redirect_url' => 'nullable|url|max:500',
             'site_title' => 'nullable|string|max:255',
             'site_description' => 'nullable|string',
             'tagline' => 'nullable|string|max:255',
@@ -266,6 +268,7 @@ class SettingsController extends Controller
         $setting->gst_text = $request->gst_text;
         $setting->default_gst_percentage = $request->default_gst_percentage ?? 18;
         $setting->delivery_charge = $request->delivery_charge ?? 0;
+        $setting->banner_page_redirect_url = $request->banner_page_redirect_url;
         $setting->theme_color = $request->theme_color;
         $setting->background_color = $request->background_color;
         $setting->font_color = $request->font_color;
@@ -516,6 +519,7 @@ class SettingsController extends Controller
                 'footer_logo' => null,
                 'favicon' => null,
                 'banner_image' => null,
+                'banner_page_redirect_url' => null,
                 'facebook_url' => null,
                 'twitter_url' => null,
                 'instagram_url' => null,

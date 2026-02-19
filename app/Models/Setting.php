@@ -11,6 +11,7 @@ class Setting extends Model
         'footer_logo',
         'favicon',
         'banner_image',
+        'banner_page_redirect_url',
         'site_title',
         'site_description',
         'tagline',

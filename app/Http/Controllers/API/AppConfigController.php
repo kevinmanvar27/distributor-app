@@ -102,6 +102,7 @@ class AppConfigController extends ApiController
             'favicon' => $this->getLogoUrl('favicon'),
             'banner_image_url' => $this->getLogoUrl('banner_image'),
             'banner_image' => $this->getLogoUrl('banner_image'),
+            'banner_page_redirect_url' => $this->getSetting('banner_page_redirect_url', ''),
             'app_icon_url' => $this->getLogoUrl('app_icon_url'),
             'splash_screen_url' => $this->getLogoUrl('splash_screen_url'),
             
