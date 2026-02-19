@@ -558,8 +558,14 @@ class AppConfigController extends ApiController
             return $value;
         }
         
-        // Otherwise, prepend the app URL
-        return rtrim(config('app.url'), '/') . '/' . ltrim($value, '/');
+        // If the path doesn't start with 'storage/', prepend it
+        $path = ltrim($value, '/');
+        if (!str_starts_with($path, 'storage/')) {
+            $path = 'storage/' . $path;
+        }
+        
+        // Prepend the app URL
+        return rtrim(config('app.url'), '/') . '/' . $path;
     }
 
     /**
