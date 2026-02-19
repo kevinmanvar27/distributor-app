@@ -55,7 +55,7 @@
                 <p class="text-muted mb-0">Explore our wide range of product categories</p>
             </div>
             <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <a href="#" class="btn btn-outline-theme btn-ripple hover-lift">
+                <a href="{{ route('frontend.categories.all') }}" class="btn btn-outline-theme btn-ripple hover-lift">
                     <i class="fas fa-th-large me-2"></i>View All Categories
                 </a>
             </div>
@@ -126,7 +126,7 @@
                 <p class="text-muted mb-0">Check out our latest and most popular products</p>
             </div>
             <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <a href="#" class="btn btn-outline-theme btn-ripple hover-lift">
+                <a href="{{ route('frontend.products.all') }}" class="btn btn-outline-theme btn-ripple hover-lift">
                     <i class="fas fa-shopping-bag me-2"></i>View All Products
                 </a>
             </div>

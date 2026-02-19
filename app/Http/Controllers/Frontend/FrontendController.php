@@ -447,4 +447,168 @@ class FrontendController extends Controller
         
         return redirect()->route('frontend.profile')->with('success', 'Password changed successfully.');
     }
+    
+    /**
+     * Show all categories page
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
+     */
+    public function allCategories(Request $request)
+    {
+        // Fetch all active categories with their images and subcategories
+        $categories = Category::where('is_active', true)
+            ->with('image', 'subCategories')
+            ->get()
+            ->filter(function ($category) {
+                // Check if category has any subcategories with products
+                foreach ($category->subCategories as $subCategory) {
+                    // Check if this subcategory has any products
+                    $products = Product::where('status', 'published')
+                        ->get()
+                        ->filter(function ($product) use ($category, $subCategory) {
+                            if (!$product->product_categories) {
+                                return false;
+                            }
+                            
+                            // Check if product belongs to both the main category and this specific subcategory
+                            foreach ($product->product_categories as $catData) {
+                                if (isset($catData['category_id']) && $catData['category_id'] == $category->id &&
+                                    isset($catData['subcategory_ids']) && in_array($subCategory->id, $catData['subcategory_ids'])) {
+                                    return true;
+                                }
+                            }
+                            
+                            return false;
+                        });
+                    
+                    // If we found products in this subcategory, the category should be displayed
+                    if ($products->count() > 0) {
+                        return true;
+                    }
+                }
+                
+                // Check if the parent category itself has products (not in subcategories)
+                $directCategoryProducts = Product::where('status', 'published')
+                    ->get()
+                    ->filter(function ($product) use ($category) {
+                        if (!$product->product_categories) {
+                            return false;
+                        }
+                        
+                        // Check if product belongs directly to this category (without subcategories)
+                        foreach ($product->product_categories as $catData) {
+                            if (isset($catData['category_id']) && $catData['category_id'] == $category->id) {
+                                // Check if subcategory_ids is empty or not set (meaning product is directly in category)
+                                if (!isset($catData['subcategory_ids']) || empty($catData['subcategory_ids'])) {
+                                    return true;
+                                }
+                            }
+                        }
+                        
+                        return false;
+                    });
+                
+                // If we found direct products in this category, display it
+                if ($directCategoryProducts->count() > 0) {
+                    return true;
+                }
+                
+                // No subcategories with products or direct products found
+                return false;
+            })
+            ->values()
+            ->map(function ($category) {
+                // Count products for this category (including both direct and subcategory products)
+                $productCount = Product::where('status', 'published')
+                    ->get()
+                    ->filter(function ($product) use ($category) {
+                        if (!$product->product_categories) {
+                            return false;
+                        }
+                        
+                        // Check if product belongs to this category (either directly or through subcategories)
+                        foreach ($product->product_categories as $catData) {
+                            if (isset($catData['category_id']) && $catData['category_id'] == $category->id) {
+                                return true;
+                            }
+                        }
+                        
+                        return false;
+                    })
+                    ->count();
+                
+                // Add product count to category
+                $category->product_count = $productCount;
+                return $category;
+            });
+        
+        // Handle AJAX request for load more
+        if ($request->ajax()) {
+            $offset = $request->get('offset', 0);
+            $limit = 8;
+            
+            $paginatedCategories = $categories->slice($offset, $limit)->values();
+            $hasMore = $categories->count() > ($offset + $limit);
+            
+            return response()->json([
+                'html' => view('frontend.partials.category-cards', ['categories' => $paginatedCategories])->render(),
+                'hasMore' => $hasMore,
+                'newOffset' => $offset + $limit
+            ]);
+        }
+        
+        $totalCategories = $categories->count();
+        
+        return view('frontend.all-categories', compact('categories', 'totalCategories'));
+    }
+    
+    /**
+     * Show all products page
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
+     */
+    public function allProducts(Request $request)
+    {
+        // Get the sort parameter from the request
+        $sort = $request->query('sort', 'default');
+        
+        // Fetch all published products with their main photos and variations (for stock calculation)
+        $products = Product::where('status', 'published')
+            ->with(['mainPhoto', 'variations'])
+            ->get();
+            
+        // Sort products based on the sort parameter
+        if ($sort === 'name') {
+            $products = $products->sortBy('name')->values();
+        } elseif ($sort === 'price-low') {
+            $products = $products->sortBy(function ($product) {
+                return $product->selling_price ?? $product->mrp;
+            })->values();
+        } elseif ($sort === 'price-high') {
+            $products = $products->sortByDesc(function ($product) {
+                return $product->selling_price ?? $product->mrp;
+            })->values();
+        }
+        
+        // Handle AJAX request for load more
+        if ($request->ajax()) {
+            $offset = $request->get('offset', 0);
+            $limit = 8;
+            
+            $paginatedProducts = $products->slice($offset, $limit)->values();
+            $hasMore = $products->count() > ($offset + $limit);
+            
+            return response()->json([
+                'html' => view('frontend.partials.product-cards', ['products' => $paginatedProducts])->render(),
+                'hasMore' => $hasMore,
+                'newOffset' => $offset + $limit
+            ]);
+        }
+        
+        $totalProducts = $products->count();
+        
+        return view('frontend.all-products', compact('products', 'sort', 'totalProducts'));
+    }
 }

@@ -69,6 +69,8 @@ Route::post('delete-account', [AccountDeletionController::class, 'deleteAccount'
 // Public Frontend Routes (accessible based on settings)
 Route::middleware('frontend.access')->group(function () {
     Route::get('/home', [FrontendController::class, 'index'])->name('frontend.home');
+    Route::get('/categories', [FrontendController::class, 'allCategories'])->name('frontend.categories.all');
+    Route::get('/products', [FrontendController::class, 'allProducts'])->name('frontend.products.all');
     Route::get('/category/{category:slug}', [FrontendController::class, 'showCategory'])->name('frontend.category.show');
     Route::get('/product/{product:slug}', [FrontendController::class, 'showProduct'])->name('frontend.product.show');
     // AJAX route for fetching subcategories

@@ -296,10 +296,15 @@
             padding: 2rem 0;
         }
         
-        /* Auth card animations */
+        /* Auth card animations with glassmorphism effect */
         .auth-card {
             border-radius: 16px;
             overflow: hidden;
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
         }
         
         /* Form input styles */
@@ -402,7 +407,7 @@
             border-color: var(--theme-color);
         }
         
-        /* Background decoration */
+        /* Enhanced Background decoration with gradient and animated shapes */
         .auth-bg-decoration {
             position: fixed;
             top: 0;
@@ -412,36 +417,156 @@
             pointer-events: none;
             overflow: hidden;
             z-index: -1;
+            background: linear-gradient(135deg, 
+                #fff5f0 0%, 
+                #ffe8d9 25%,
+                #ffd4b3 50%,
+                #ffe8d9 75%,
+                #fff5f0 100%);
         }
         
+        /* Animated gradient overlay */
         .auth-bg-decoration::before {
             content: '';
             position: absolute;
             top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, var(--theme-color) 0%, transparent 70%);
-            opacity: 0.05;
+            right: -20%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, #FF6B00 0%, #ff8533 30%, transparent 70%);
+            opacity: 0.15;
+            animation: float 20s ease-in-out infinite;
         }
         
         .auth-bg-decoration::after {
             content: '';
             position: absolute;
             bottom: -50%;
-            left: -50%;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, var(--theme-color) 0%, transparent 70%);
-            opacity: 0.05;
+            left: -20%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, #ff9966 0%, #ffb380 30%, transparent 70%);
+            opacity: 0.15;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+        
+        /* Animated shapes */
+        .auth-shape {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF6B00 0%, #ff8533 50%, #ffb380 100%);
+            opacity: 0.08;
+            animation: float 15s ease-in-out infinite;
+        }
+        
+        .auth-shape-1 {
+            width: 300px;
+            height: 300px;
+            top: 10%;
+            left: 5%;
+            animation-duration: 18s;
+        }
+        
+        .auth-shape-2 {
+            width: 200px;
+            height: 200px;
+            top: 60%;
+            right: 10%;
+            animation-duration: 22s;
+            animation-delay: -5s;
+        }
+        
+        .auth-shape-3 {
+            width: 150px;
+            height: 150px;
+            bottom: 15%;
+            left: 15%;
+            animation-duration: 20s;
+            animation-delay: -10s;
+        }
+        
+        .auth-shape-4 {
+            width: 250px;
+            height: 250px;
+            top: 30%;
+            right: 5%;
+            animation-duration: 25s;
+            animation-delay: -15s;
+        }
+        
+        /* Floating particles */
+        .auth-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #FF6B00;
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: particle-float 10s ease-in-out infinite;
+        }
+        
+        /* Float animation */
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(30px, -30px) scale(1.1);
+            }
+            50% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+            75% {
+                transform: translate(20px, 30px) scale(1.05);
+            }
+        }
+        
+        /* Particle float animation */
+        @keyframes particle-float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0.4;
+            }
+            50% {
+                transform: translateY(-100px) translateX(50px);
+                opacity: 0.7;
+            }
+        }
+        
+        /* Pulse animation for shapes */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.08;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.12;
+            }
         }
     </style>
     
     @yield('styles')
 </head>
 <body>
-    <!-- Background decoration -->
-    <div class="auth-bg-decoration"></div>
+    <!-- Enhanced Background decoration with animated shapes -->
+    <div class="auth-bg-decoration">
+        <!-- Animated shapes -->
+        <div class="auth-shape auth-shape-1"></div>
+        <div class="auth-shape auth-shape-2"></div>
+        <div class="auth-shape auth-shape-3"></div>
+        <div class="auth-shape auth-shape-4"></div>
+        
+        <!-- Floating particles -->
+        <div class="auth-particle" style="top: 10%; left: 20%; animation-delay: 0s;"></div>
+        <div class="auth-particle" style="top: 30%; left: 80%; animation-delay: -2s;"></div>
+        <div class="auth-particle" style="top: 50%; left: 10%; animation-delay: -4s;"></div>
+        <div class="auth-particle" style="top: 70%; left: 70%; animation-delay: -6s;"></div>
+        <div class="auth-particle" style="top: 20%; left: 50%; animation-delay: -1s;"></div>
+        <div class="auth-particle" style="top: 80%; left: 30%; animation-delay: -3s;"></div>
+        <div class="auth-particle" style="top: 40%; left: 60%; animation-delay: -5s;"></div>
+        <div class="auth-particle" style="top: 60%; left: 40%; animation-delay: -7s;"></div>
+    </div>
     
     <div class="auth-wrapper">
         @yield('content')
