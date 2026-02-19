@@ -1,0 +1,851 @@
+================================================================================
+                    NOTIFICATION APIS - COMPLETE REFERENCE
+================================================================================
+
+Project: Distributor App
+Authentication: Laravel Sanctum (Bearer Token)
+Base URL: https://your-domain.com/api
+Push Service: Firebase Cloud Messaging (FCM)
+
+================================================================================
+                              USER ENDPOINTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. GET LIST OF NOTIFICATIONS
+--------------------------------------------------------------------------------
+Endpoint: GET /api/notifications
+Auth: Required (Bearer Token)
+
+Query Parameters:
+  - page (optional): Page number for pagination (default: 1)
+  - per_page (optional): Items per page (default: 15)
+
+Request Example:
+  GET /api/notifications?page=1&per_page=20
+  Headers:
+    Authorization: Bearer {your_token}
+    Accept: application/json
+
+Response Success (200):
+  {
+    "success": true,
+    "data": {
+      "current_page": 1,
+      "data": [
+        {
+          "id": 1,
+          "user_id": 5,
+          "title": "New Order",
+          "body": "You have received a new order #1234",
+          "data": {"order_id": 1234, "amount": 5000},
+          "is_read": false,
+          "created_at": "2026-02-19T03:30:00.000000Z",
+          "updated_at": "2026-02-19T03:30:00.000000Z"
+        }
+      ],
+      "total": 50,
+      "per_page": 15,
+      "last_page": 4
+    }
+  }
+
+--------------------------------------------------------------------------------
+2. GET UNREAD NOTIFICATION COUNT
+--------------------------------------------------------------------------------
+Endpoint: GET /api/notifications/unread-count
+Auth: Required (Bearer Token)
+
+Request Example:
+  GET /api/notifications/unread-count
+  Headers:
+    Authorization: Bearer {your_token}
+    Accept: application/json
+
+Response Success (200):
+  {
+    "success": true,
+    "unread_count": 12
+  }
+
+--------------------------------------------------------------------------------
+3. MARK SINGLE NOTIFICATION AS READ
+--------------------------------------------------------------------------------
+Endpoint: POST /api/notifications/{id}/mark-read
+Auth: Required (Bearer Token)
+
+URL Parameters:
+  - id: Notification ID
+
+Request Example:
+  POST /api/notifications/5/mark-read
+  Headers:
+    Authorization: Bearer {your_token}
+    Accept: application/json
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "Notification marked as read"
+  }
+
+Response Error (404):
+  {
+    "success": false,
+    "message": "Notification not found"
+  }
+
+--------------------------------------------------------------------------------
+4. MARK ALL NOTIFICATIONS AS READ
+--------------------------------------------------------------------------------
+Endpoint: POST /api/notifications/mark-all-read
+Auth: Required (Bearer Token)
+
+Request Example:
+  POST /api/notifications/mark-all-read
+  Headers:
+    Authorization: Bearer {your_token}
+    Accept: application/json
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "All notifications marked as read"
+  }
+
+--------------------------------------------------------------------------------
+5. BULK MARK NOTIFICATIONS AS READ (NEW)
+--------------------------------------------------------------------------------
+Endpoint: POST /api/notifications/bulk-mark-read
+Auth: Required (Bearer Token)
+
+Request Body:
+  {
+    "notification_ids": [1, 2, 3, 4, 5]
+  }
+
+Request Example:
+  POST /api/notifications/bulk-mark-read
+  Headers:
+    Authorization: Bearer {your_token}
+    Content-Type: application/json
+    Accept: application/json
+  Body:
+    {
+      "notification_ids": [1, 2, 3, 4, 5]
+    }
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "5 notifications marked as read",
+    "marked_count": 5
+  }
+
+Response Error (422):
+  {
+    "success": false,
+    "message": "The notification ids field is required."
+  }
+
+--------------------------------------------------------------------------------
+6. DELETE SINGLE NOTIFICATION
+--------------------------------------------------------------------------------
+Endpoint: DELETE /api/notifications/{id}
+Auth: Required (Bearer Token)
+
+URL Parameters:
+  - id: Notification ID
+
+Request Example:
+  DELETE /api/notifications/5
+  Headers:
+    Authorization: Bearer {your_token}
+    Accept: application/json
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "Notification deleted successfully"
+  }
+
+Response Error (404):
+  {
+    "success": false,
+    "message": "Notification not found"
+  }
+
+--------------------------------------------------------------------------------
+7. BULK DELETE NOTIFICATIONS (NEW)
+--------------------------------------------------------------------------------
+Endpoint: POST /api/notifications/bulk-delete
+Auth: Required (Bearer Token)
+
+Request Body:
+  {
+    "notification_ids": [1, 2, 3, 4, 5]
+  }
+
+Request Example:
+  POST /api/notifications/bulk-delete
+  Headers:
+    Authorization: Bearer {your_token}
+    Content-Type: application/json
+    Accept: application/json
+  Body:
+    {
+      "notification_ids": [1, 2, 3, 4, 5]
+    }
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "5 notifications deleted successfully",
+    "deleted_count": 5
+  }
+
+Response Error (422):
+  {
+    "success": false,
+    "message": "The notification ids field is required."
+  }
+
+--------------------------------------------------------------------------------
+8. CLEAR ALL NOTIFICATIONS (NEW)
+--------------------------------------------------------------------------------
+Endpoint: DELETE /api/notifications/clear-all
+Auth: Required (Bearer Token)
+
+Request Example:
+  DELETE /api/notifications/clear-all
+  Headers:
+    Authorization: Bearer {your_token}
+    Accept: application/json
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "All notifications cleared successfully",
+    "deleted_count": 25
+  }
+
+--------------------------------------------------------------------------------
+9. GET NOTIFICATION PREFERENCES (NEW)
+--------------------------------------------------------------------------------
+Endpoint: GET /api/notifications/preferences
+Auth: Required (Bearer Token)
+
+Request Example:
+  GET /api/notifications/preferences
+  Headers:
+    Authorization: Bearer {your_token}
+    Accept: application/json
+
+Response Success (200):
+  {
+    "success": true,
+    "preferences": {
+      "push_enabled": true,
+      "email_enabled": true,
+      "in_app_enabled": true,
+      "order_notifications": true,
+      "payment_notifications": true,
+      "system_notifications": true
+    }
+  }
+
+Note: Currently returns default preferences. Can be extended with database table.
+
+--------------------------------------------------------------------------------
+10. UPDATE NOTIFICATION PREFERENCES (NEW)
+--------------------------------------------------------------------------------
+Endpoint: PUT /api/notifications/preferences
+Auth: Required (Bearer Token)
+
+Request Body:
+  {
+    "push_enabled": true,
+    "email_enabled": false,
+    "in_app_enabled": true,
+    "order_notifications": true,
+    "payment_notifications": true,
+    "system_notifications": false
+  }
+
+Request Example:
+  PUT /api/notifications/preferences
+  Headers:
+    Authorization: Bearer {your_token}
+    Content-Type: application/json
+    Accept: application/json
+  Body:
+    {
+      "push_enabled": true,
+      "email_enabled": false
+    }
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "Notification preferences updated successfully",
+    "preferences": {
+      "push_enabled": true,
+      "email_enabled": false,
+      "in_app_enabled": true
+    }
+  }
+
+================================================================================
+                            ADMIN ENDPOINTS
+================================================================================
+
+--------------------------------------------------------------------------------
+11. SEND NOTIFICATION TO SINGLE USER
+--------------------------------------------------------------------------------
+Endpoint: POST /api/admin/notifications/send
+Auth: Required (Bearer Token + Admin Role)
+
+Request Body:
+  {
+    "user_id": 5,
+    "title": "Payment Received",
+    "body": "Your payment of $500 has been received",
+    "data": {
+      "payment_id": 123,
+      "amount": 500
+    }
+  }
+
+Request Example:
+  POST /api/admin/notifications/send
+  Headers:
+    Authorization: Bearer {admin_token}
+    Content-Type: application/json
+    Accept: application/json
+  Body:
+    {
+      "user_id": 5,
+      "title": "Payment Received",
+      "body": "Your payment of $500 has been received",
+      "data": {"payment_id": 123}
+    }
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "Notification sent successfully",
+    "notification": {
+      "id": 15,
+      "user_id": 5,
+      "title": "Payment Received",
+      "body": "Your payment of $500 has been received",
+      "data": {"payment_id": 123},
+      "is_read": false,
+      "created_at": "2026-02-19T03:30:00.000000Z"
+    }
+  }
+
+Response Error (422):
+  {
+    "success": false,
+    "message": "Validation failed",
+    "errors": {
+      "user_id": ["The user id field is required."],
+      "title": ["The title field is required."],
+      "body": ["The body field is required."]
+    }
+  }
+
+Response Error (404):
+  {
+    "success": false,
+    "message": "User not found or device token not registered"
+  }
+
+--------------------------------------------------------------------------------
+12. SEND NOTIFICATION TO USER GROUP
+--------------------------------------------------------------------------------
+Endpoint: POST /api/admin/notifications/send-to-group
+Auth: Required (Bearer Token + Admin Role)
+
+Request Body:
+  {
+    "user_ids": [1, 2, 3, 4, 5],
+    "title": "System Maintenance",
+    "body": "System will be down for maintenance on Sunday",
+    "data": {
+      "maintenance_date": "2026-02-23",
+      "duration": "2 hours"
+    }
+  }
+
+Request Example:
+  POST /api/admin/notifications/send-to-group
+  Headers:
+    Authorization: Bearer {admin_token}
+    Content-Type: application/json
+    Accept: application/json
+  Body:
+    {
+      "user_ids": [1, 2, 3, 4, 5],
+      "title": "System Maintenance",
+      "body": "System will be down for maintenance"
+    }
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "Notifications sent to 5 users",
+    "sent_count": 5,
+    "failed_count": 0
+  }
+
+Response Error (422):
+  {
+    "success": false,
+    "message": "Validation failed",
+    "errors": {
+      "user_ids": ["The user ids field is required."]
+    }
+  }
+
+--------------------------------------------------------------------------------
+13. SEND NOTIFICATION TO ALL USERS (BROADCAST)
+--------------------------------------------------------------------------------
+Endpoint: POST /api/admin/notifications/send-to-all
+Auth: Required (Bearer Token + Admin Role)
+
+Request Body:
+  {
+    "title": "New Feature Available",
+    "body": "Check out our new product catalog feature!",
+    "data": {
+      "feature": "product_catalog",
+      "version": "2.0"
+    }
+  }
+
+Request Example:
+  POST /api/admin/notifications/send-to-all
+  Headers:
+    Authorization: Bearer {admin_token}
+    Content-Type: application/json
+    Accept: application/json
+  Body:
+    {
+      "title": "New Feature Available",
+      "body": "Check out our new product catalog feature!"
+    }
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "Notifications sent to 150 users",
+    "sent_count": 150,
+    "failed_count": 5
+  }
+
+Response Error (422):
+  {
+    "success": false,
+    "message": "Validation failed",
+    "errors": {
+      "title": ["The title field is required."]
+    }
+  }
+
+--------------------------------------------------------------------------------
+14. SCHEDULE NOTIFICATION
+--------------------------------------------------------------------------------
+Endpoint: POST /api/admin/notifications/schedule
+Auth: Required (Bearer Token + Admin Role)
+
+Request Body:
+  {
+    "user_ids": [1, 2, 3],
+    "title": "Payment Reminder",
+    "body": "Your payment is due tomorrow",
+    "data": {
+      "invoice_id": 456,
+      "due_date": "2026-02-20"
+    },
+    "scheduled_at": "2026-02-20 09:00:00"
+  }
+
+For broadcast to all users, use:
+  {
+    "send_to_all": true,
+    "title": "Holiday Announcement",
+    "body": "Office closed on Monday",
+    "scheduled_at": "2026-02-22 08:00:00"
+  }
+
+Request Example:
+  POST /api/admin/notifications/schedule
+  Headers:
+    Authorization: Bearer {admin_token}
+    Content-Type: application/json
+    Accept: application/json
+  Body:
+    {
+      "user_ids": [1, 2, 3],
+      "title": "Payment Reminder",
+      "body": "Your payment is due tomorrow",
+      "scheduled_at": "2026-02-20 09:00:00"
+    }
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "Notification scheduled successfully",
+    "scheduled_notification": {
+      "id": 10,
+      "user_ids": [1, 2, 3],
+      "title": "Payment Reminder",
+      "body": "Your payment is due tomorrow",
+      "scheduled_at": "2026-02-20 09:00:00",
+      "status": "pending",
+      "created_at": "2026-02-19T03:30:00.000000Z"
+    }
+  }
+
+Response Error (422):
+  {
+    "success": false,
+    "message": "Validation failed",
+    "errors": {
+      "scheduled_at": ["The scheduled at must be a date after now."]
+    }
+  }
+
+--------------------------------------------------------------------------------
+15. GET SCHEDULED NOTIFICATIONS
+--------------------------------------------------------------------------------
+Endpoint: GET /api/admin/notifications/scheduled
+Auth: Required (Bearer Token + Admin Role)
+
+Query Parameters:
+  - status (optional): Filter by status (pending, processing, completed, failed)
+  - page (optional): Page number for pagination
+  - per_page (optional): Items per page
+
+Request Example:
+  GET /api/admin/notifications/scheduled?status=pending&page=1
+  Headers:
+    Authorization: Bearer {admin_token}
+    Accept: application/json
+
+Response Success (200):
+  {
+    "success": true,
+    "data": {
+      "current_page": 1,
+      "data": [
+        {
+          "id": 10,
+          "user_ids": [1, 2, 3],
+          "send_to_all": false,
+          "title": "Payment Reminder",
+          "body": "Your payment is due tomorrow",
+          "data": {"invoice_id": 456},
+          "scheduled_at": "2026-02-20 09:00:00",
+          "status": "pending",
+          "sent_count": 0,
+          "failed_count": 0,
+          "error_message": null,
+          "created_at": "2026-02-19T03:30:00.000000Z"
+        }
+      ],
+      "total": 5,
+      "per_page": 15,
+      "last_page": 1
+    }
+  }
+
+--------------------------------------------------------------------------------
+16. CANCEL SCHEDULED NOTIFICATION
+--------------------------------------------------------------------------------
+Endpoint: DELETE /api/admin/notifications/scheduled/{id}
+Auth: Required (Bearer Token + Admin Role)
+
+URL Parameters:
+  - id: Scheduled notification ID
+
+Request Example:
+  DELETE /api/admin/notifications/scheduled/10
+  Headers:
+    Authorization: Bearer {admin_token}
+    Accept: application/json
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "Scheduled notification cancelled successfully"
+  }
+
+Response Error (404):
+  {
+    "success": false,
+    "message": "Scheduled notification not found"
+  }
+
+Response Error (400):
+  {
+    "success": false,
+    "message": "Cannot cancel notification that has already been processed"
+  }
+
+================================================================================
+                        DEVICE TOKEN MANAGEMENT
+================================================================================
+
+--------------------------------------------------------------------------------
+17. REGISTER/UPDATE DEVICE TOKEN
+--------------------------------------------------------------------------------
+Endpoint: POST /api/user/device-token
+Auth: Required (Bearer Token)
+
+Request Body:
+  {
+    "device_token": "fcm_token_from_firebase"
+  }
+
+Request Example:
+  POST /api/user/device-token
+  Headers:
+    Authorization: Bearer {your_token}
+    Content-Type: application/json
+    Accept: application/json
+  Body:
+    {
+      "device_token": "eXaM_pLe_FcM_ToKeN_123456789"
+    }
+
+Response Success (200):
+  {
+    "success": true,
+    "message": "Device token registered successfully"
+  }
+
+Response Error (422):
+  {
+    "success": false,
+    "message": "Validation failed",
+    "errors": {
+      "device_token": ["The device token field is required."]
+    }
+  }
+
+Note: This endpoint may need to be created if not exists. Check routes/api.php
+
+================================================================================
+                          FIREBASE CONFIGURATION
+================================================================================
+
+Required Settings (in database 'settings' table):
+  - firebase_project_id: Your Firebase project ID
+  - firebase_client_email: Service account email
+  - firebase_private_key: Service account private key (with \n for newlines)
+
+Example Firebase Settings:
+  firebase_project_id = "distributor-app-12345"
+  firebase_client_email = "firebase-adminsdk-abc@distributor-app-12345.iam.gserviceaccount.com"
+  firebase_private_key = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBA...\n-----END PRIVATE KEY-----\n"
+
+How to Get Firebase Credentials:
+  1. Go to Firebase Console (console.firebase.google.com)
+  2. Select your project
+  3. Go to Project Settings > Service Accounts
+  4. Click "Generate New Private Key"
+  5. Download JSON file
+  6. Extract: project_id, client_email, private_key
+  7. Store in settings table
+
+================================================================================
+                        SCHEDULED NOTIFICATION PROCESSING
+================================================================================
+
+Cron Job Command:
+  php artisan notifications:process
+
+Schedule in app/Console/Kernel.php:
+  $schedule->command('notifications:process')->everyMinute();
+
+Or setup in crontab:
+  * * * * * cd /path-to-project && php artisan notifications:process >> /dev/null 2>&1
+
+What it does:
+  - Runs every minute
+  - Finds notifications scheduled for current time or past
+  - Sends to specified users or all users
+  - Updates status (pending -> processing -> completed/failed)
+  - Logs errors for failed notifications
+  - Retries failed notifications (configurable)
+
+================================================================================
+                            COMMON ERROR CODES
+================================================================================
+
+200 - Success
+  Request completed successfully
+
+400 - Bad Request
+  Invalid request or operation not allowed
+
+401 - Unauthorized
+  Missing or invalid authentication token
+
+403 - Forbidden
+  User doesn't have permission (e.g., not admin)
+
+404 - Not Found
+  Resource (notification, user, etc.) not found
+
+422 - Unprocessable Entity
+  Validation failed, check 'errors' field in response
+
+500 - Internal Server Error
+  Server error, check logs
+
+================================================================================
+                            VALIDATION RULES
+================================================================================
+
+Send Notification:
+  - user_id: required, integer, exists in users table
+  - title: required, string, max 255 characters
+  - body: required, string
+  - data: optional, array/object
+
+Send to Group:
+  - user_ids: required, array, min 1 item
+  - user_ids.*: integer, exists in users table
+  - title: required, string, max 255 characters
+  - body: required, string
+  - data: optional, array/object
+
+Send to All:
+  - title: required, string, max 255 characters
+  - body: required, string
+  - data: optional, array/object
+
+Schedule Notification:
+  - user_ids or send_to_all: one required
+  - title: required, string, max 255 characters
+  - body: required, string
+  - scheduled_at: required, datetime, must be future date
+  - data: optional, array/object
+
+Bulk Operations:
+  - notification_ids: required, array, min 1 item
+  - notification_ids.*: integer
+
+Device Token:
+  - device_token: required, string
+
+================================================================================
+                          DATABASE SCHEMA
+================================================================================
+
+Table: notifications
+  - id: bigint (primary key)
+  - user_id: bigint (foreign key to users)
+  - title: varchar(255)
+  - body: text
+  - data: json (nullable)
+  - is_read: boolean (default: false)
+  - created_at: timestamp
+  - updated_at: timestamp
+
+Table: scheduled_notifications
+  - id: bigint (primary key)
+  - user_ids: json (nullable)
+  - send_to_all: boolean (default: false)
+  - title: varchar(255)
+  - body: text
+  - data: json (nullable)
+  - scheduled_at: datetime
+  - status: enum (pending, processing, completed, failed)
+  - sent_count: integer (default: 0)
+  - failed_count: integer (default: 0)
+  - error_message: text (nullable)
+  - created_at: timestamp
+  - updated_at: timestamp
+
+Table: users (relevant fields)
+  - id: bigint (primary key)
+  - device_token: varchar(255) (nullable)
+
+Table: settings
+  - key: varchar(255) (primary key)
+  - value: text
+
+================================================================================
+                          TESTING CHECKLIST
+================================================================================
+
+User Endpoints:
+  [ ] Get notifications list with pagination
+  [ ] Get unread count
+  [ ] Mark single notification as read
+  [ ] Mark all notifications as read
+  [ ] Bulk mark notifications as read
+  [ ] Delete single notification
+  [ ] Bulk delete notifications
+  [ ] Clear all notifications
+  [ ] Get notification preferences
+  [ ] Update notification preferences
+
+Admin Endpoints:
+  [ ] Send notification to single user
+  [ ] Send notification to user group
+  [ ] Send notification to all users
+  [ ] Schedule notification for future
+  [ ] Get list of scheduled notifications
+  [ ] Cancel scheduled notification
+
+Firebase Integration:
+  [ ] Firebase credentials configured in settings table
+  [ ] Device token registration working
+  [ ] Push notifications received on mobile device
+  [ ] Notification payload contains correct data
+
+Scheduled Processing:
+  [ ] Cron job configured
+  [ ] Scheduled notifications sent at correct time
+  [ ] Status updated correctly (pending -> completed)
+  [ ] Failed notifications logged properly
+
+================================================================================
+                          SUPPORT & TROUBLESHOOTING
+================================================================================
+
+Issue: Notifications not sending
+  - Check Firebase credentials in settings table
+  - Verify device_token is registered for user
+  - Check Laravel logs: storage/logs/laravel.log
+  - Verify internet connection to Firebase servers
+
+Issue: Scheduled notifications not processing
+  - Verify cron job is running: php artisan notifications:process
+  - Check scheduled_at datetime is in correct timezone
+  - Check status field (should be 'pending')
+  - Review error_message field for failed notifications
+
+Issue: Authentication errors
+  - Verify Bearer token is valid
+  - Check token hasn't expired
+  - Ensure user has correct role/permissions for admin endpoints
+
+Issue: Validation errors
+  - Check all required fields are provided
+  - Verify data types match validation rules
+  - Ensure datetime format is correct (Y-m-d H:i:s)
+
+================================================================================
+                              END OF DOCUMENT
+================================================================================
+
+Last Updated: February 19, 2026
+Version: 1.0
+Project: Distributor App - Laravel 12

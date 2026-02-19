@@ -120,8 +120,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+    Route::post('/notifications/bulk-mark-read', [NotificationController::class, 'bulkMarkAsRead']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+    Route::delete('/notifications/clear-all', [NotificationController::class, 'clearAll']);
+    Route::post('/notifications/bulk-delete', [NotificationController::class, 'bulkDelete']);
     Route::post('/notifications/register-device', [NotificationController::class, 'registerDeviceToken']);
     
     // =============================================

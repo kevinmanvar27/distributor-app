@@ -55,6 +55,13 @@ class NotificationController extends ApiController
      *          in="query",
      *          @OA\Schema(type="boolean")
      *      ),
+     *      @OA\Parameter(
+     *          name="type",
+     *          description="Filter by notification type",
+     *          required=false,
+     *          in="query",
+     *          @OA\Schema(type="string")
+     *      ),
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
@@ -73,12 +80,17 @@ class NotificationController extends ApiController
         $user = $request->user();
         $perPage = min($request->per_page ?? 15, 50);
         $unreadOnly = filter_var($request->unread_only, FILTER_VALIDATE_BOOLEAN);
+        $type = $request->type;
 
         $query = Notification::where('user_id', $user->id)
             ->orderBy('created_at', 'desc');
 
         if ($unreadOnly) {
             $query->where('read', false);
+        }
+
+        if ($type) {
+            $query->where('type', $type);
         }
 
         $notifications = $query->paginate($perPage);
@@ -271,6 +283,155 @@ class NotificationController extends ApiController
         $notification->delete();
 
         return $this->sendResponse(null, 'Notification deleted successfully.');
+    }
+
+    /**
+     * Clear all notifications for the user
+     * 
+     * @OA\Delete(
+     *      path="/api/v1/notifications/clear-all",
+     *      operationId="clearAllNotifications",
+     *      tags={"Notifications"},
+     *      summary="Clear all notifications",
+     *      description="Delete all notifications for the authenticated user",
+     *      security={{"sanctum": {}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="All notifications cleared",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated"
+     *      )
+     * )
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function clearAll(Request $request)
+    {
+        $user = $request->user();
+
+        $deleted = Notification::where('user_id', $user->id)->delete();
+
+        return $this->sendResponse([
+            'deleted_count' => $deleted,
+        ], 'All notifications cleared successfully.');
+    }
+
+    /**
+     * Bulk delete notifications
+     * 
+     * @OA\Post(
+     *      path="/api/v1/notifications/bulk-delete",
+     *      operationId="bulkDeleteNotifications",
+     *      tags={"Notifications"},
+     *      summary="Bulk delete notifications",
+     *      description="Delete multiple notifications at once",
+     *      security={{"sanctum": {}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"notification_ids"},
+     *              @OA\Property(
+     *                  property="notification_ids",
+     *                  type="array",
+     *                  @OA\Items(type="integer"),
+     *                  example={1, 2, 3, 4, 5}
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Notifications deleted",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated"
+     *      ),
+     *      @OA\Response(
+     *          response=422,
+     *          description="Validation error"
+     *      )
+     * )
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'notification_ids' => 'required|array',
+            'notification_ids.*' => 'integer|exists:notifications,id',
+        ]);
+
+        $user = $request->user();
+
+        $deleted = Notification::where('user_id', $user->id)
+            ->whereIn('id', $request->notification_ids)
+            ->delete();
+
+        return $this->sendResponse([
+            'deleted_count' => $deleted,
+        ], 'Notifications deleted successfully.');
+    }
+
+    /**
+     * Bulk mark notifications as read
+     * 
+     * @OA\Post(
+     *      path="/api/v1/notifications/bulk-mark-read",
+     *      operationId="bulkMarkNotificationsAsRead",
+     *      tags={"Notifications"},
+     *      summary="Bulk mark notifications as read",
+     *      description="Mark multiple notifications as read at once",
+     *      security={{"sanctum": {}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"notification_ids"},
+     *              @OA\Property(
+     *                  property="notification_ids",
+     *                  type="array",
+     *                  @OA\Items(type="integer"),
+     *                  example={1, 2, 3, 4, 5}
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Notifications marked as read",
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated"
+     *      ),
+     *      @OA\Response(
+     *          response=422,
+     *          description="Validation error"
+     *      )
+     * )
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function bulkMarkAsRead(Request $request)
+    {
+        $request->validate([
+            'notification_ids' => 'required|array',
+            'notification_ids.*' => 'integer|exists:notifications,id',
+        ]);
+
+        $user = $request->user();
+
+        $updated = Notification::where('user_id', $user->id)
+            ->whereIn('id', $request->notification_ids)
+            ->where('read', false)
+            ->update(['read' => true]);
+
+        return $this->sendResponse([
+            'marked_count' => $updated,
+        ], 'Notifications marked as read successfully.');
     }
 
     /**
