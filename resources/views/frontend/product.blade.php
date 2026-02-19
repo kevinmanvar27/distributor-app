@@ -296,7 +296,7 @@
                     <h2 class="heading-text mb-3"><i class="fas fa-align-left me-2"></i>Product Description</h2>
                     <div class="general-text description-content">
                         @if($product->description)
-                            <p>{{ $product->description }}</p>
+                            <div>{!! $product->description !!}</div>
                         @else
                             <p style="color: var(--general-text-color); opacity: 0.7;">No description available for this product.</p>
                         @endif
@@ -565,7 +565,99 @@
     }
     
     .description-content {
+        line-height: 1.8;
     }
+    
+    /* Style HTML content in description */
+    .description-content h1,
+    .description-content h2,
+    .description-content h3,
+    .description-content h4,
+    .description-content h5,
+    .description-content h6 {
+        color: var(--heading-text-color);
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .description-content h1 { font-size: 2rem; }
+    .description-content h2 { font-size: 1.75rem; }
+    .description-content h3 { font-size: 1.5rem; }
+    .description-content h4 { font-size: 1.25rem; }
+    .description-content h5 { font-size: 1.1rem; }
+    .description-content h6 { font-size: 1rem; }
+    
+    .description-content p {
+        margin-bottom: 1rem;
+        color: var(--general-text-color);
+    }
+    
+    .description-content ul,
+    .description-content ol {
+        margin-bottom: 1rem;
+        padding-left: 2rem;
+        color: var(--general-text-color);
+    }
+    
+    .description-content li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .description-content a {
+        color: var(--theme-color);
+        text-decoration: underline;
+    }
+    
+    .description-content a:hover {
+        color: var(--link-hover-color);
+    }
+    
+    .description-content strong,
+    .description-content b {
+        font-weight: 600;
+        color: var(--heading-text-color);
+    }
+    
+    .description-content em,
+    .description-content i {
+        font-style: italic;
+    }
+    
+    .description-content u {
+        text-decoration: underline;
+    }
+    
+    .description-content blockquote {
+        border-left: 4px solid var(--theme-color);
+        padding-left: 1rem;
+        margin: 1rem 0;
+        font-style: italic;
+        color: var(--general-text-color);
+        opacity: 0.9;
+    }
+    
+    .description-content code {
+        background-color: #f5f5f5;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9em;
+    }
+    
+    .description-content pre {
+        background-color: #f5f5f5;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin-bottom: 1rem;
+    }
+    
+    .description-content pre code {
+        background-color: transparent;
+        padding: 0;
+    }
+    
     
     /* Variation Selection Styles */
     .variation-group {

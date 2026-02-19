@@ -34,7 +34,7 @@
                         {{ $product->name }}
                     </a>
                 </h5>
-                <p class="card-text flex-grow-1 product-description mb-3">{{ Str::limit($product->description ?? 'No description available', 100) }}</p>
+                <p class="card-text flex-grow-1 product-description mb-3">{{ Str::limit(strip_tags($product->description ?? 'No description available'), 100) }}</p>
                 <div class="mt-auto">
                     <div class="d-flex justify-content-between align-items-center mb-2 price-container">
                         @php

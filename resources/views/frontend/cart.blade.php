@@ -71,7 +71,7 @@
                                                         </small>
                                                     </div>
                                                 @endif
-                                                <small class="text-muted">{{ Str::limit($item->product->description ?? 'No description', 50) }}</small>
+                                                <small class="text-muted">{{ Str::limit(strip_tags($item->product->description ?? 'No description'), 50) }}</small>
                                             </div>
                                         </div>
                                     </td>

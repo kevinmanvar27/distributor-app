@@ -43,7 +43,7 @@
                 </a>
             </h5>
             <p class="card-text text-muted flex-grow-1 mb-3" style="font-size: 0.875rem; line-height: 1.6;">
-                {{ Str::limit($product->description ?? 'No description available', 80) }}
+                {{ Str::limit(strip_tags($product->description ?? 'No description available'), 80) }}
             </p>
             
             <!-- Price Section -->

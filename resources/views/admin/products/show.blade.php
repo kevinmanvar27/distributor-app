@@ -94,7 +94,7 @@
                                             <h5 class="fw-bold mb-3">Description</h5>
                                             <div class="border rounded-3 p-3">
                                                 @if($product->description)
-                                                    {{ $product->description }}
+                                                    {!! $product->description !!}
                                                 @else
                                                     <span class="text-muted">No description provided</span>
                                                 @endif
@@ -184,4 +184,71 @@
         </main>
     </div>
 </div>
+
+<style>
+    /* Style HTML content in product description */
+    .border.rounded-3.p-3 h1,
+    .border.rounded-3.p-3 h2,
+    .border.rounded-3.p-3 h3,
+    .border.rounded-3.p-3 h4,
+    .border.rounded-3.p-3 h5,
+    .border.rounded-3.p-3 h6 {
+        margin-top: 1rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .border.rounded-3.p-3 h1 { font-size: 1.75rem; }
+    .border.rounded-3.p-3 h2 { font-size: 1.5rem; }
+    .border.rounded-3.p-3 h3 { font-size: 1.25rem; }
+    .border.rounded-3.p-3 h4 { font-size: 1.1rem; }
+    .border.rounded-3.p-3 h5 { font-size: 1rem; }
+    .border.rounded-3.p-3 h6 { font-size: 0.95rem; }
+    
+    .border.rounded-3.p-3 p {
+        margin-bottom: 0.75rem;
+        line-height: 1.6;
+    }
+    
+    .border.rounded-3.p-3 ul,
+    .border.rounded-3.p-3 ol {
+        margin-bottom: 0.75rem;
+        padding-left: 2rem;
+    }
+    
+    .border.rounded-3.p-3 li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .border.rounded-3.p-3 a {
+        color: #0d6efd;
+        text-decoration: underline;
+    }
+    
+    .border.rounded-3.p-3 a:hover {
+        color: #0a58ca;
+    }
+    
+    .border.rounded-3.p-3 strong,
+    .border.rounded-3.p-3 b {
+        font-weight: 600;
+    }
+    
+    .border.rounded-3.p-3 em,
+    .border.rounded-3.p-3 i {
+        font-style: italic;
+    }
+    
+    .border.rounded-3.p-3 u {
+        text-decoration: underline;
+    }
+    
+    .border.rounded-3.p-3 blockquote {
+        border-left: 4px solid #0d6efd;
+        padding-left: 1rem;
+        margin: 1rem 0;
+        font-style: italic;
+        opacity: 0.9;
+    }
+</style>
 @endsection
