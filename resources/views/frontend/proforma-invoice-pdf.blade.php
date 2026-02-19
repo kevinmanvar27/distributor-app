@@ -216,7 +216,7 @@
                                 @endif
                             @endif
                         </td>
-                        <td>{{ Str::limit($item['product_description'] ?? '', 40) }}</td>
+                        <td>{!! Str::limit(strip_tags($item['product_description'] ?? ''), 40) !!}</td>
                         <td class="text-end">{{ number_format($item['price'], 2) }}</td>
                         <td class="text-center">{{ $item['quantity'] }}</td>
                         <td class="text-end">{{ number_format($item['total'], 2) }}</td>

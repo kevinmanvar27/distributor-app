@@ -246,7 +246,7 @@
                                                                 $description = $item['product_description'] ?? $item['description'] ?? null;
                                                             @endphp
                                                             @if(!empty($description))
-                                                                <small class="text-muted d-block">{{ Str::limit($description, 50) }}</small>
+                                                                <small class="text-muted d-block">{!! Str::limit(strip_tags($description), 50) !!}</small>
                                                             @endif
                                                         </div>
                                                     </td>

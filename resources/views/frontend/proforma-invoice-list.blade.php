@@ -873,6 +873,13 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Helper function to strip HTML tags
+    function stripHtmlTags(html) {
+        const tmp = document.createElement('DIV');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+    
     // View invoice button click handler
     document.querySelectorAll('.view-invoice').forEach(button => {
         button.addEventListener('click', function() {
@@ -1116,7 +1123,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>
                             <div>
                                 <h6 class="mb-0">${productNameHtml}${variationHtml}</h6>
-                                ${productDesc ? `<small class="text-muted">${productDesc.substring(0, 50)}${productDesc.length > 50 ? '...' : ''}</small>` : ''}
+                                ${productDesc ? `<small class="text-muted">${stripHtmlTags(productDesc).substring(0, 50)}${stripHtmlTags(productDesc).length > 50 ? '...' : ''}</small>` : ''}
                             </div>
                         </td>
                         <td>₹${price.toFixed(2)}</td>
