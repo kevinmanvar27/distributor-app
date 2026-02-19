@@ -298,7 +298,7 @@
                         @if($product->description)
                             <p>{{ $product->description }}</p>
                         @else
-                            <p class="text-muted">No description available for this product.</p>
+                            <p style="color: var(--general-text-color); opacity: 0.7;">No description available for this product.</p>
                         @endif
                     </div>
                 </div>

@@ -33,21 +33,21 @@
                             
                             <div class="card-body">
                                 @if(session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
                                 
                                 @if(session('error'))
-                                    <div class="alert alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
                                 
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle" id="usersTable">
+                                    <table class="table align-middle" id="usersTable">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>#</th>
@@ -59,7 +59,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse($users as $user)
+                                            @foreach($users as $user)
                                                 <tr>
                                                     <td class="fw-bold">{{ $user->id }}</td>
                                                     <td>
@@ -97,11 +97,13 @@
                                                             <button type="button" class="btn btn-outline-info rounded-start-pill px-3 view-user-btn" data-user-id="{{ $user->id }}" data-bs-toggle="modal" data-bs-target="#userModal">
                                                                 <i class="fas fa-eye"></i>
                                                             </button>
+                                                            <!-- Edit Button -->
                                                             <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-primary px-3">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
+                                                            <!-- Delete Button -->
                                                             @if(Auth::user()->id != $user->id)
-                                                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');">
+                                                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');">
                                                                     @csrf
                                                                     @method('DELETE')
                                                                     <button type="submit" class="btn btn-outline-danger rounded-end-pill px-3">
@@ -109,24 +111,14 @@
                                                                     </button>
                                                                 </form>
                                                             @else
-                                                                <button type="button" class="btn btn-outline-secondary rounded-end-pill px-3" disabled>
+                                                                <button type="button" class="btn btn-outline-secondary rounded-end-pill px-3" disabled title="Cannot delete yourself">
                                                                     <i class="fas fa-trash"></i>
                                                                 </button>
                                                             @endif
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="6" class="text-center py-5">
-                                                        <div class="text-muted">
-                                                            <i class="fas fa-users fa-2x mb-3"></i>
-                                                            <p class="mb-0">No users found</p>
-                                                            <p class="small">Try creating a new user</p>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            @endforelse
+                                            @endforeach
                                         </tbody>
                                     </table>
                                 </div>
@@ -177,8 +169,15 @@
             "searching": true,
             "info": true,
             "paging": true,
+            "autoWidth": false,
             "columnDefs": [
-                { "orderable": false, "targets": [5] } // Disable sorting on Actions column
+                { "orderable": false, "targets": [5] }, // Disable sorting on Actions column
+                { "width": "5%", "targets": 0 },
+                { "width": "25%", "targets": 1 },
+                { "width": "20%", "targets": 2 },
+                { "width": "15%", "targets": 3 },
+                { "width": "15%", "targets": 4 },
+                { "width": "20%", "targets": 5 }
             ],
             "language": {
                 "search": "Search:",
@@ -186,33 +185,22 @@
                 "info": "Showing _START_ to _END_ of _TOTAL_ users",
                 "infoEmpty": "Showing 0 to 0 of 0 users",
                 "infoFiltered": "(filtered from _MAX_ total users)",
+                "emptyTable": '<div class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No users found</p><p class="small">Try creating a new user</p></div></div>',
+                "zeroRecords": '<div class="text-center py-5"><div class="text-muted"><i class="fas fa-search fa-2x mb-3"></i><p class="mb-0">No matching users found</p><p class="small">Try adjusting your search</p></div></div>',
                 "paginate": {
                     "first": "First",
                     "last": "Last",
                     "next": "Next",
                     "previous": "Previous"
                 }
-            },
-            "aoColumns": [
-                null, // #
-                null, // User
-                null, // Email
-                null, // Role
-                null, // Status
-                null  // Actions
-            ],
-            "preDrawCallback": function(settings) {
-                // Ensure consistent column count
-                if ($('#usersTable tbody tr').length === 0) {
-                    $('#usersTable tbody').html('<tr><td colspan="6" class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No users found</p><p class="small">Try creating a new user</p></div></td></tr>');
-                }
             }
         });
+        
         // Adjust select width after DataTable initializes
         $('.dataTables_length select').css('width', '80px');
         
-        // Handle view user button click
-        $('.view-user-btn').on('click', function() {
+        // Handle view user button click - use event delegation for dynamically rendered rows
+        $(document).on('click', '.view-user-btn', function() {
             var userId = $(this).data('user-id');
             
             // Show loading indicator
@@ -226,7 +214,7 @@
                     $('#userModalBody').html(data);
                 },
                 error: function() {
-                    $('#userModalBody').html('<div class="alert alert-danger">Failed to load user details.</div>');
+                    $('#userModalBody').html('<div class="alert-theme alert-danger">Failed to load user details.</div>');
                 }
             });
         });

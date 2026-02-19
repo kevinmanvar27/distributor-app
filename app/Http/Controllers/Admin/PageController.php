@@ -14,7 +14,7 @@ class PageController extends Controller
      */
     public function index()
     {
-        $pages = Page::orderBy('priority', 'asc')->orderBy('created_at', 'desc')->paginate(10);
+        $pages = Page::orderBy('priority', 'asc')->orderBy('created_at', 'desc')->get();
         return view('admin.pages.index', compact('pages'));
     }
 

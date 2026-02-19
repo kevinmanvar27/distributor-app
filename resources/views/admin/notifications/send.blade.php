@@ -84,14 +84,14 @@ function setMinDateTime() {
                             
                             <div class="card-body">
                                 @if(session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
                                 
                                 @if(session('error'))
-                                    <div class="alert alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
@@ -249,13 +249,13 @@ function setMinDateTime() {
                                     
                                     <!-- Send to All Users Tab -->
                                     <div class="tab-pane fade" id="all" role="tabpanel" aria-labelledby="all-tab">
-                                        <div class="alert alert-warning rounded-3 mb-4">
+                                        <div class="alert-theme alert-warning rounded-3 mb-4">
                                             <i class="fas fa-exclamation-triangle me-2"></i>
                                             <strong>Warning:</strong> This will send a notification to all users in the system. Use with caution.
                                         </div>
                                         
                                         <!-- Device Token Counts -->
-                                        <div class="alert alert-info rounded-3 mb-4">
+                                        <div class="alert-theme alert-info rounded-3 mb-4">
                                             <i class="fas fa-info-circle me-2"></i>
                                             <strong>Recipients with registered devices:</strong>
                                             <div class="d-flex gap-3 mt-2">
@@ -328,7 +328,7 @@ function setMinDateTime() {
                                     
                                     <!-- Send to Device Token Tab -->
                                     <div class="tab-pane fade" id="token" role="tabpanel" aria-labelledby="token-tab">
-                                        <div class="alert alert-info rounded-3 mb-4">
+                                        <div class="alert-theme alert-info rounded-3 mb-4">
                                             <i class="fas fa-info-circle me-2"></i>
                                             <strong>Direct Device Token:</strong> Send a notification directly to a specific FCM device token. Useful for testing.
                                         </div>
@@ -943,7 +943,7 @@ function setMinDateTime() {
     function displayScheduledResult(response, type) {
         const scheduledTime = response.scheduled_at ? new Date(response.scheduled_at).toLocaleString() : 'Unknown';
         
-        let html = `<div class="alert alert-info rounded-3 px-4 py-3">
+        let html = `<div class="alert-theme alert-info rounded-3 px-4 py-3">
                         <i class="fas fa-clock me-2"></i>
                         <strong>${type} scheduled successfully!</strong>
                     </div>
@@ -1104,7 +1104,7 @@ function setMinDateTime() {
         
         // Show helpful tips if all failed
         if (!response.success && (response.summary?.failed > 0 || failed > 0)) {
-            html += `<div class="alert alert-info mt-3 rounded-3">
+            html += `<div class="alert-theme alert-info mt-3 rounded-3">
                         <h6 class="alert-heading"><i class="fas fa-lightbulb me-2"></i>Troubleshooting Tips</h6>
                         <ul class="mb-0 small">
                             <li>Device tokens may be expired or invalid. Users need to re-login to the app to refresh their tokens.</li>
@@ -1126,7 +1126,7 @@ function setMinDateTime() {
 
     // Display error (outside document.ready - called by name)
     function displayError(message) {
-        const html = `<div class="alert alert-danger rounded-pill px-4 py-3">
+        const html = `<div class="alert-theme alert-danger rounded-pill px-4 py-3">
                         <i class="fas fa-exclamation-circle me-2"></i>
                         <strong>Error:</strong> ${message}
                       </div>`;

@@ -14,14 +14,14 @@
                 <div class="row">
                     <div class="col-lg-8">
                         <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-gradient text-white border-0 py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <div class="card-header border-0 py-3" style="background: linear-gradient(135deg, var(--theme-color, var(--primary)) 0%, color-mix(in srgb, var(--theme-color, var(--primary)) 80%, black) 100%);">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h4 class="card-title mb-0 fw-bold text-white">
+                                        <h4 class="card-title mb-0 fw-bold" style="color: #ffffff;">
                                             <i class="fas fa-money-bill-wave me-2"></i>
                                             {{ $user ? 'Update Salary for ' . $user->name : 'Set New Salary' }}
                                         </h4>
-                                        <p class="text-white-50 mb-0 mt-1 small">Configure salary rates and working days</p>
+                                        <p class="mb-0 mt-1 small" style="color: rgba(255, 255, 255, 0.9);">Configure salary rates and working days</p>
                                     </div>
                                     <a href="{{ route('admin.salary.index') }}" class="btn btn-light rounded-pill px-4">
                                         <i class="fas fa-arrow-left me-2"></i> Back
@@ -31,14 +31,14 @@
                             
                             <div class="card-body p-4">
                                 @if(session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show rounded-3 px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-success alert-dismissible fade show rounded-3 px-4 py-3" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
                                 
                                 @if($errors->any())
-                                    <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                                    <div class="alert-theme alert-danger alert-dismissible fade show rounded-3" role="alert">
                                         <ul class="mb-0">
                                             @foreach($errors->all() as $error)
                                                 <li>{{ $error }}</li>
@@ -49,7 +49,7 @@
                                 @endif
                                 
                                 @if(!(auth()->user()->hasPermission('create_salary') || auth()->user()->hasPermission('update_salary') || auth()->user()->isSuperAdmin()))
-                                    <div class="alert alert-warning rounded-3">
+                                    <div class="alert-theme alert-warning rounded-3">
                                         <i class="fas fa-exclamation-triangle me-2"></i>You don't have permission to set or update salary.
                                     </div>
                                 @else
@@ -192,10 +192,10 @@
                                     </div>
                                     
                                     <!-- Info Alert -->
-                                    <div class="alert alert-info rounded-3 border-0">
+                                    <div class="alert-theme rounded-3 border-0">
                                         <div class="d-flex">
                                             <div class="flex-shrink-0">
-                                                <i class="fas fa-info-circle fa-2x text-info"></i>
+                                                <i class="fas fa-info-circle fa-2x"></i>
                                             </div>
                                             <div class="flex-grow-1 ms-3">
                                                 <h6 class="alert-heading mb-2">Important Information</h6>
@@ -210,7 +210,7 @@
                                     
                                     <!-- Submit Button -->
                                     <div class="text-end">
-                                        <button type="submit" class="btn btn-lg btn-theme rounded-pill px-5 shadow">
+                                        <button type="submit" class="btn btn-lg btn-theme rounded-pill px-5 shadow mt-5">
                                             <i class="fas fa-save me-2"></i> Save Salary
                                         </button>
                                     </div>
@@ -352,19 +352,19 @@
             hikeDisplay.style.display = 'block';
             
             if (percentageChange > 0) {
-                hikeAlert.className = 'alert alert-success mb-0 py-2 px-3';
+                hikeAlert.className = 'alert-theme alert-success mb-0 py-2 px-3';
                 hikePercentage.innerHTML = '<span class="badge bg-success"><i class="fas fa-arrow-up me-1"></i>' + 
                     percentageChange.toFixed(2) + '% Hike</span>';
                 hikeAmount.innerHTML = '<span class="text-success">(+₹' + 
                     difference.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ')</span>';
             } else if (percentageChange < 0) {
-                hikeAlert.className = 'alert alert-danger mb-0 py-2 px-3';
+                hikeAlert.className = 'alert-theme alert-danger mb-0 py-2 px-3';
                 hikePercentage.innerHTML = '<span class="badge bg-danger"><i class="fas fa-arrow-down me-1"></i>' + 
                     Math.abs(percentageChange).toFixed(2) + '% Decrease</span>';
                 hikeAmount.innerHTML = '<span class="text-danger">(-₹' + 
                     Math.abs(difference).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ')</span>';
             } else {
-                hikeAlert.className = 'alert alert-info mb-0 py-2 px-3';
+                hikeAlert.className = 'alert-theme mb-0 py-2 px-3';
                 hikePercentage.innerHTML = '<span class="badge bg-info">No Change</span>';
                 hikeAmount.innerHTML = '';
             }

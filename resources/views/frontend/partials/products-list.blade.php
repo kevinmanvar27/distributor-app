@@ -392,23 +392,17 @@
 @else
 <div class="row">
     <div class="col-12">
-        <div class="alert alert-info text-center py-5 empty-state">
-            <i class="fas fa-info-circle fa-2x mb-3 empty-icon"></i>
-            <h4 class="alert-heading">No Products Found</h4>
-            <p class="mb-0">There are currently no products available in this category. Please check back later or explore other categories.</p>
+        <div class="alert-theme text-center py-5 empty-state" style="background-color: rgba(var(--theme-color-rgb, 255, 107, 0), 0.1); border-left: 4px solid var(--theme-color); border-radius: var(--radius-lg);">
+            <i class="fas fa-info-circle fa-2x mb-3 empty-icon" style="color: var(--theme-color);"></i>
+            <h4 class="alert-heading" style="color: var(--heading-text-color);">No Products Found</h4>
+            <p class="mb-0" style="color: var(--general-text-color);">There are currently no products available in this category. Please check back later or explore other categories.</p>
         </div>
     </div>
 </div>
 
 <style>
     .empty-state {
-        border-radius: 12px;
-        background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
-        border: none;
-    }
-    
-    .empty-icon {
-        color: #17a2b8;
+        border-radius: var(--radius-lg);
     }
 </style>
 @endif

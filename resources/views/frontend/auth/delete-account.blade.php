@@ -24,13 +24,13 @@
                     </div>
                     
                     <!-- Warning Alert -->
-                    <div class="alert alert-warning mb-4" role="alert">
+                    <div class="alert-theme alert-warning mb-4" role="alert">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         <strong>Warning:</strong> This action is irreversible. All your data including cart items, wishlist, and notifications will be permanently deleted.
                     </div>
                     
                     @if ($errors->any())
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <div class="alert-theme alert-danger alert-dismissible fade show" role="alert">
                             <i class="fas fa-exclamation-circle me-2 alert-icon"></i>
                             <strong>Error!</strong>
                             <ul class="mb-0 mt-2">
@@ -43,7 +43,7 @@
                     @endif
                     
                     @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <div class="alert-theme alert-success alert-dismissible fade show" role="alert">
                             <i class="fas fa-check-circle me-2 alert-icon"></i>
                             {{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>

@@ -54,7 +54,7 @@
                             
                             <div class="card-body">
                                 @if(session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
@@ -222,7 +222,7 @@
             <form id="paymentForm" method="POST">
                 @csrf
                 <div class="modal-body">
-                    <div class="alert alert-info mb-3">
+                    <div class="alert-theme mb-3">
                         <div class="d-flex justify-content-between">
                             <span>Net Salary:</span>
                             <strong id="modalNetSalary">₹0.00</strong>
@@ -294,7 +294,7 @@
             <form id="adjustmentForm" method="POST">
                 @csrf
                 <div class="modal-body">
-                    <div class="alert alert-info mb-3">
+                    <div class="alert-theme border-0 shadow-sm mb-3">
                         <div class="d-flex justify-content-between">
                             <span>Earned Salary:</span>
                             <strong id="adjEarnedSalary">₹0.00</strong>
@@ -324,7 +324,7 @@
                         <textarea class="form-control" name="notes" id="adjNotes" rows="2" placeholder="Reason for adjustments..."></textarea>
                     </div>
                     
-                    <div class="alert alert-warning">
+                    <div class="alert-theme border-0 shadow-sm">
                         <div class="d-flex justify-content-between">
                             <span>New Net Salary:</span>
                             <strong id="adjNewNet">₹0.00</strong>

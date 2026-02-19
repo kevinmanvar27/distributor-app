@@ -40,21 +40,21 @@
                             
                             <div class="card-body">
                                 @if(session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
                                 
                                 @if(session('error'))
-                                    <div class="alert alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
                                 
                                 <!-- Info Box -->
-                                <div class="alert alert-info border-0 shadow-sm mb-4" role="alert">
+                                <div class="alert-theme border-0 shadow-sm mb-4" role="alert">
                                     <div class="d-flex align-items-start">
                                         <i class="fas fa-info-circle me-3 mt-1 fs-5"></i>
                                         <div>
@@ -69,7 +69,7 @@
                                 </div>
                                 
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle" id="staffTable">
+                                    <table class="table align-middle" id="staffTable">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>#</th>
@@ -82,7 +82,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse($staff as $index => $user)
+                                            @foreach($staff as $index => $user)
                                                 @php
                                                     $activeSalary = $user->activeSalary;
                                                 @endphp
@@ -156,9 +156,7 @@
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            @empty
-                                                {{-- Handled by DataTables JavaScript --}}
-                                            @endforelse
+                                            @endforeach
                                         </tbody>
                                     </table>
                                 </div>
@@ -203,8 +201,16 @@
             "searching": true,
             "info": true,
             "paging": true,
+            "autoWidth": false,
             "columnDefs": [
-                { "orderable": false, "targets": [6] } // Disable sorting on Actions column
+                { "orderable": false, "targets": [6] }, // Disable sorting on Actions column
+                { "width": "5%", "targets": 0 },
+                { "width": "20%", "targets": 1 },
+                { "width": "20%", "targets": 2 },
+                { "width": "12%", "targets": 3 },
+                { "width": "15%", "targets": 4 },
+                { "width": "12%", "targets": 5 },
+                { "width": "16%", "targets": 6 }
             ],
             "language": {
                 "search": "Search:",
@@ -212,29 +218,17 @@
                 "info": "Showing _START_ to _END_ of _TOTAL_ staff members",
                 "infoEmpty": "Showing 0 to 0 of 0 staff members",
                 "infoFiltered": "(filtered from _MAX_ total staff members)",
+                "emptyTable": '<div class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No staff members found</p><p class="small">Try creating a new staff member</p></div></div>',
+                "zeroRecords": '<div class="text-center py-5"><div class="text-muted"><i class="fas fa-search fa-2x mb-3"></i><p class="mb-0">No matching staff members found</p><p class="small">Try adjusting your search</p></div></div>',
                 "paginate": {
                     "first": "First",
                     "last": "Last",
                     "next": "Next",
                     "previous": "Previous"
                 }
-            },
-            "aoColumns": [
-                null, // #
-                null, // Staff Member
-                null, // Email
-                null, // Role
-                null, // Current Salary
-                null, // Status
-                null  // Actions
-            ],
-            "preDrawCallback": function(settings) {
-                // Ensure consistent column count
-                if ($('#staffTable tbody tr').length === 0) {
-                    $('#staffTable tbody').html('<tr><td colspan="7" class="text-center py-5"><div class="text-muted"><i class="fas fa-users fa-2x mb-3"></i><p class="mb-0">No staff members found</p><p class="small">Try creating a new staff member</p></div></td></tr>');
-                }
             }
         });
+        
         // Adjust select width after DataTable initializes
         $('.dataTables_length select').css('width', '80px');
     });

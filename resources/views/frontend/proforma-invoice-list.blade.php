@@ -938,7 +938,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (data.error) {
                     document.getElementById('invoiceModalBody').innerHTML = `
-                        <div class="alert alert-danger">
+                        <div class="alert-theme alert-danger">
                             <i class="fas fa-exclamation-circle me-2"></i>${data.error}
                         </div>
                     `;
@@ -948,7 +948,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Validate data structure
                 if (!data.invoice || !data.data) {
                     document.getElementById('invoiceModalBody').innerHTML = `
-                        <div class="alert alert-warning">
+                        <div class="alert-theme alert-warning">
                             <i class="fas fa-exclamation-triangle me-2"></i>Invalid invoice data received.
                         </div>
                     `;
@@ -966,7 +966,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error loading invoice:', error);
                 document.getElementById('invoiceModalBody').innerHTML = `
-                    <div class="alert alert-danger">
+                    <div class="alert-theme alert-danger">
                         <i class="fas fa-exclamation-circle me-2"></i>
                         Failed to load invoice details. Please try again.
                         <br><small class="text-muted">Error: ${error.message}</small>
@@ -1128,8 +1128,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             cartItemsHtml = `
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-3">
-                        <i class="fas fa-inbox me-2"></i>No items found in this invoice
+                    <td colspan="5" class="text-center py-4" style="color: var(--general-text-color);">
+                        <i class="fas fa-inbox me-2" style="color: var(--theme-color);"></i>No items found in this invoice
                     </td>
                 </tr>
             `;

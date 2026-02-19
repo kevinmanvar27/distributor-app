@@ -269,7 +269,7 @@
                                 </div>
                                 
                                 @if($payment->notes)
-                                <div class="alert alert-secondary">
+                                <div class="alert-theme alert-info">
                                     <strong>Notes:</strong> {{ $payment->notes }}
                                 </div>
                                 @endif

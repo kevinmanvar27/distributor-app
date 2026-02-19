@@ -26,14 +26,14 @@
                             
                             <div class="card-body">
                                 @if(session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
                                 
                                 @if($errors->any())
-                                    <div class="alert alert-danger rounded-pill px-4 py-3">
+                                    <div class="alert-theme alert-danger rounded-pill px-4 py-3">
                                         <i class="fas fa-exclamation-circle me-2"></i>
                                         <ul class="mb-0">
                                             @foreach($errors->all() as $error)

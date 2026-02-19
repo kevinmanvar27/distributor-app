@@ -80,12 +80,12 @@
                             @endphp
                             
                             @if($isConfigured)
-                                <div class="alert alert-success">
+                                <div class="alert-theme alert-success">
                                     <i class="fas fa-check-circle me-2"></i>
                                     <strong>Firebase is properly configured!</strong> You can now send push notifications.
                                 </div>
                             @else
-                                <div class="alert alert-warning">
+                                <div class="alert-theme alert-warning">
                                     <i class="fas fa-exclamation-triangle me-2"></i>
                                     <strong>Firebase is not fully configured.</strong> Please configure the missing settings in the database.
                                 </div>
@@ -135,7 +135,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             <h6 class="text-muted mb-3">Configuration Instructions</h6>
-                            <div class="alert alert-info">
+                            <div class="alert-theme alert-info">
                                 <h6><i class="fas fa-info-circle me-2"></i>How to Configure Firebase:</h6>
                                 <ol class="mb-0">
                                     <li>Go to <a href="https://console.firebase.google.com" target="_blank">Firebase Console</a></li>
@@ -251,14 +251,14 @@ document.getElementById('testNotificationForm').addEventListener('submit', async
         resultDiv.style.display = 'block';
         if (data.success) {
             resultDiv.innerHTML = `
-                <div class="alert alert-success">
+                <div class="alert-theme alert-success">
                     <i class="fas fa-check-circle me-2"></i>
                     <strong>Success!</strong> ${data.message}
                 </div>
             `;
         } else {
             resultDiv.innerHTML = `
-                <div class="alert alert-danger">
+                <div class="alert-theme alert-danger">
                     <i class="fas fa-exclamation-circle me-2"></i>
                     <strong>Error!</strong> ${data.message}
                 </div>
@@ -267,7 +267,7 @@ document.getElementById('testNotificationForm').addEventListener('submit', async
     } catch (error) {
         resultDiv.style.display = 'block';
         resultDiv.innerHTML = `
-            <div class="alert alert-danger">
+            <div class="alert-theme alert-danger">
                 <i class="fas fa-exclamation-circle me-2"></i>
                 <strong>Error!</strong> ${error.message}
             </div>

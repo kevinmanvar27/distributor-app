@@ -21,7 +21,7 @@
                     </div>
                     
                     @if ($errors->any())
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <div class="alert-theme alert-danger alert-dismissible fade show" role="alert">
                             <i class="fas fa-exclamation-circle me-2 alert-icon"></i>
                             <strong>Whoops!</strong> Something went wrong.
                             <ul class="mb-0 mt-2">
@@ -34,7 +34,7 @@
                     @endif
                     
                     @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <div class="alert-theme alert-danger alert-dismissible fade show" role="alert">
                             <i class="fas fa-exclamation-circle me-2 alert-icon"></i>
                             {{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -42,7 +42,7 @@
                     @endif
                     
                     @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <div class="alert-theme alert-success alert-dismissible fade show" role="alert">
                             <i class="fas fa-check-circle me-2 alert-icon"></i>
                             {{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>

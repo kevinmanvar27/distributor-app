@@ -35,7 +35,7 @@
                                         <p class="text-muted">No products are currently below their low stock threshold.</p>
                                     </div>
                                 @else
-                                    <div class="alert alert-warning rounded-3 mb-4">
+                                    <div class="alert-theme alert-warning rounded-3 mb-4">
                                         <i class="fas fa-bell me-2"></i>
                                         <strong>{{ $paginatedProducts->total() }} product(s)</strong> have stock levels below their threshold. Consider restocking soon!
                                     </div>

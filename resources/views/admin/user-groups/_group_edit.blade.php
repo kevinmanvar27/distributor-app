@@ -330,7 +330,7 @@ $(document).ready(function() {
                             <ul class="list-unstyled">
                                 ${conflictList}
                             </ul>
-                            <div class="alert alert-info mt-3">
+                            <div class="alert-theme alert-info mt-3">
                                 <i class="fas fa-info-circle me-2"></i>
                                 If you proceed, these users will be removed from their existing groups and added to this group.
                             </div>

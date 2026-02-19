@@ -10,7 +10,7 @@
                 <div class="card-header">{{ __('Access Denied') }}</div>
 
                 <div class="card-body">
-                    <div class="alert alert-danger">
+                    <div class="alert-theme alert-danger">
                         <h4 class="alert-heading">{{ __('Access Denied') }}</h4>
                         <p>{{ $message ?? 'You do not have access to the admin area.' }}</p>
                         <hr>

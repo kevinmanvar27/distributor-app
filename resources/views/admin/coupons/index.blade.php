@@ -33,14 +33,14 @@
                             
                             <div class="card-body">
                                 @if(session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
                                 
                                 @if(session('error'))
-                                    <div class="alert alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
@@ -154,7 +154,7 @@
                                             </tr>
                                             @empty
                                             <tr>
-                                                <td colspan="7" class="text-center py-5">
+                                                <td colspan="8" class="text-center py-5">
                                                     <div class="text-muted">
                                                         <i class="fas fa-ticket-alt fa-3x mb-3"></i>
                                                         <p class="mb-0">No coupons found</p>

@@ -14,7 +14,7 @@
                 <div class="row">
                     <div class="col-12">
                         @if(session('success'))
-                            <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                            <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                 <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
@@ -153,7 +153,7 @@
                                                     </div>
                                                 @else
                                                     <div class="chat-input-locked border-top bg-light p-3">
-                                                        <div class="alert alert-secondary mb-0 text-center">
+                                                        <div class="alert-theme alert-info mb-0 text-center">
                                                             <i class="fas fa-lock me-2"></i>
                                                             <strong>{{ $task->status === 'verified' ? 'Task Verified & Locked' : 'No Permission' }}</strong>
                                                             <p class="mb-0 small mt-1">
@@ -209,7 +209,7 @@
                                                 </h5>
 
                                                 @if($task->status === 'verified')
-                                                    <div class="alert alert-success mb-3">
+                                                    <div class="alert-theme alert-success mb-3">
                                                         <div class="d-flex align-items-center">
                                                             <i class="fas fa-lock fa-2x me-3"></i>
                                                             <div>

@@ -68,11 +68,11 @@
     @else
     <div class="row">
         <div class="col-12">
-            <div class="alert alert-info d-flex align-items-center justify-content-center" style="border-radius: var(--radius-lg); min-height: 300px;">
+            <div class="alert-theme d-flex align-items-center justify-content-center p-5" style="border-radius: var(--radius-lg); min-height: 300px; background-color: rgba(var(--theme-color-rgb, 255, 107, 0), 0.1); border-left: 4px solid var(--theme-color);">
                 <div class="text-center">
                     <i class="fas fa-info-circle mb-3" style="font-size: 3rem; color: var(--theme-color);"></i>
-                    <h4 class="mb-2">No Categories Available</h4>
-                    <p class="mb-3">Categories will appear here once they are added.</p>
+                    <h4 class="mb-2" style="color: var(--heading-text-color);">No Categories Available</h4>
+                    <p class="mb-3" style="color: var(--general-text-color);">Categories will appear here once they are added.</p>
                     <a href="{{ route('frontend.home') }}" class="btn btn-theme">
                         <i class="fas fa-home me-2"></i>Back to Home
                     </a>

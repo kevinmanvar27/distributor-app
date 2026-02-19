@@ -84,14 +84,14 @@
                             
                             <div class="card-body">
                                 @if(session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
                                 
                                 @if($errors->any())
-                                    <div class="alert alert-danger rounded-pill px-4 py-3">
+                                    <div class="alert-theme alert-danger rounded-pill px-4 py-3">
                                         <i class="fas fa-exclamation-circle me-2"></i>
                                         <ul class="mb-0">
                                             @foreach($errors->all() as $error)
@@ -121,7 +121,7 @@
                                             <!-- Product Type Display (Read-only for edit) -->
                                             <div class="mb-4">
                                                 <label class="form-label fw-bold">Product Type</label>
-                                                <div class="alert alert-info">
+                                                <div class="alert-theme alert-info">
                                                     <i class="fas fa-info-circle me-2"></i>
                                                     This is a <strong>{{ $product->isVariable() ? 'Variable' : 'Simple' }}</strong> product.
                                                     @if($product->isVariable())
@@ -178,7 +178,7 @@
                                             </div>
                                             @else
                                             <div class="mb-4">
-                                                <div class="alert alert-info">
+                                                <div class="alert-theme alert-info">
                                                     <i class="fas fa-info-circle me-2"></i>
                                                     Stock is managed at the variation level. Total stock: <strong>{{ $product->total_stock }}</strong>
                                                 </div>

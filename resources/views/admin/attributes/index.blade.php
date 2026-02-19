@@ -82,7 +82,7 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert-theme alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -318,7 +318,7 @@ $(document).ready(function() {
                 bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
                 
                 // Show success message
-                var alertHtml = '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                var alertHtml = '<div class="alert-theme alert-success alert-dismissible fade show" role="alert">' +
                     'Attribute deleted successfully.' +
                     '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
                     '</div>';
@@ -339,7 +339,7 @@ $(document).ready(function() {
                     ? xhr.responseJSON.message 
                     : 'Error deleting attribute.';
                 
-                var alertHtml = '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                var alertHtml = '<div class="alert-theme alert-danger alert-dismissible fade show" role="alert">' +
                     errorMsg +
                     '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
                     '</div>';

@@ -128,7 +128,7 @@
                                                 @if($activeSalary->notes)
                                                 <tr>
                                                     <td class="py-3" colspan="2">
-                                                        <div class="alert alert-info mb-0 rounded-3">
+                                                        <div class="alert-theme mb-0 rounded-3">
                                                             <i class="fas fa-info-circle me-2"></i>
                                                             <strong>Notes:</strong> {{ $activeSalary->notes }}
                                                         </div>
@@ -226,8 +226,8 @@
                                                     </div>
                                                     
                                                     @if($salary->notes)
-                                                        <div class="alert alert-light border-0 mt-2 mb-0 small">
-                                                            <i class="fas fa-sticky-note text-warning me-1"></i>
+                                                        <div class="alert-theme alert-info border-0 mt-2 mb-0 small">
+                                                            <i class="fas fa-sticky-note me-1"></i>
                                                             {{ $salary->notes }}
                                                         </div>
                                                     @endif

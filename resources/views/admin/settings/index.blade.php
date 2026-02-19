@@ -27,7 +27,7 @@
                     </div>
                     <div class="card-body">
                         @if(session('success'))
-                            <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                            <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                 <i class="fas fa-check-circle me-2"></i>
                                 <strong>Success!</strong> {{ session('success') }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -35,7 +35,7 @@
                         @endif
                         
                         @if(session('error'))
-                            <div class="alert alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                            <div class="alert-theme alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                 <i class="fas fa-exclamation-circle me-2"></i>
                                 <strong>Error!</strong> {{ session('error') }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -622,7 +622,7 @@
                                             <h4 class="mb-4">Payment Settings</h4>
                                             <p class="text-muted">Configure Razorpay integration and payment processing options.</p>
                                             
-                                            <div class="alert alert-info">
+                                            <div class="alert-theme alert-info">
                                                 <i class="fas fa-info-circle me-2"></i>
                                                 <strong>Setup Required</strong> - Please ensure you have your Razorpay credentials ready.
                                             </div>
@@ -660,7 +660,7 @@
                                             <h4 class="mb-4">Notification Settings</h4>
                                             <p class="text-muted">Configure Firebase Cloud Messaging for push notifications.</p>
                                             
-                                            <div class="alert alert-info">
+                                            <div class="alert-theme alert-info">
                                                 <i class="fas fa-info-circle me-2"></i>
                                                 <strong>Setup Required</strong> - Firebase Cloud Messaging Configuration
                                             </div>
@@ -807,7 +807,7 @@
                                                 </div>
                                                 
                                                 <div class="col-12">
-                                                    <div class="alert alert-info">
+                                                    <div class="alert-theme alert-info">
                                                         <i class="fas fa-info-circle me-2"></i>
                                                         Password must be at least 8 characters long.
                                                     </div>
@@ -1029,7 +1029,7 @@
             
             // Add a notice at the top of the form
             const notice = document.createElement('div');
-            notice.className = 'alert alert-info mb-4';
+            notice.className = 'alert-theme alert-info mb-4';
             notice.innerHTML = '<i class="fas fa-info-circle me-2"></i><strong>View Only Mode:</strong> You do not have permission to modify settings.';
             const tabContent = form.querySelector('.tab-content');
             if (tabContent) {
@@ -1177,7 +1177,7 @@
         })
         .catch(error => {
             document.getElementById('testResults').innerHTML = `
-                <div class="alert alert-danger">
+                <div class="alert-theme alert-danger">
                     <h5><i class="fas fa-exclamation-circle me-2"></i>Error</h5>
                     <p>Failed to test configuration: ${error.message}</p>
                 </div>
@@ -1270,7 +1270,7 @@
         })
         .catch(error => {
             document.getElementById('statsContent').innerHTML = `
-                <div class="alert alert-danger">
+                <div class="alert-theme alert-danger">
                     <h5><i class="fas fa-exclamation-circle me-2"></i>Error</h5>
                     <p>Failed to load statistics: ${error.message}</p>
                 </div>

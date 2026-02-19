@@ -25,14 +25,14 @@
                             </div>
                             <div class="card-body">
                                 @if(session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
 
                                 @if(session('error'))
-                                    <div class="alert alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-danger alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
@@ -139,7 +139,7 @@
 
                                                     <hr class="my-3">
 
-                                                    <div class="alert alert-info small mb-0">
+                                                    <div class="alert-theme alert-info small mb-0">
                                                         <i class="fas fa-bell me-2"></i>
                                                         If you change the assigned person, they will receive a notification.
                                                     </div>

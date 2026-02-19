@@ -274,13 +274,13 @@
                 @endforeach
             </div>
         @else
-            <div class="empty-state">
-                <div class="empty-state-icon">
+            <div class="empty-state" style="background-color: rgba(var(--theme-color-rgb, 255, 107, 0), 0.1); border-left: 4px solid var(--theme-color);">
+                <div class="empty-state-icon" style="background: var(--theme-color);">
                     <i class="fas fa-file-alt"></i>
                 </div>
-                <h3>No Pages Available</h3>
-                <p>There are no pages to display at the moment. Please check back later.</p>
-                <a href="{{ route('frontend.home') }}" class="btn btn-primary">
+                <h3 style="color: var(--heading-text-color);">No Pages Available</h3>
+                <p style="color: var(--general-text-color);">There are no pages to display at the moment. Please check back later.</p>
+                <a href="{{ route('frontend.home') }}" class="btn btn-theme">
                     <i class="fas fa-home me-2"></i> Back to Home
                 </a>
             </div>

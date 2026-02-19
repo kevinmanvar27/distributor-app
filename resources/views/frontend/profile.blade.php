@@ -6,7 +6,7 @@
 <div class="container py-5">
     <!-- Success Message -->
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show alert-animated" role="alert">
+        <div class="alert-theme alert-success alert-dismissible fade show alert-animated" role="alert">
             <i class="fas fa-check-circle me-2 success-icon"></i>{{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -14,7 +14,7 @@
     
     <!-- Error Messages -->
     @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show alert-animated" role="alert">
+        <div class="alert-theme alert-danger alert-dismissible fade show alert-animated" role="alert">
             <i class="fas fa-exclamation-triangle me-2 error-icon"></i>
             <strong>Whoops!</strong> There were some problems with your input.
             <ul class="mb-0 mt-2">

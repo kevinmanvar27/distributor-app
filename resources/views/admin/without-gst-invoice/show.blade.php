@@ -39,14 +39,14 @@
                             
                             <div class="card-body">
                                 @if(session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3 mb-4" role="alert">
+                                    <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3 mb-4" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
                                 
                                 @if($invoice->original_invoice_id)
-                                    <div class="alert alert-info mb-4">
+                                    <div class="alert-theme alert-info mb-4">
                                         <i class="fas fa-info-circle me-2"></i>
                                         This invoice was converted from a proforma invoice (Original ID: #{{ $invoice->original_invoice_id }})
                                     </div>

@@ -23,7 +23,7 @@ class UserController extends Controller
         // Show only regular users
         $users = User::where('user_role', 'user')
                     ->orderBy('created_at', 'desc')
-                    ->paginate(10);
+                    ->get();
         return view('admin.users.index', compact('users'));
     }
     
@@ -39,7 +39,7 @@ class UserController extends Controller
                     ->with(['activeSalary'])
                     ->orderBy('user_role')
                     ->orderBy('created_at', 'desc')
-                    ->paginate(10);
+                    ->get();
 
         return view('admin.users.staff', compact('staff'));
     }
@@ -328,7 +328,7 @@ class UserController extends Controller
     {
         $users = User::onlyTrashed()
                     ->orderBy('deleted_at', 'desc')
-                    ->paginate(10);
+                    ->get();
         return view('admin.users.trashed', compact('users'));
     }
 

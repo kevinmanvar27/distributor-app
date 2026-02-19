@@ -42,6 +42,7 @@
         :root {
             /* Color Settings */
             --theme-color: {{ setting('theme_color', '#007bff') }};
+            --theme-color-rgb: {{ implode(', ', sscanf(setting('theme_color', '#007bff'), "#%02x%02x%02x")) }};
             --background-color: {{ setting('background_color', '#f8f9fa') }};
             --font-color: {{ setting('font_color', '#333333') }};
             --sidebar-text-color: {{ setting('sidebar_text_color', '#333333') }};

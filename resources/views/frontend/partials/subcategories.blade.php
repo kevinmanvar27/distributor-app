@@ -82,8 +82,8 @@
     }
 </style>
 @else
-<div class="alert alert-info text-center">
-    <i class="fas fa-info-circle me-2"></i>
+<div class="alert-theme text-center p-3" style="background-color: rgba(var(--theme-color-rgb, 255, 107, 0), 0.1); border-left: 4px solid var(--theme-color); border-radius: var(--radius-lg); color: var(--general-text-color);">
+    <i class="fas fa-info-circle me-2" style="color: var(--theme-color);"></i>
     No subcategories available for this category.
 </div>
 @endif

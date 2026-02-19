@@ -72,9 +72,9 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="p-4 text-center">
-                            <i class="fas fa-info-circle text-muted mb-2" style="font-size: 2rem;"></i>
-                            <p class="text-muted mb-0">No subcategories available</p>
+                        <div class="p-4 text-center" style="background-color: rgba(var(--theme-color-rgb, 255, 107, 0), 0.05); border-radius: var(--radius-lg);">
+                            <i class="fas fa-info-circle mb-2" style="font-size: 2rem; color: var(--theme-color);"></i>
+                            <p class="mb-0" style="color: var(--general-text-color);">No subcategories available</p>
                         </div>
                     @endif
                 </div>

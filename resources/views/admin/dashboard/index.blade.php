@@ -486,7 +486,7 @@
                 
                 <!-- Pending Payments Alert -->
                 @if($canViewPendingBills && $pendingPayments > 0)
-                <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4" role="alert">
+                <div class="alert-theme alert-warning border-0 shadow-sm d-flex align-items-center mb-4" role="alert">
                     <i class="fas fa-exclamation-circle me-3 fa-lg"></i>
                     <div class="flex-grow-1">
                         <strong>Pending Payments:</strong> You have ₹{{ number_format($pendingPayments, 2) }} in pending payments.

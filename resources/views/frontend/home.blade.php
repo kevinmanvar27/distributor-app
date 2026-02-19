@@ -5,8 +5,9 @@
 @section('content')
 <div class="container-fluid px-0">
     <!-- Hero Section -->
-    <div class="hero-section text-center py-5 mb-5">
-        <div class="container">
+    <div class="hero-section text-center py-5 mb-5" @if(banner_image_url()) style="background-image: url('{{ banner_image_url() }}'); background-size: cover; background-position: center; background-repeat: no-repeat;" @endif>
+        <div class="hero-overlay"></div>
+        <div class="container position-relative" style="z-index: 2;">
             <div class="row justify-content-center">
                 <div class="col-lg-9 col-xl-8">
                     <h1 class="display-3 fw-bold mb-4 fade-in" style="color: white !important;">
@@ -24,7 +25,7 @@
                         <a href="{{ route('frontend.profile') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 btn-ripple hover-lift">
                             <i class="fas fa-user me-2"></i>My Profile
                         </a>
-                        <a href="{{ route('frontend.cart.index') }}" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 btn-ripple hover-lift">
+                        <a href="{{ route('frontend.cart.index') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 btn-ripple hover-lift">
                             <i class="fas fa-shopping-cart me-2"></i>View Cart
                         </a>
                     </div>
@@ -33,7 +34,7 @@
                         <a href="{{ route('frontend.login') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 btn-ripple hover-lift">
                             <i class="fas fa-sign-in-alt me-2"></i>Login
                         </a>
-                        <a href="{{ route('frontend.register') }}" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 btn-ripple hover-lift">
+                        <a href="{{ route('frontend.register') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 btn-ripple hover-lift">
                             <i class="fas fa-user-plus me-2"></i>Register
                         </a>
                     </div>
@@ -104,11 +105,11 @@
         @else
         <div class="row">
             <div class="col-12">
-                <div class="alert alert-info d-flex align-items-center" style="border-radius: var(--radius-lg);">
-                    <i class="fas fa-info-circle me-3" style="font-size: 1.5rem;"></i>
+                <div class="alert-theme d-flex align-items-center p-4" style="border-radius: var(--radius-lg); background-color: rgba(var(--theme-color-rgb, 255, 107, 0), 0.1); border-left: 4px solid var(--theme-color);">
+                    <i class="fas fa-info-circle me-3" style="font-size: 1.5rem; color: var(--theme-color);"></i>
                     <div>
-                        <h5 class="mb-1">No Categories Available</h5>
-                        <p class="mb-0">Categories will appear here once they are added.</p>
+                        <h5 class="mb-1" style="color: var(--heading-text-color);">No Categories Available</h5>
+                        <p class="mb-0" style="color: var(--general-text-color);">Categories will appear here once they are added.</p>
                     </div>
                 </div>
             </div>
@@ -265,11 +266,11 @@
         @else
         <div class="row">
             <div class="col-12">
-                <div class="alert alert-info d-flex align-items-center" style="border-radius: var(--radius-lg);">
-                    <i class="fas fa-info-circle me-3" style="font-size: 1.5rem;"></i>
+                <div class="alert-theme d-flex align-items-center p-4" style="border-radius: var(--radius-lg); background-color: rgba(var(--theme-color-rgb, 255, 107, 0), 0.1); border-left: 4px solid var(--theme-color);">
+                    <i class="fas fa-info-circle me-3" style="font-size: 1.5rem; color: var(--theme-color);"></i>
                     <div>
-                        <h5 class="mb-1">No Products Available</h5>
-                        <p class="mb-0">Products will appear here once they are added.</p>
+                        <h5 class="mb-1" style="color: var(--heading-text-color);">No Products Available</h5>
+                        <p class="mb-0" style="color: var(--general-text-color);">Products will appear here once they are added.</p>
                     </div>
                 </div>
             </div>
@@ -284,9 +285,13 @@
         background: linear-gradient(135deg, var(--theme-color) 0%, var(--link-hover-color) 100%);
         position: relative;
         overflow: hidden;
+        min-height: 500px;
+        display: flex;
+        align-items: center;
     }
     
-    .hero-section::before {
+    /* Hero overlay - adds a dark overlay when banner is set, or gradient pattern when not */
+    .hero-overlay {
         content: '';
         position: absolute;
         top: 0;
@@ -298,6 +303,22 @@
             radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
             radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 40%);
         pointer-events: none;
+        z-index: 1;
+    }
+    
+    /* When banner image is set, add darker overlay for better text readability */
+    .hero-section[style*="background-image"] {
+        background-blend-mode: overlay;
+    }
+    
+    .hero-section[style*="background-image"] .hero-overlay {
+        background: rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Ensure content is above the overlay */
+    .hero-section .container {
+        position: relative;
+        z-index: 2;
     }
     
     .category-card,
@@ -311,12 +332,22 @@
     }
     
     @media (max-width: 768px) {
+        .hero-section {
+            min-height: 400px;
+        }
+        
         .hero-section .display-3 {
             font-size: 2.25rem !important;
         }
         
         .hero-section .lead {
             font-size: 1rem !important;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .hero-section {
+            min-height: 350px;
         }
     }
 </style>

@@ -14,7 +14,7 @@
                 <div class="row">
                     <div class="col-12">
                         @if(session('success'))
-                            <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                            <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                 <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
@@ -229,7 +229,7 @@
                                                         @endif
 
                                                         @if($task->status === 'done')
-                                                            <div class="alert alert-success mb-0">
+                                                            <div class="alert-theme alert-success mb-0">
                                                                 <i class="fas fa-check-circle me-2"></i>
                                                                 <strong>Task Completed</strong>
                                                                 <p class="mb-0 small mt-1">Waiting for verification</p>
@@ -241,7 +241,7 @@
                                         @else
                                             <div class="card border-0 bg-light">
                                                 <div class="card-body">
-                                                    <div class="alert alert-success mb-0">
+                                                    <div class="alert-theme alert-success mb-0">
                                                         <div class="d-flex align-items-center">
                                                             <i class="fas fa-check-double fa-2x me-3"></i>
                                                             <div>

@@ -32,14 +32,14 @@
                             
                             <div class="card-body">
                                 @if(session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
                                 @endif
                                 
                                 @if(!(auth()->user()->hasPermission('create_attendance') || auth()->user()->isSuperAdmin()))
-                                    <div class="alert alert-warning">
+                                    <div class="alert-theme alert-warning">
                                         <i class="fas fa-exclamation-triangle me-2"></i>You don't have permission to mark bulk attendance.
                                     </div>
                                 @else

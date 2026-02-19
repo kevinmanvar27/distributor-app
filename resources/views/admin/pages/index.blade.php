@@ -27,7 +27,7 @@
                             </div>
                             <div class="card-body">
                                 @if(session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
+                                    <div class="alert-theme alert-success alert-dismissible fade show rounded-pill px-4 py-3" role="alert">
                                         <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
                                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                     </div>
@@ -46,7 +46,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @forelse($pages as $page)
+                                            @foreach($pages as $page)
                                             <tr>
                                                 <td>{{ $loop->iteration }}</td>
                                                 <td>
@@ -84,28 +84,11 @@
                                                     </div>
                                                 </td>
                                             </tr>
-                                            @empty
-                                            <tr>
-                                                <td colspan="6" class="text-center py-5">
-                                                    <div class="text-muted">
-                                                        <i class="fas fa-file-alt fa-2x mb-3"></i>
-                                                        <p class="mb-0">No pages found</p>
-                                                        <p class="small">Get started by creating a new page</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            @endforelse
+                                            @endforeach
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
-                            @if($pages->hasPages())
-                            <div class="card-footer bg-white border-0 py-3">
-                                <div class="d-flex justify-content-end">
-                                    {{ $pages->links() }}
-                                </div>
-                            </div>
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -127,8 +110,15 @@
             "searching": true,
             "info": true,
             "paging": true,
+            "autoWidth": false,
             "columnDefs": [
-                { "orderable": false, "targets": [0, 5] }
+                { "orderable": false, "targets": [0, 5] },
+                { "width": "5%", "targets": 0 },
+                { "width": "25%", "targets": 1 },
+                { "width": "20%", "targets": 2 },
+                { "width": "10%", "targets": 3 },
+                { "width": "15%", "targets": 4 },
+                { "width": "15%", "targets": 5 }
             ],
             "order": [[3, "asc"]], // Order by priority by default
             "language": {
@@ -137,28 +127,17 @@
                 "info": "Showing _START_ to _END_ of _TOTAL_ pages",
                 "infoEmpty": "Showing 0 to 0 of 0 pages",
                 "infoFiltered": "(filtered from _MAX_ total pages)",
+                "emptyTable": '<div class="text-center py-5"><div class="text-muted"><i class="fas fa-file-alt fa-2x mb-3"></i><p class="mb-0">No pages found</p><p class="small">Get started by creating a new page</p></div></div>',
+                "zeroRecords": '<div class="text-center py-5"><div class="text-muted"><i class="fas fa-search fa-2x mb-3"></i><p class="mb-0">No matching pages found</p><p class="small">Try adjusting your search</p></div></div>',
                 "paginate": {
                     "first": "First",
                     "last": "Last",
                     "next": "Next",
                     "previous": "Previous"
                 }
-            },
-            "aoColumns": [
-                null, // S.No.
-                null, // Title
-                null, // Slug
-                null, // Priority
-                null, // Status
-                null  // Actions
-            ],
-            "preDrawCallback": function(settings) {
-                // Ensure consistent column count
-                if ($('#pages-table tbody tr').length === 0) {
-                    $('#pages-table tbody').html('<tr><td colspan="6" class="text-center py-5"><div class="text-muted"><i class="fas fa-file-alt fa-2x mb-3"></i><p class="mb-0">No pages found</p><p class="small">Get started by creating a new page</p></div></td></tr>');
-                }
             }
         });
+        
         // Adjust select width after DataTable initializes
         $('.dataTables_length select').css('width', '80px');
     });

@@ -147,6 +147,10 @@ Route::get('/css/dynamic.css', function () {
     $themeColor = $setting && $setting->theme_color ? $setting->theme_color : '#FF6B00';
     $backgroundColor = $setting && $setting->background_color ? $setting->background_color : '#FFFFFF';
     
+    // Convert theme color to RGB for rgba usage
+    $themeColorRgb = sscanf($themeColor, "#%02x%02x%02x");
+    $themeColorRgbString = implode(', ', $themeColorRgb);
+    
     // Text color settings
     $sidebarTextColor = $setting && $setting->sidebar_text_color ? $setting->sidebar_text_color : '#333333';
     $headingTextColor = $setting && $setting->heading_text_color ? $setting->heading_text_color : '#333333';
@@ -184,6 +188,7 @@ Route::get('/css/dynamic.css', function () {
         --font-color: {$fontColor}; 
         --font-style: {$fontStyle};
         --theme-color: {$themeColor};
+        --theme-color-rgb: {$themeColorRgbString};
         --background-color: {$backgroundColor};
         --sidebar-text-color: {$sidebarTextColor};
         --heading-text-color: {$headingTextColor};

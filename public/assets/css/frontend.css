@@ -1180,6 +1180,88 @@ body {
     box-shadow: 0 0 0 0.25rem rgba(255, 107, 0, 0.25);
 }
 
+/* ==================== ALERT THEME STYLES ==================== */
+/* Consistent alert styling using theme colors */
+.alert-theme {
+    background-color: rgba(255, 107, 0, 0.1);
+    border-left: 4px solid var(--theme-color);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.5rem;
+    color: var(--general-text-color);
+}
+
+.alert-theme i {
+    color: var(--theme-color);
+}
+
+.alert-theme h1,
+.alert-theme h2,
+.alert-theme h3,
+.alert-theme h4,
+.alert-theme h5,
+.alert-theme h6 {
+    color: var(--heading-text-color);
+}
+
+.alert-theme p {
+    color: var(--general-text-color);
+}
+
+.alert-theme .btn-close {
+    filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%);
+}
+
+.alert-theme hr {
+    border-color: var(--theme-color);
+    opacity: 0.3;
+}
+
+/* Alert theme variants for different message types */
+.alert-theme.alert-success {
+    background-color: rgba(76, 175, 80, 0.1);
+    border-left-color: #4CAF50;
+    border-color: rgba(76, 175, 80, 0.2);
+}
+
+.alert-theme.alert-success i {
+    color: #4CAF50;
+}
+
+.alert-theme.alert-danger {
+    background-color: rgba(244, 67, 54, 0.1);
+    border-left-color: #F44336;
+    border-color: rgba(244, 67, 54, 0.2);
+}
+
+.alert-theme.alert-danger i {
+    color: #F44336;
+}
+
+.alert-theme.alert-warning {
+    background-color: rgba(255, 152, 0, 0.1);
+    border-left-color: #FF9800;
+    border-color: rgba(255, 152, 0, 0.2);
+}
+
+.alert-theme.alert-warning i {
+    color: #FF9800;
+}
+
+.alert-theme.alert-info {
+    background-color: rgba(33, 150, 243, 0.1);
+    border-left-color: #2196F3;
+    border-color: rgba(33, 150, 243, 0.2);
+}
+
+.alert-theme.alert-info i {
+    color: #2196F3;
+}
+
+/* Hover effects for dismissible alerts */
+.alert-theme.alert-dismissible .btn-close:hover {
+    opacity: 0.75;
+}
+
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 992px) {
     .hero-section {

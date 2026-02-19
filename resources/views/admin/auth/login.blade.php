@@ -177,7 +177,7 @@
                         </div>
                         
                         @if ($errors->any())
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <div class="alert-theme alert-danger alert-dismissible fade show" role="alert">
                                 <strong>Whoops!</strong> Something went wrong.
                                 <ul class="mb-0 mt-2">
                                     @foreach ($errors->all() as $error)
@@ -189,7 +189,7 @@
                         @endif
                         
                         @if (session('error'))
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <div class="alert-theme alert-danger alert-dismissible fade show" role="alert">
                                 {{ session('error') }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
