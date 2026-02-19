@@ -65,25 +65,101 @@ class AppConfigController extends ApiController
             'h6_font_family' => $this->getSetting('h6_font_family', 'Roboto'),
             'body_font_family' => $this->getSetting('body_font_family', 'Roboto'),
             
+            // Font sizes - Desktop
+            'desktop_h1_size' => $this->getSetting('desktop_h1_size', '32'),
+            'desktop_h2_size' => $this->getSetting('desktop_h2_size', '28'),
+            'desktop_h3_size' => $this->getSetting('desktop_h3_size', '24'),
+            'desktop_h4_size' => $this->getSetting('desktop_h4_size', '20'),
+            'desktop_h5_size' => $this->getSetting('desktop_h5_size', '18'),
+            'desktop_h6_size' => $this->getSetting('desktop_h6_size', '16'),
+            'desktop_body_size' => $this->getSetting('desktop_body_size', '16'),
+            
+            // Font sizes - Tablet
+            'tablet_h1_size' => $this->getSetting('tablet_h1_size', '28'),
+            'tablet_h2_size' => $this->getSetting('tablet_h2_size', '24'),
+            'tablet_h3_size' => $this->getSetting('tablet_h3_size', '20'),
+            'tablet_h4_size' => $this->getSetting('tablet_h4_size', '18'),
+            'tablet_h5_size' => $this->getSetting('tablet_h5_size', '16'),
+            'tablet_h6_size' => $this->getSetting('tablet_h6_size', '14'),
+            'tablet_body_size' => $this->getSetting('tablet_body_size', '14'),
+            
+            // Font sizes - Mobile
+            'mobile_h1_size' => $this->getSetting('mobile_h1_size', '24'),
+            'mobile_h2_size' => $this->getSetting('mobile_h2_size', '20'),
+            'mobile_h3_size' => $this->getSetting('mobile_h3_size', '18'),
+            'mobile_h4_size' => $this->getSetting('mobile_h4_size', '16'),
+            'mobile_h5_size' => $this->getSetting('mobile_h5_size', '14'),
+            'mobile_h6_size' => $this->getSetting('mobile_h6_size', '12'),
+            'mobile_body_size' => $this->getSetting('mobile_body_size', '14'),
+            
             // App appearance
             'dark_mode_enabled' => $this->getSetting('dark_mode_enabled', 'false') === 'true',
             'logo_url' => $this->getLogoUrl('header_logo'),
+            'header_logo' => $this->getLogoUrl('header_logo'),
             'footer_logo_url' => $this->getLogoUrl('footer_logo'),
+            'footer_logo' => $this->getLogoUrl('footer_logo'),
             'favicon_url' => $this->getLogoUrl('favicon'),
+            'favicon' => $this->getLogoUrl('favicon'),
             'banner_image_url' => $this->getLogoUrl('banner_image'),
-            'app_icon_url' => $this->getSetting('app_icon_url', null),
-            'splash_screen_url' => $this->getSetting('splash_screen_url', null),
+            'banner_image' => $this->getLogoUrl('banner_image'),
+            'app_icon_url' => $this->getLogoUrl('app_icon_url'),
+            'splash_screen_url' => $this->getLogoUrl('splash_screen_url'),
             
             // Branding
             'brand_name' => $this->getSetting('site_title', config('app.name')),
             'site_title' => $this->getSetting('site_title', config('app.name')),
             'site_description' => $this->getSetting('site_description', ''),
             'tagline' => $this->getSetting('tagline', ''),
+            'footer_text' => $this->getSetting('footer_text', ''),
             
             // Business settings
             'gst_text' => $this->getSetting('gst_text', 'GST'),
             'default_gst_percentage' => (float) $this->getSetting('default_gst_percentage', 18),
             'delivery_charge' => (float) $this->getSetting('delivery_charge', 0),
+            'gst_number' => $this->getSetting('gst_number', ''),
+            'authorized_signatory' => $this->getSetting('authorized_signatory', ''),
+            
+            // Company contact information
+            'address' => $this->getSetting('address', ''),
+            'company_email' => $this->getSetting('company_email', ''),
+            'company_phone' => $this->getSetting('company_phone', ''),
+            
+            // Social media links
+            'facebook_url' => $this->getSetting('facebook_url', ''),
+            'twitter_url' => $this->getSetting('twitter_url', ''),
+            'instagram_url' => $this->getSetting('instagram_url', ''),
+            'linkedin_url' => $this->getSetting('linkedin_url', ''),
+            'youtube_url' => $this->getSetting('youtube_url', ''),
+            'whatsapp_url' => $this->getSetting('whatsapp_url', ''),
+            
+            // App store links
+            'app_store_link' => $this->getSetting('app_store_link', ''),
+            'play_store_link' => $this->getSetting('play_store_link', ''),
+            
+            // Maintenance & Coming Soon
+            'maintenance_mode' => $this->getSetting('maintenance_mode', 'false') === 'true',
+            'maintenance_end_time' => $this->getSetting('maintenance_end_time', null),
+            'maintenance_message' => $this->getSetting('maintenance_message', 'We are currently under maintenance. Please check back soon.'),
+            'coming_soon_mode' => $this->getSetting('coming_soon_mode', 'false') === 'true',
+            'launch_time' => $this->getSetting('launch_time', null),
+            'coming_soon_message' => $this->getSetting('coming_soon_message', 'Something exciting is coming soon!'),
+            
+            // Frontend access permissions
+            'frontend_access_permission' => $this->getSetting('frontend_access_permission', 'open_for_all'),
+            'pending_approval_message' => $this->getSetting('pending_approval_message', 'Your account is pending approval. Please wait for admin approval before accessing the site.'),
+            
+            // Payment settings
+            'show_online_payment' => $this->getSetting('show_online_payment', 'true') === 'true',
+            'show_cod_payment' => $this->getSetting('show_cod_payment', 'false') === 'true',
+            'show_invoice_payment' => $this->getSetting('show_invoice_payment', 'true') === 'true',
+            
+            // Payment gateway - Razorpay
+            'razorpay_key_id' => $this->getSetting('razorpay_key_id', ''),
+            'razorpay_enabled' => !empty($this->getSetting('razorpay_key_id', '')),
+            
+            // Firebase configuration (for notifications)
+            'firebase_project_id' => $this->getSetting('firebase_project_id', ''),
+            'firebase_enabled' => !empty($this->getSetting('firebase_project_id', '')),
         ];
 
         return $this->sendResponse($settings, 'App settings retrieved successfully.');
